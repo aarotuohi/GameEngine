@@ -1,0 +1,4 @@
+# C++ Build Requirements
+# This project uses CMake and requires SDL2 for client rendering
+# 
+# See README.md for platform-specific installation instructions
