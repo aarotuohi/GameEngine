@@ -2,7 +2,10 @@
 #include <cmath>
 #include <cstring>
 
-InputHandler::InputHandler() : mouseX(0), mouseY(0), quit(false) {
+InputHandler::InputHandler() 
+    : mouseX(0), mouseY(0), quit(false), 
+      hasMovementTarget(false), targetX(0), targetY(0),
+      qPressed(false), wPressed(false), ePressed(false), rPressed(false) {
     std::memset(keyStates, 0, sizeof(keyStates));
     std::memset(mouseButtons, 0, sizeof(mouseButtons));
 }
@@ -25,6 +28,26 @@ void InputHandler::handleEvent(const SDL_Event& event) {
     } else if (event.type == SDL_KEYDOWN) {
         if (event.key.keysym.sym == SDLK_ESCAPE) {
             quit = true;
+        }
+        // Ability keys - detect single press
+        else if (event.key.keysym.sym == SDLK_q) {
+            qPressed = true;
+        }
+        else if (event.key.keysym.sym == SDLK_w) {
+            wPressed = true;
+        }
+        else if (event.key.keysym.sym == SDLK_e) {
+            ePressed = true;
+        }
+        else if (event.key.keysym.sym == SDLK_r) {
+            rPressed = true;
+        }
+    } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+        if (event.button.button == SDL_BUTTON_RIGHT) {
+            // Right-click sets movement target
+            hasMovementTarget = true;
+            targetX = static_cast<float>(event.button.x);
+            targetY = static_cast<float>(event.button.y);
         }
     }
 }
@@ -71,6 +94,15 @@ std::pair<float, float> InputHandler::getShootDirection(float playerX, float pla
     return {0.0f, 0.0f};
 }
 
+void InputHandler::clearAbilityInputs() {
+    qPressed = false;
+    wPressed = false;
+    ePressed = false;
+    rPressed = false;
+}
+
 void InputHandler::reset() {
     quit = false;
+    hasMovementTarget = false;
+    clearAbilityInputs();
 }

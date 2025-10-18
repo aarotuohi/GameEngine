@@ -2,6 +2,7 @@
 #include "../shared/Config.h"
 #include <iostream>
 #include <thread>
+#include <cmath>
 
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
@@ -37,17 +38,62 @@ bool GameClient::connect(const std::string& serverHost) {
 }
 
 void GameClient::updateLocalPlayer(float dt) {
-    std::pair<float, float> movement = inputHandler->getMovementVector();
-    float dx = movement.first;
-    float dy = movement.second;
+    // Check for ability key presses
+    if (inputHandler->isQPressed()) {
+        std::cout << "Q ability pressed (Steel Tempest)\n";
+        // TODO: Send ability use to server
+        inputHandler->clearAbilityInputs();
+    }
+    if (inputHandler->isWPressed()) {
+        std::cout << "W ability pressed (Wind Wall)\n";
+        // TODO: Send ability use to server
+        inputHandler->clearAbilityInputs();
+    }
+    if (inputHandler->isEPressed()) {
+        std::cout << "E ability pressed (Sweeping Blade)\n";
+        // TODO: Send ability use to server
+        inputHandler->clearAbilityInputs();
+    }
+    if (inputHandler->isRPressed()) {
+        std::cout << "R ability pressed (Last Breath)\n";
+        // TODO: Send ability use to server
+        inputHandler->clearAbilityInputs();
+    }
     
-    // Update velocity
-    localVx = dx;
-    localVy = dy;
-    
-    // Update position (client-side prediction)
-    localX += dx * Config::PLAYER_SPEED * dt;
-    localY += dy * Config::PLAYER_SPEED * dt;
+    // Right-click movement system
+    if (inputHandler->hasTarget()) {
+        std::pair<float, float> target = inputHandler->getTarget();
+        float targetX = target.first;
+        float targetY = target.second;
+        
+        // Calculate direction to target
+        float dx = targetX - localX;
+        float dy = targetY - localY;
+        float distance = std::sqrt(dx * dx + dy * dy);
+        
+        // If we're close enough, stop
+        const float arrivalThreshold = 3.0f;
+        if (distance < arrivalThreshold) {
+            inputHandler->clearTarget();
+            localVx = 0.0f;
+            localVy = 0.0f;
+        } else {
+            // Normalize direction and move
+            float dirX = dx / distance;
+            float dirY = dy / distance;
+            
+            localVx = dirX;
+            localVy = dirY;
+            
+            // Update position (client-side prediction)
+            localX += dirX * Config::PLAYER_SPEED * dt;
+            localY += dirY * Config::PLAYER_SPEED * dt;
+        }
+    } else {
+        // No target, stop moving
+        localVx = 0.0f;
+        localVy = 0.0f;
+    }
     
     // Clamp to world bounds
     localX = (std::max)(0.0f, (std::min)(static_cast<float>(Config::WORLD_WIDTH - Config::PLAYER_SIZE), localX));
