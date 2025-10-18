@@ -8,7 +8,16 @@
 #include <chrono>
 #include "Config.h"
 
-// Player class
+// Samurai ability states
+enum class SamuraiAbility {
+    NONE = 0,
+    Q_STEEL_TEMPEST = 1,    // Linear dash/slash
+    W_WIND_WALL = 2,         // Projectile blocking
+    E_SWEEPING_BLADE = 3,    // Dash through enemies
+    R_LAST_BREATH = 4        // Ultimate
+};
+
+// Player class (Samurai-themed)
 class Player {
 public:
     uint32_t id;
@@ -21,12 +30,37 @@ public:
     int score;
     std::chrono::steady_clock::time_point lastUpdate;
 
+    // Samurai-specific attributes
+    int health;
+    int maxHealth;
+    float rotation;      // Character facing direction
+    bool isDashing;
+    bool isAlive;
+    SamuraiAbility activeAbility;
+    std::chrono::steady_clock::time_point lastQTime;
+    std::chrono::steady_clock::time_point lastWTime;
+    std::chrono::steady_clock::time_point lastETime;
+    std::chrono::steady_clock::time_point lastRTime;
+    int qStacks;         // Steel Tempest stacks (0-2, third cast is tornado)
+    
     Player(uint32_t playerId, float posX, float posY, const std::string& playerName = "Player");
     
     void updatePosition(float dx, float dy, float dt);
     void updateVelocity(float velX, float velY);
     void setPosition(float posX, float posY);
     bool checkCollision(const Player& other) const;
+
+    // Samurai abilities
+    bool canUseQ() const;
+    bool canUseW() const;
+    bool canUseE() const;
+    bool canUseR() const;
+    void useQ();
+    void useW();
+    void useE(float targetX, float targetY);
+    void useR(const Player& target);
+    void takeDamage(int damage);
+    void respawn(float spawnX, float spawnY);
 };
 
 // Projectile class

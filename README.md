@@ -82,11 +82,25 @@ cmake --build .
 
 ## Game Concepts
 
-This is a simple 2D tag/shooter game where:
-- Players move in a shared 2D world
-- Real-time position synchronization
-- Simple collision detection
-- Tagging/shooting mechanics
+**Inspired 2D Multiplayer Arena**
+
+Play as a 2D version of samura
+
+### Controls:
+- **WASD / Arrow Keys**: Move Samurai
+- **Q Key**: Steel Tempest - Quick slash (3 stacks = tornado)
+- **W Key**: Wind Wall - Block projectiles
+- **E Key**: Sweeping Blade - Dash through enemies
+- **R Key**: Last Breath - Ultimate ability
+- **ESC**: Quit
+
+### Features:
+- Real-time multiplayer synchronization
+- Samurais's signature abilities with cooldowns
+- Health system with visual health bars
+- Wind effects and samurai-themed visuals
+- Ability cooldown indicators
+- Death and respawn mechanics
 
 ## Extensions
 

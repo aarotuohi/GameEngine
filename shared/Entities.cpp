@@ -2,11 +2,19 @@
 #include <algorithm>
 #include <cmath>
 
-// Player implementation
+// Player implementation (Samurai-themed)
 Player::Player(uint32_t playerId, float posX, float posY, const std::string& playerName)
     : id(playerId), name(playerName), x(posX), y(posY),
       vx(0.0f), vy(0.0f), size(Config::PLAYER_SIZE), speed(Config::PLAYER_SPEED),
-      isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()) {
+      isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
+      health(100), maxHealth(100), rotation(0.0f), isDashing(false), isAlive(true),
+      activeAbility(SamuraiAbility::NONE), qStacks(0) {
+    
+    auto now = std::chrono::steady_clock::now();
+    lastQTime = now;
+    lastWTime = now;
+    lastETime = now;
+    lastRTime = now;
 }
 
 void Player::updatePosition(float dx, float dy, float dt) {
@@ -34,6 +42,91 @@ bool Player::checkCollision(const Player& other) const {
     float dy = y - other.y;
     float distance = std::sqrt(dx * dx + dy * dy);
     return distance < (size + other.size) / 2.0f;
+}
+
+
+bool Player::canUseQ() const {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastQTime);
+    return elapsed.count() >= 400 && isAlive; 
+}
+
+bool Player::canUseW() const {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastWTime);
+    return elapsed.count() >= 3000 && isAlive; 
+}
+
+bool Player::canUseE() const {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastETime);
+    return elapsed.count() >= 500 && isAlive; 
+}
+
+bool Player::canUseR() const {
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRTime);
+    return elapsed.count() >= 10000 && isAlive; 
+}
+
+void Player::useQ() {
+    if (!canUseQ()) return;
+    lastQTime = std::chrono::steady_clock::now();
+    activeAbility = SamuraiAbility::Q_STEEL_TEMPEST;
+    qStacks++;
+    if (qStacks > 2) qStacks = 0; 
+}
+
+void Player::useW() {
+    if (!canUseW()) return;
+    lastWTime = std::chrono::steady_clock::now();
+    activeAbility = SamuraiAbility::W_WIND_WALL;
+}
+
+void Player::useE(float targetX, float targetY) {
+    if (!canUseE()) return;
+    lastETime = std::chrono::steady_clock::now();
+    activeAbility = SamuraiAbility::E_SWEEPING_BLADE;
+    isDashing = true;
+    
+    // Dash towards target
+    float dx = targetX - x;
+    float dy = targetY - y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    if (distance > 0) {
+        float dashDistance = 200.0f; // E dash range
+        x += (dx / distance) * dashDistance;
+        y += (dy / distance) * dashDistance;
+    }
+}
+
+void Player::useR(const Player& target) {
+    if (!canUseR()) return;
+    lastRTime = std::chrono::steady_clock::now();
+    activeAbility = SamuraiAbility::R_LAST_BREATH;
+    
+    // Teleport to target and deal massive damage
+    x = target.x;
+    y = target.y - 50; // Appear above target
+}
+
+void Player::takeDamage(int damage) {
+    if (!isAlive) return;
+    health -= damage;
+    if (health <= 0) {
+        health = 0;
+        isAlive = false;
+    }
+}
+
+void Player::respawn(float spawnX, float spawnY) {
+    x = spawnX;
+    y = spawnY;
+    health = maxHealth;
+    isAlive = true;
+    isDashing = false;
+    qStacks = 0;
+    activeAbility = SamuraiAbility::NONE;
 }
 
 // Projectile implementation

@@ -18,11 +18,14 @@ private:
     
     // Colors
     SDL_Color bgColor;
-    SDL_Color playerColor;
-    SDL_Color taggedColor;
+    SDL_Color samuraiColor;        // Samurai blue/teal
+    SDL_Color samuraiSwordColor;   // Silver/white
+    SDL_Color windColor;         // Light blue/cyan
     SDL_Color otherPlayerColor;
     SDL_Color gridColor;
     SDL_Color textColor;
+    SDL_Color healthBarGreen;
+    SDL_Color healthBarRed;
 
 public:
     Renderer(int w = Config::WORLD_WIDTH, int h = Config::WORLD_HEIGHT);
