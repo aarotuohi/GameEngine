@@ -2,6 +2,20 @@
 
 A simple 2D multiplayer game engine with real-time synchronization and distributed architecture built in modern C++.
 
+## Controls
+
+### Movement
+- **Right-Click**: Click anywhere on the screen to move your character to that location. Yasuo will automatically move to the clicked position using the shortest path.
+
+### Abilities
+- **Q Key**: Steel Tempest - Linear dash/slash attack
+- **W Key**: Wind Wall - Blocks projectiles
+- **E Key**: Sweeping Blade - Dash through enemies
+- **R Key**: Last Breath - Ultimate ability
+
+### Other
+- **ESC**: Quit the game
+
 ## Features
 
 - **Server-side game state management**: Central authority for game logic

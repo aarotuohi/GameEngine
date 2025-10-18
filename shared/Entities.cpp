@@ -8,7 +8,8 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       vx(0.0f), vy(0.0f), size(Config::PLAYER_SIZE), speed(Config::PLAYER_SPEED),
       isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
       health(100), maxHealth(100), rotation(0.0f), isDashing(false), isAlive(true),
-      activeAbility(SamuraiAbility::NONE), qStacks(0) {
+      activeAbility(SamuraiAbility::NONE), qStacks(0),
+      hasTarget(false), targetX(0.0f), targetY(0.0f) {
     
     auto now = std::chrono::steady_clock::now();
     lastQTime = now;
@@ -42,6 +43,48 @@ bool Player::checkCollision(const Player& other) const {
     float dy = y - other.y;
     float distance = std::sqrt(dx * dx + dy * dy);
     return distance < (size + other.size) / 2.0f;
+}
+
+void Player::setTarget(float tx, float ty) {
+    hasTarget = true;
+    targetX = tx;
+    targetY = ty;
+}
+
+void Player::clearTarget() {
+    hasTarget = false;
+}
+
+void Player::moveTowardsTarget(float dt) {
+    if (!hasTarget) return;
+    
+    // Calculate direction to target
+    float dx = targetX - x;
+    float dy = targetY - y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    
+    // If we're close enough to the target, stop
+    const float arrivalThreshold = 3.0f;
+    if (distance < arrivalThreshold) {
+        clearTarget();
+        vx = 0.0f;
+        vy = 0.0f;
+        return;
+    }
+    
+    // Normalize direction and move
+    float dirX = dx / distance;
+    float dirY = dy / distance;
+    
+    // Update velocity
+    vx = dirX;
+    vy = dirY;
+    
+    // Update rotation to face movement direction
+    rotation = std::atan2(dirY, dirX);
+    
+    // Update position
+    updatePosition(dirX, dirY, dt);
 }
 
 

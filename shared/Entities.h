@@ -43,12 +43,21 @@ public:
     std::chrono::steady_clock::time_point lastRTime;
     int qStacks;         // Steel Tempest stacks (0-2, third cast is tornado)
     
+    // Movement target (right-click movement)
+    bool hasTarget;
+    float targetX, targetY;
+    
     Player(uint32_t playerId, float posX, float posY, const std::string& playerName = "Player");
     
     void updatePosition(float dx, float dy, float dt);
     void updateVelocity(float velX, float velY);
     void setPosition(float posX, float posY);
     bool checkCollision(const Player& other) const;
+    
+    // Movement target methods
+    void setTarget(float tx, float ty);
+    void clearTarget();
+    void moveTowardsTarget(float dt);
 
     // Samurai abilities
     bool canUseQ() const;
