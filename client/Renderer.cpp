@@ -68,40 +68,13 @@ void Renderer::setColor(const SDL_Color& color) {
 }
 
 void Renderer::updateCamera(float playerX, float playerY) {
-    // Calculate distance from borders
-    const float borderZone = 200.0f; // Distance from edge where scaling starts
-    const float minScale = 0.7f;     // Minimum zoom level
-    const float maxScale = 1.0f;     // Maximum zoom level (normal)
-    
-    // Calculate distances to each border
-    float distToLeft = playerX;
-    float distToRight = Config::WORLD_WIDTH - playerX;
-    float distToTop = playerY;
-    float distToBottom = Config::WORLD_HEIGHT - playerY;
-    
-    // Find minimum distance to any border
-    float minDistToBorder = (std::min)((std::min)(distToLeft, distToRight), 
-                                       (std::min)(distToTop, distToBottom));
-    
-    // Calculate scale based on distance to border
-    if (minDistToBorder < borderZone) {
-        // Smoothly scale down as we approach the border
-        float t = minDistToBorder / borderZone; // 0.0 at border, 1.0 at borderZone distance
-        cameraScale = minScale + (maxScale - minScale) * t;
-    } else {
-        cameraScale = maxScale;
-    }
+  
+    // No world bounds - infinite world generation
+    cameraScale = 1.0f;
     
     // Center camera on player
-    cameraX = playerX - (width / (2.0f * cameraScale));
-    cameraY = playerY - (height / (2.0f * cameraScale));
-    
-    // Clamp camera to world bounds
-    float scaledWidth = width / cameraScale;
-    float scaledHeight = height / cameraScale;
-    
-    cameraX = (std::max)(0.0f, (std::min)(cameraX, Config::WORLD_WIDTH - scaledWidth));
-    cameraY = (std::max)(0.0f, (std::min)(cameraY, Config::WORLD_HEIGHT - scaledHeight));
+    cameraX = playerX - (width / 2.0f);
+    cameraY = playerY - (height / 2.0f);
 }
 
 void Renderer::worldToScreen(float worldX, float worldY, int& screenX, int& screenY) {
@@ -114,13 +87,13 @@ void Renderer::renderGrass() {
     setColor(grassColor1);
     SDL_RenderClear(renderer);
     
-    // Calculate visible world area
+    // Calculate visible world area (can be anywhere - infinite world)
     float worldStartX = cameraX;
     float worldStartY = cameraY;
-    float worldEndX = cameraX + (width / cameraScale);
-    float worldEndY = cameraY + (height / cameraScale);
+    float worldEndX = cameraX + width;
+    float worldEndY = cameraY + height;
     
-    // Draw grass pattern (tiled grass blades)
+    // Draw grass pattern (tiled grass blades) - works for any world position
     const int grassSize = 20;
     const int grassBladeHeight = 8;
     
@@ -129,7 +102,7 @@ void Renderer::renderGrass() {
         for (int worldY = static_cast<int>(worldStartY / grassSize) * grassSize; 
              worldY < worldEndY; worldY += grassSize) {
             
-            // Create variation using position-based pseudo-random
+            // Create variation using position-based pseudo-random (works for infinite coords)
             int variation = (worldX * 7 + worldY * 13) % 3;
             
             int screenX, screenY;
@@ -165,13 +138,13 @@ void Renderer::renderGrid() {
     setColor(gridColor);
     const int gridSize = 50;
     
-    // Calculate visible world area
+    // Calculate visible world area (infinite world)
     float worldStartX = cameraX;
     float worldStartY = cameraY;
-    float worldEndX = cameraX + (width / cameraScale);
-    float worldEndY = cameraY + (height / cameraScale);
+    float worldEndX = cameraX + width;
+    float worldEndY = cameraY + height;
     
-    // Vertical lines
+    // Vertical lines (can be at any world position)
     for (int worldX = static_cast<int>(worldStartX / gridSize) * gridSize; 
          worldX < worldEndX; worldX += gridSize) {
         int screenX, screenY1, screenY2;
@@ -180,7 +153,7 @@ void Renderer::renderGrid() {
         SDL_RenderDrawLine(renderer, screenX, 0, screenX, height);
     }
     
-    // Horizontal lines
+    // Horizontal lines (can be at any world position)
     for (int worldY = static_cast<int>(worldStartY / gridSize) * gridSize; 
          worldY < worldEndY; worldY += gridSize) {
         int screenX1, screenY, screenX2;
