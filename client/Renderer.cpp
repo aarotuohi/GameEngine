@@ -4,7 +4,11 @@
 
 Renderer::Renderer(int w, int h)
     : window(nullptr), renderer(nullptr), width(w), height(h),
+      cameraX(0.0f), cameraY(0.0f), cameraScale(1.0f),
       bgColor{30, 30, 40, 255},           // Dark blue-gray
+      grassColor1{85, 140, 60, 255},      // Base grass green
+      grassColor2{70, 120, 50, 255},      // Darker grass
+      grassColor3{95, 150, 70, 255},      // Lighter grass accent
       samuraiColor{0, 180, 255, 255},       //  teal/cyan
       samuraiSwordColor{220, 220, 255, 255}, // Silver-white
       windColor{100, 200, 255, 180},      // Light wind effect
@@ -63,18 +67,126 @@ void Renderer::setColor(const SDL_Color& color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
+void Renderer::updateCamera(float playerX, float playerY) {
+    // Calculate distance from borders
+    const float borderZone = 200.0f; // Distance from edge where scaling starts
+    const float minScale = 0.7f;     // Minimum zoom level
+    const float maxScale = 1.0f;     // Maximum zoom level (normal)
+    
+    // Calculate distances to each border
+    float distToLeft = playerX;
+    float distToRight = Config::WORLD_WIDTH - playerX;
+    float distToTop = playerY;
+    float distToBottom = Config::WORLD_HEIGHT - playerY;
+    
+    // Find minimum distance to any border
+    float minDistToBorder = (std::min)((std::min)(distToLeft, distToRight), 
+                                       (std::min)(distToTop, distToBottom));
+    
+    // Calculate scale based on distance to border
+    if (minDistToBorder < borderZone) {
+        // Smoothly scale down as we approach the border
+        float t = minDistToBorder / borderZone; // 0.0 at border, 1.0 at borderZone distance
+        cameraScale = minScale + (maxScale - minScale) * t;
+    } else {
+        cameraScale = maxScale;
+    }
+    
+    // Center camera on player
+    cameraX = playerX - (width / (2.0f * cameraScale));
+    cameraY = playerY - (height / (2.0f * cameraScale));
+    
+    // Clamp camera to world bounds
+    float scaledWidth = width / cameraScale;
+    float scaledHeight = height / cameraScale;
+    
+    cameraX = (std::max)(0.0f, (std::min)(cameraX, Config::WORLD_WIDTH - scaledWidth));
+    cameraY = (std::max)(0.0f, (std::min)(cameraY, Config::WORLD_HEIGHT - scaledHeight));
+}
+
+void Renderer::worldToScreen(float worldX, float worldY, int& screenX, int& screenY) {
+    screenX = static_cast<int>((worldX - cameraX) * cameraScale);
+    screenY = static_cast<int>((worldY - cameraY) * cameraScale);
+}
+
+void Renderer::renderGrass() {
+    // Draw base grass layer
+    setColor(grassColor1);
+    SDL_RenderClear(renderer);
+    
+    // Calculate visible world area
+    float worldStartX = cameraX;
+    float worldStartY = cameraY;
+    float worldEndX = cameraX + (width / cameraScale);
+    float worldEndY = cameraY + (height / cameraScale);
+    
+    // Draw grass pattern (tiled grass blades)
+    const int grassSize = 20;
+    const int grassBladeHeight = 8;
+    
+    for (int worldX = static_cast<int>(worldStartX / grassSize) * grassSize; 
+         worldX < worldEndX; worldX += grassSize) {
+        for (int worldY = static_cast<int>(worldStartY / grassSize) * grassSize; 
+             worldY < worldEndY; worldY += grassSize) {
+            
+            // Create variation using position-based pseudo-random
+            int variation = (worldX * 7 + worldY * 13) % 3;
+            
+            int screenX, screenY;
+            worldToScreen(static_cast<float>(worldX), static_cast<float>(worldY), screenX, screenY);
+            int scaledSize = static_cast<int>(grassSize * cameraScale);
+            int scaledBladeHeight = static_cast<int>(grassBladeHeight * cameraScale);
+            
+            // Draw grass patch with darker/lighter variations
+            if (variation == 0) {
+                setColor(grassColor2);
+            } else if (variation == 1) {
+                setColor(grassColor3);
+            } else {
+                setColor(grassColor1);
+            }
+            
+            SDL_Rect grassPatch = {screenX, screenY, scaledSize, scaledSize};
+            SDL_RenderFillRect(renderer, &grassPatch);
+            
+            // Draw grass blades on top for detail
+            setColor(grassColor2);
+            for (int i = 0; i < 3; i++) {
+                int bladeX = screenX + (i * scaledSize / 3) + (scaledSize / 6);
+                int bladeY = screenY + scaledSize / 2;
+                SDL_Rect blade = {bladeX, bladeY, (std::max)(1, scaledSize / 10), scaledBladeHeight};
+                SDL_RenderFillRect(renderer, &blade);
+            }
+        }
+    }
+}
+
 void Renderer::renderGrid() {
     setColor(gridColor);
     const int gridSize = 50;
     
+    // Calculate visible world area
+    float worldStartX = cameraX;
+    float worldStartY = cameraY;
+    float worldEndX = cameraX + (width / cameraScale);
+    float worldEndY = cameraY + (height / cameraScale);
+    
     // Vertical lines
-    for (int x = 0; x < width; x += gridSize) {
-        SDL_RenderDrawLine(renderer, x, 0, x, height);
+    for (int worldX = static_cast<int>(worldStartX / gridSize) * gridSize; 
+         worldX < worldEndX; worldX += gridSize) {
+        int screenX, screenY1, screenY2;
+        worldToScreen(static_cast<float>(worldX), worldStartY, screenX, screenY1);
+        worldToScreen(static_cast<float>(worldX), worldEndY, screenX, screenY2);
+        SDL_RenderDrawLine(renderer, screenX, 0, screenX, height);
     }
     
     // Horizontal lines
-    for (int y = 0; y < height; y += gridSize) {
-        SDL_RenderDrawLine(renderer, 0, y, width, y);
+    for (int worldY = static_cast<int>(worldStartY / gridSize) * gridSize; 
+         worldY < worldEndY; worldY += gridSize) {
+        int screenX1, screenY, screenX2;
+        worldToScreen(worldStartX, static_cast<float>(worldY), screenX1, screenY);
+        worldToScreen(worldEndX, static_cast<float>(worldY), screenX2, screenY);
+        SDL_RenderDrawLine(renderer, 0, screenY, width, screenY);
     }
 }
 
@@ -95,13 +207,14 @@ void Renderer::renderCircle(int centerX, int centerY, int radius) {
 void Renderer::renderPlayer(const Player& player, bool isLocal) {
     if (!player.isAlive) return; 
     
-    int centerX = static_cast<int>(player.x);
-    int centerY = static_cast<int>(player.y);
+    // Convert world coordinates to screen coordinates
+    int centerX, centerY;
+    worldToScreen(player.x, player.y, centerX, centerY);
     
-    // Samurai pixel art style rendering
-    int scale = 2; // Scale factor for pixel art
+    // Yasuo pixel art style rendering
+    int scale = static_cast<int>(2 * cameraScale); // Scale factor for pixel art with camera zoom
 
-    // Define Samurai's colors
+    // Define Yasuo's colors
     SDL_Color hairColor = {60, 50, 80, 255};        // Dark purple hair
     SDL_Color skinColor = {255, 220, 190, 255};     // Skin tone
     SDL_Color armorBlue = {80, 150, 200, 255};      // Blue armor
@@ -184,30 +297,35 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_Rect shine = {centerX + 4 * scale, centerY, 1 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &shine);
 
-    // Wind effect around Samurai when dashing or using abilities
+    // Wind effect around Yasuo when dashing or using abilities
     if (player.isDashing || player.activeAbility != SamuraiAbility::NONE) {
         setColor(windColor);
         // Circular wind particles
         for (int i = 0; i < 360; i += 40) {
             float angle = i * 3.14159f / 180.0f;
-            int windRadius = 18;
+            int windRadius = static_cast<int>(18 * cameraScale);
             int wx = centerX + static_cast<int>(std::cos(angle) * windRadius);
             int wy = centerY + static_cast<int>(std::sin(angle) * windRadius);
-            SDL_Rect windParticle = {wx, wy, 2, 4};
+            SDL_Rect windParticle = {wx, wy, (std::max)(1, static_cast<int>(2 * cameraScale)), 
+                                     (std::max)(1, static_cast<int>(4 * cameraScale))};
             SDL_RenderFillRect(renderer, &windParticle);
         }
         
         // Add flowing wind lines
         for (int i = 0; i < 3; i++) {
-            int lineY = centerY - 10 + i * 8;
-            SDL_RenderDrawLine(renderer, centerX - 20, lineY, centerX - 10, lineY);
-            SDL_RenderDrawLine(renderer, centerX + 10, lineY, centerX + 20, lineY);
+            int lineY = centerY - static_cast<int>(10 * cameraScale) + static_cast<int>(i * 8 * cameraScale);
+            SDL_RenderDrawLine(renderer, 
+                centerX - static_cast<int>(20 * cameraScale), lineY, 
+                centerX - static_cast<int>(10 * cameraScale), lineY);
+            SDL_RenderDrawLine(renderer, 
+                centerX + static_cast<int>(10 * cameraScale), lineY, 
+                centerX + static_cast<int>(20 * cameraScale), lineY);
         }
     }
     
     // Health bar above character
-    int barWidth = 40;
-    int barHeight = 5;
+    int barWidth = static_cast<int>(40 * cameraScale);
+    int barHeight = static_cast<int>(5 * cameraScale);
     int barX = centerX - barWidth / 2;
     int barY = centerY - 25 * scale;
     
@@ -224,7 +342,8 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     
     // Player name
     setColor(textColor);
-    renderText(player.name.c_str(), centerX - 20, centerY + 20, 12);
+    renderText(player.name.c_str(), centerX - static_cast<int>(20 * cameraScale), 
+               centerY + static_cast<int>(20 * cameraScale), static_cast<int>(12 * cameraScale));
     
     // Draw ability indicators for local player
     if (isLocal) {
