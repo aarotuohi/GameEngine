@@ -16,8 +16,16 @@ private:
     int width;
     int height;
     
+    // Camera system
+    float cameraX;
+    float cameraY;
+    float cameraScale;
+    
     // Colors
     SDL_Color bgColor;
+    SDL_Color grassColor1;         // Light grass
+    SDL_Color grassColor2;         // Dark grass
+    SDL_Color grassColor3;         // Accent grass
     SDL_Color samuraiColor;        // Samurai blue/teal
     SDL_Color samuraiSwordColor;   // Silver/white
     SDL_Color windColor;         // Light blue/cyan
@@ -35,6 +43,11 @@ public:
     void clear();
     void present();
     
+    // Camera methods
+    void updateCamera(float playerX, float playerY);
+    void worldToScreen(float worldX, float worldY, int& screenX, int& screenY);
+    
+    void renderGrass();
     void renderGrid();
     void renderPlayer(const Player& player, bool isLocal = false);
     void renderUI(uint32_t playerId, int playerCount, int fps);

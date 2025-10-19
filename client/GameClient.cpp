@@ -95,13 +95,15 @@ void GameClient::updateLocalPlayer(float dt) {
         localVy = 0.0f;
     }
     
-    // Clamp to world bounds
-    localX = (std::max)(0.0f, (std::min)(static_cast<float>(Config::WORLD_WIDTH - Config::PLAYER_SIZE), localX));
-    localY = (std::max)(0.0f, (std::min)(static_cast<float>(Config::WORLD_HEIGHT - Config::PLAYER_SIZE), localY));
+    
 }
 
 void GameClient::render() {
+    // Update camera to follow local player
+    renderer->updateCamera(localX, localY);
+    
     renderer->clear();
+    renderer->renderGrass();
     renderer->renderGrid();
     
     // Get current game state

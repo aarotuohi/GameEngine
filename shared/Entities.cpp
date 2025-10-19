@@ -22,9 +22,7 @@ void Player::updatePosition(float dx, float dy, float dt) {
     x += dx * speed * dt;
     y += dy * speed * dt;
     
-    // Clamp to world bounds
-    x = (std::max)(0.0f, (std::min)(static_cast<float>(Config::WORLD_WIDTH) - size, x));
-    y = (std::max)(0.0f, (std::min)(static_cast<float>(Config::WORLD_HEIGHT) - size, y));
+    // No world bounds - infinite world like Minecraft
 }
 
 void Player::updateVelocity(float velX, float velY) {
