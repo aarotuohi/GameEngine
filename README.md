@@ -5,7 +5,7 @@ A simple 2D multiplayer game engine with real-time synchronization and distribut
 ## Controls
 
 ### Movement
-- **Right-Click**: Click anywhere on the screen to move your character to that location. Yasuo will automatically move to the clicked position using the shortest path.
+- **Right-Click**: Click anywhere on the screen to move your character to that location. 
 
 ### Abilities
 - **Q Key**: Steel Tempest - Linear dash/slash attack

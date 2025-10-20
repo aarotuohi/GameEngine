@@ -92,13 +92,13 @@ void Renderer::renderGrass() {
     setColor(grassColor1);
     SDL_RenderClear(renderer);
     
-    // Calculate visible world area (can be anywhere - infinite world)
+    // Calculate visible world area 
     float worldStartX = cameraX;
     float worldStartY = cameraY;
     float worldEndX = cameraX + width;
     float worldEndY = cameraY + height;
     
-    // Draw grass pattern (tiled grass blades) - works for any world position
+    // Draw grass patternworks for any world position
     const int grassSize = 20;
     const int grassBladeHeight = 8;
     
@@ -107,7 +107,7 @@ void Renderer::renderGrass() {
         for (int worldY = static_cast<int>(worldStartY / grassSize) * grassSize; 
              worldY < worldEndY; worldY += grassSize) {
             
-            // Create variation using position-based pseudo-random (works for infinite coords)
+            // Create variation using position-based random
             int variation = (worldX * 7 + worldY * 13) % 3;
             
             int screenX, screenY;
@@ -143,13 +143,13 @@ void Renderer::renderGrid() {
     setColor(gridColor);
     const int gridSize = 50;
     
-    // Calculate visible world area (infinite world)
+    // Calculate visible world area (
     float worldStartX = cameraX;
     float worldStartY = cameraY;
     float worldEndX = cameraX + width;
     float worldEndY = cameraY + height;
     
-    // Vertical lines (can be at any world position)
+    // Vertical lines 
     for (int worldX = static_cast<int>(worldStartX / gridSize) * gridSize; 
          worldX < worldEndX; worldX += gridSize) {
         int screenX, screenY1, screenY2;
@@ -158,13 +158,227 @@ void Renderer::renderGrid() {
         SDL_RenderDrawLine(renderer, screenX, 0, screenX, height);
     }
     
-    // Horizontal lines (can be at any world position)
+    // Horizontal lines 
     for (int worldY = static_cast<int>(worldStartY / gridSize) * gridSize; 
          worldY < worldEndY; worldY += gridSize) {
         int screenX1, screenY, screenX2;
         worldToScreen(worldStartX, static_cast<float>(worldY), screenX1, screenY);
         worldToScreen(worldEndX, static_cast<float>(worldY), screenX2, screenY);
         SDL_RenderDrawLine(renderer, 0, screenY, width, screenY);
+    }
+}
+
+bool Renderer::shouldSpawnDecoration(int worldX, int worldY, int decorationType) {
+
+    // spawn rates and distribution based on random hash
+    int hash = (worldX * 73 + worldY * 149 + decorationType * 97) % 1000;
+    
+    // All decorations have the same spawn rate: 5%
+    // Cabins: 5%
+    if (decorationType == 0) return hash < 50;
+    
+    // Spruces: 5%
+    if (decorationType == 1) return hash < 50;
+
+    // Campfires: 5%
+    if (decorationType == 2) return hash < 50;
+    
+    return false;
+}
+
+void Renderer::renderCabin(int worldX, int worldY) {
+    int screenX, screenY;
+    worldToScreen(static_cast<float>(worldX), static_cast<float>(worldY), screenX, screenY);
+    
+    int scale = static_cast<int>(cameraScale);
+    
+    // Cabin base
+    SDL_Color cabinWood = {139, 90, 60, 255};
+    SDL_Color cabinRoof = {100, 50, 30, 255};
+    SDL_Color cabinWindow = {255, 220, 150, 255}; 
+    SDL_Color cabinDoor = {80, 50, 30, 255};
+    
+    // Main cabin structure
+    setColor(cabinWood);
+    SDL_Rect cabin = {screenX, screenY, 40 * scale, 30 * scale};
+    SDL_RenderFillRect(renderer, &cabin);
+    
+    // Roof 
+    setColor(cabinRoof);
+    int roofHeight = 15 * scale;
+    int roofWidth = 50 * scale; 
+    
+    // Draw triangle roof
+    for (int i = 0; i < roofHeight; i++) {
+        
+        int currentWidth = (roofWidth * i) / roofHeight;
+        int xOffset = (roofWidth - currentWidth) / 2;
+        
+        SDL_Rect roofLine = {
+            screenX - 5 * scale + xOffset, 
+            screenY - roofHeight + i, 
+            currentWidth, 
+            1
+        };
+        SDL_RenderFillRect(renderer, &roofLine);
+    }
+    
+    // Windows
+    setColor(cabinWindow);
+    SDL_Rect window1 = {screenX + 5 * scale, screenY + 8 * scale, 8 * scale, 8 * scale};
+    SDL_Rect window2 = {screenX + 27 * scale, screenY + 8 * scale, 8 * scale, 8 * scale};
+    SDL_RenderFillRect(renderer, &window1);
+    SDL_RenderFillRect(renderer, &window2);
+    
+    // Door
+    setColor(cabinDoor);
+    SDL_Rect door = {screenX + 16 * scale, screenY + 15 * scale, 8 * scale, 15 * scale};
+    SDL_RenderFillRect(renderer, &door);
+    
+    // Chimney
+    setColor(cabinRoof);
+    SDL_Rect chimney = {screenX + 30 * scale, screenY - 20 * scale, 6 * scale, 10 * scale};
+    SDL_RenderFillRect(renderer, &chimney);
+    
+    // Smoke from chimney
+    SDL_Color smoke = {200, 200, 200, 150};
+    setColor(smoke);
+    for (int i = 0; i < 3; i++) {
+        SDL_Rect smokeParticle = {
+            screenX + 32 * scale + (i * 2), 
+            screenY - 25 * scale - (i * 5), 
+            3 * scale, 3 * scale
+        };
+        SDL_RenderFillRect(renderer, &smokeParticle);
+    }
+}
+
+void Renderer::renderSpruce(int worldX, int worldY) {
+    int screenX, screenY;
+    worldToScreen(static_cast<float>(worldX), static_cast<float>(worldY), screenX, screenY);
+    
+    int scale = static_cast<int>(cameraScale);
+    
+    // Tree colors
+    SDL_Color trunk = {101, 67, 33, 255};
+    SDL_Color needles1 = {34, 80, 49, 255}; // Dark 
+    SDL_Color needles2 = {45, 95, 60, 255}; // Medium 
+    
+    // Trunk 
+    setColor(trunk);
+    SDL_Rect trunkRect = {screenX + 13 * scale, screenY - 5 * scale, 4 * scale, 40 * scale};
+    SDL_RenderFillRect(renderer, &trunkRect);
+    
+    
+    // Bottom layer 
+    setColor(needles1);
+    for (int i = 0; i < 15 * scale; i++) {
+        int layerWidth = 30 * scale - i * 2;
+        SDL_Rect layer = {screenX + i, screenY + 20 * scale - i, layerWidth, 1};
+        SDL_RenderFillRect(renderer, &layer);
+    }
+    
+    // Middle layer
+    setColor(needles2);
+    for (int i = 0; i < 12 * scale; i++) {
+        int layerWidth = 24 * scale - i * 2;
+        SDL_Rect layer = {screenX + 3 * scale + i, screenY + 8 * scale - i, layerWidth, 1};
+        SDL_RenderFillRect(renderer, &layer);
+    }
+    
+    // Top layer 
+    setColor(needles1);
+    for (int i = 0; i < 8 * scale; i++) {
+        int layerWidth = 16 * scale - i * 2;
+        SDL_Rect layer = {screenX + 7 * scale + i, screenY - 5 * scale - i, layerWidth, 1};
+        SDL_RenderFillRect(renderer, &layer);
+    }
+}
+
+void Renderer::renderCampfire(int worldX, int worldY) {
+    int screenX, screenY;
+    worldToScreen(static_cast<float>(worldX), static_cast<float>(worldY), screenX, screenY);
+    
+    int scale = static_cast<int>(cameraScale);
+    
+    // Fire colors
+    SDL_Color logs = {101, 67, 33, 255};
+    SDL_Color fireYellow = {255, 200, 0, 255};
+    SDL_Color fireOrange = {255, 100, 0, 255};
+    SDL_Color fireRed = {200, 0, 0, 255};
+    
+    // Logs arranged in a circle
+    setColor(logs);
+    SDL_Rect log1 = {screenX + 5 * scale, screenY + 10 * scale, 15 * scale, 3 * scale};
+    SDL_Rect log2 = {screenX + 10 * scale, screenY + 5 * scale, 3 * scale, 15 * scale};
+    SDL_RenderFillRect(renderer, &log1);
+    SDL_RenderFillRect(renderer, &log2);
+
+    // layers of fire
+    setColor(fireRed);
+    for (int i = 0; i < 8 * scale; i++) {
+        int flameWidth = 8 * scale - i;
+        SDL_Rect flame = {screenX + 8 * scale + i / 2, screenY + 8 * scale - i, flameWidth, 1};
+        SDL_RenderFillRect(renderer, &flame);
+    }
+    
+    setColor(fireOrange);
+    for (int i = 0; i < 6 * scale; i++) {
+        int flameWidth = 6 * scale - i;
+        SDL_Rect flame = {screenX + 9 * scale + i / 2, screenY + 6 * scale - i, flameWidth, 1};
+        SDL_RenderFillRect(renderer, &flame);
+    }
+    
+    setColor(fireYellow);
+    for (int i = 0; i < 4 * scale; i++) {
+        int flameWidth = 4 * scale - i;
+        SDL_Rect flame = {screenX + 10 * scale + i / 2, screenY + 4 * scale - i, flameWidth, 1};
+        SDL_RenderFillRect(renderer, &flame);
+    }
+    
+    // Sparks above fire
+    SDL_Color sparks = {255, 150, 0, 200};
+    setColor(sparks);
+    SDL_Rect spark1 = {screenX + 9 * scale, screenY - 3 * scale, 1, 1};
+    SDL_Rect spark2 = {screenX + 13 * scale, screenY - 5 * scale, 1, 1};
+    SDL_RenderFillRect(renderer, &spark1);
+    SDL_RenderFillRect(renderer, &spark2);
+}
+
+void Renderer::renderDecorations() {
+
+    // wrolds area for decorations
+    float worldStartX = cameraX - 100;
+    float worldStartY = cameraY - 100;
+    float worldEndX = cameraX + width + 100;
+    float worldEndY = cameraY + height + 100;
+    
+    // Grid size for decoration placement 
+    const int decorationGrid = 100;
+    
+    // grid and place decorations
+    for (int worldX = static_cast<int>(worldStartX / decorationGrid) * decorationGrid; 
+         worldX < worldEndX; worldX += decorationGrid) {
+        for (int worldY = static_cast<int>(worldStartY / decorationGrid) * decorationGrid; 
+             worldY < worldEndY; worldY += decorationGrid) {
+            
+            // Cabins (highest priority)
+            if (shouldSpawnDecoration(worldX, worldY, 0)) {
+                renderCabin(worldX + 30, worldY + 30);
+                continue; 
+            }
+            
+            // Spruces (medium priority)
+            if (shouldSpawnDecoration(worldX, worldY, 1)) {
+                renderSpruce(worldX + 10, worldY + 10);
+                continue; 
+            }
+            
+            // Campfires (lowest priority)
+            if (shouldSpawnDecoration(worldX, worldY, 2)) {
+                renderCampfire(worldX + 20, worldY + 20);
+            }
+        }
     }
 }
 
@@ -189,10 +403,10 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     int centerX, centerY;
     worldToScreen(player.x, player.y, centerX, centerY);
     
-    // Yasuo pixel art style rendering
-    int scale = static_cast<int>(2 * cameraScale); // Scale factor for pixel art with camera zoom
+    
+    int scale = static_cast<int>(2 * cameraScale); 
 
-    // Define Yasuo's colors
+    
     SDL_Color hairColor = {60, 50, 80, 255};        // Dark purple hair
     SDL_Color skinColor = {255, 220, 190, 255};     // Skin tone
     SDL_Color armorBlue = {80, 150, 200, 255};      // Blue armor
@@ -218,46 +432,47 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
         SDL_RenderFillRect(renderer, &capeRect);
     }
     
-    // Draw legs (dark blue pants)
+    // Draw legs 
     setColor(armorDark);
     SDL_Rect leftLeg = {centerX - 4 * scale, centerY + 6 * scale, 3 * scale, 8 * scale};
     SDL_Rect rightLeg = {centerX + 1 * scale, centerY + 6 * scale, 3 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &leftLeg);
     SDL_RenderFillRect(renderer, &rightLeg);
     
-    // Draw body (blue armor)
+    // Draw body 
     setColor(armorBlue);
     SDL_Rect body = {centerX - 5 * scale, centerY - 2 * scale, 10 * scale, 10 * scale};
     SDL_RenderFillRect(renderer, &body);
     
-    // Draw armor details (darker blue accents)
+    // Draw armor details 
     setColor(armorDark);
     SDL_Rect armorDetail1 = {centerX - 3 * scale, centerY, 2 * scale, 6 * scale};
     SDL_Rect armorDetail2 = {centerX + 1 * scale, centerY, 2 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &armorDetail1);
     SDL_RenderFillRect(renderer, &armorDetail2);
     
-    // Draw head (skin)
+    // Draw head 
     setColor(skinColor);
     SDL_Rect head = {centerX - 3 * scale, centerY - 8 * scale, 6 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &head);
     
-    // Draw hair (purple/black flowing)
+    // Draw hair 
     setColor(hairColor);
     SDL_Rect hair1 = {centerX - 4 * scale, centerY - 10 * scale, 8 * scale, 4 * scale};
     SDL_RenderFillRect(renderer, &hair1);
+
     // Hair ponytail flowing
     SDL_Rect ponytail = {centerX - 8 * scale, centerY - 8 * scale, 5 * scale, 3 * scale};
     SDL_RenderFillRect(renderer, &ponytail);
     
-    // Draw eyes (small white dots)
+    // Draw eyes 
     setColor({255, 255, 255, 255});
     SDL_Rect leftEye = {centerX - 2 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
     SDL_Rect rightEye = {centerX + 1 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
     SDL_RenderFillRect(renderer, &leftEye);
     SDL_RenderFillRect(renderer, &rightEye);
     
-    // Draw sword (katana extending to the right)
+    // Draw sword
     setColor(swordHandle);
     SDL_Rect swordHandle_rect = {centerX + 2 * scale, centerY - 2 * scale, 3 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &swordHandle_rect);
@@ -275,7 +490,7 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_Rect shine = {centerX + 4 * scale, centerY, 1 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &shine);
 
-    // Wind effect around Yasuo when dashing or using abilities
+    // wind effect WIP
     if (player.isDashing || player.activeAbility != SamuraiAbility::NONE) {
         setColor(windColor);
         // Circular wind particles
