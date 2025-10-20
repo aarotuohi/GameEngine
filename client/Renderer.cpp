@@ -82,6 +82,11 @@ void Renderer::worldToScreen(float worldX, float worldY, int& screenX, int& scre
     screenY = static_cast<int>((worldY - cameraY) * cameraScale);
 }
 
+void Renderer::screenToWorld(int screenX, int screenY, float& worldX, float& worldY) {
+    worldX = (static_cast<float>(screenX) / cameraScale) + cameraX;
+    worldY = (static_cast<float>(screenY) / cameraScale) + cameraY;
+}
+
 void Renderer::renderGrass() {
     // Draw base grass layer
     setColor(grassColor1);

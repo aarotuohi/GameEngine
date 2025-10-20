@@ -46,6 +46,7 @@ public:
     // Camera methods
     void updateCamera(float playerX, float playerY);
     void worldToScreen(float worldX, float worldY, int& screenX, int& screenY);
+    void screenToWorld(int screenX, int screenY, float& worldX, float& worldY);
     
     void renderGrass();
     void renderGrid();
