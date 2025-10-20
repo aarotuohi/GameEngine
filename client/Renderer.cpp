@@ -170,20 +170,26 @@ void Renderer::renderGrid() {
 
 bool Renderer::shouldSpawnDecoration(int worldX, int worldY, int decorationType) {
 
-    // spawn rates and distribution based on random hash
-    int hash = (worldX * 73 + worldY * 149 + decorationType * 97) % 1000;
+    int seed1 = 73, seed2 = 149;
+    
+    if (decorationType == 0) {
+        // Cabins with unique seeds
+        seed1 = 73;
+        seed2 = 149;
+    } else if (decorationType == 1) {
+        // Spruces with different seeds
+        seed1 = 211;
+        seed2 = 317;
+    } else if (decorationType == 2) {
+        // Campfires with different seeds
+        seed1 = 431;
+        seed2 = 523;
+    }
+    
+    int hash = (worldX * seed1 + worldY * seed2) % 1000;
     
     // All decorations have the same spawn rate: 5%
-    // Cabins: 5%
-    if (decorationType == 0) return hash < 50;
-    
-    // Spruces: 5%
-    if (decorationType == 1) return hash < 50;
-
-    // Campfires: 5%
-    if (decorationType == 2) return hash < 50;
-    
-    return false;
+    return hash < 50;
 }
 
 void Renderer::renderCabin(int worldX, int worldY) {
@@ -362,20 +368,24 @@ void Renderer::renderDecorations() {
         for (int worldY = static_cast<int>(worldStartY / decorationGrid) * decorationGrid; 
              worldY < worldEndY; worldY += decorationGrid) {
             
-            // Cabins (highest priority)
-            if (shouldSpawnDecoration(worldX, worldY, 0)) {
+          
+            // Check all types and pick the first one that wants to spawn
+            bool hasDecoration = false;
+            
+            // Check Cabins
+            if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 0)) {
                 renderCabin(worldX + 30, worldY + 30);
-                continue; 
+                hasDecoration = true;
             }
             
-            // Spruces (medium priority)
-            if (shouldSpawnDecoration(worldX, worldY, 1)) {
+            // Check Spruces (only if no cabin)
+            if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 1)) {
                 renderSpruce(worldX + 10, worldY + 10);
-                continue; 
+                hasDecoration = true;
             }
             
-            // Campfires (lowest priority)
-            if (shouldSpawnDecoration(worldX, worldY, 2)) {
+            // Check Campfires (only if no cabin or spruce)
+            if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 2)) {
                 renderCampfire(worldX + 20, worldY + 20);
             }
         }
