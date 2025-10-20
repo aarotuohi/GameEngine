@@ -63,8 +63,14 @@ void GameClient::updateLocalPlayer(float dt) {
     // Right-click movement system
     if (inputHandler->hasTarget()) {
         std::pair<float, float> target = inputHandler->getTarget();
-        float targetX = target.first;
-        float targetY = target.second;
+        float screenTargetX = target.first;
+        float screenTargetY = target.second;
+        
+        // Convert screen coordinates to world coordinates
+        float targetX, targetY;
+        renderer->screenToWorld(static_cast<int>(screenTargetX), 
+                               static_cast<int>(screenTargetY), 
+                               targetX, targetY);
         
         // Calculate direction to target
         float dx = targetX - localX;
@@ -72,7 +78,7 @@ void GameClient::updateLocalPlayer(float dt) {
         float distance = std::sqrt(dx * dx + dy * dy);
         
         // If we're close enough, stop
-        const float arrivalThreshold = 3.0f;
+        const float arrivalThreshold = 5.0f;
         if (distance < arrivalThreshold) {
             inputHandler->clearTarget();
             localVx = 0.0f;
@@ -104,6 +110,7 @@ void GameClient::render() {
     
     renderer->clear();
     renderer->renderGrass();
+    renderer->renderDecorations(); // Cabins, spruces, and campfires
     renderer->renderGrid();
     
     // Get current game state

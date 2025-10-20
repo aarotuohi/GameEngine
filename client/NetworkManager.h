@@ -47,7 +47,7 @@ public:
     std::shared_ptr<Player> getPlayer(uint32_t pid);
 };
 
-#endif // NETWORKMANAGER_H
+#endif 
 
 
-#endif /* A6514255_3B69_45E6_9CAB_ED37FD749420 */
+#endif 
