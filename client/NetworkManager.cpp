@@ -130,19 +130,42 @@ void NetworkManager::processTcpMessage(const Protocol::TCPMessage& message) {
 }
 
 void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast) {
-    std::lock_guard<std::mutex> lock(playersMutex);
+    {
+        std::lock_guard<std::mutex> lock(playersMutex);
+        
+        for (const auto& state : broadcast.players) {
+            auto it = players.find(state.id);
+            if (it != players.end()) {
+                // Update existing player
+                it->second->setPosition(state.x, state.y);
+                it->second->updateVelocity(state.vx, state.vy);
+            } else {
+                // Add new player
+                auto player = std::make_shared<Player>(state.id, state.x, state.y);
+                player->updateVelocity(state.vx, state.vy);
+                players[state.id] = player;
+            }
+        }
+    }
     
-    for (const auto& state : broadcast.players) {
-        auto it = players.find(state.id);
-        if (it != players.end()) {
-            // Update existing player
-            it->second->setPosition(state.x, state.y);
-            it->second->updateVelocity(state.vx, state.vy);
-        } else {
-            // Add new player
-            auto player = std::make_shared<Player>(state.id, state.x, state.y);
-            player->updateVelocity(state.vx, state.vy);
-            players[state.id] = player;
+    {
+        std::lock_guard<std::mutex> lock(dummiesMutex);
+        
+        for (const auto& state : broadcast.dummies) {
+            auto it = dummies.find(state.id);
+            if (it != dummies.end()) {
+                // Update existing dummy
+                it->second->x = state.x;
+                it->second->y = state.y;
+                it->second->health = state.health;
+                it->second->isAlive = state.isAlive;
+            } else {
+                // Add new dummy
+                auto dummy = std::make_shared<Dummy>(state.id, state.x, state.y);
+                dummy->health = state.health;
+                dummy->isAlive = state.isAlive;
+                dummies[state.id] = dummy;
+            }
         }
     }
 }
@@ -183,6 +206,11 @@ std::shared_ptr<Player> NetworkManager::getPlayer(uint32_t pid) {
     std::lock_guard<std::mutex> lock(playersMutex);
     auto it = players.find(pid);
     return (it != players.end()) ? it->second : nullptr;
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<Dummy>> NetworkManager::getDummies() {
+    std::lock_guard<std::mutex> lock(dummiesMutex);
+    return dummies;
 }
 
 void NetworkManager::disconnect() {

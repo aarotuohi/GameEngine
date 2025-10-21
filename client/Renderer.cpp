@@ -559,6 +559,87 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     }
 }
 
+void Renderer::renderDummy(const Dummy& dummy) {
+    if (!dummy.isAlive) return;
+    
+    // Convert world position to screen coordinates
+    int screenX, screenY;
+    worldToScreen(dummy.x, dummy.y, screenX, screenY);
+    
+    // Colors
+    SDL_Color woodColor = {139, 90, 60, 255};    // Brown wood
+    SDL_Color targetRed = {220, 50, 50, 255};    // Red target
+    SDL_Color targetWhite = {240, 240, 240, 255}; // White target
+    SDL_Color healthBarBg = {60, 60, 60, 255};
+    SDL_Color healthBarRed = {200, 50, 50, 255};
+    
+    int scale = static_cast<int>(cameraScale);
+    int centerX = screenX;
+    int centerY = screenY;
+    
+    // Draw wooden post/stand
+    setColor(woodColor);
+    SDL_Rect post = {centerX - 3 * scale, centerY + 5 * scale, 6 * scale, 15 * scale};
+    SDL_RenderFillRect(renderer, &post);
+    
+    // Draw base
+    SDL_Rect base = {centerX - 8 * scale, centerY + 20 * scale, 16 * scale, 4 * scale};
+    SDL_RenderFillRect(renderer, &base);
+    
+    // Draw circular target (alternating red and white rings)
+    for (int ring = 3; ring >= 0; ring--) {
+        if (ring % 2 == 0) {
+            setColor(targetWhite);
+        } else {
+            setColor(targetRed);
+        }
+        
+        int radius = (ring + 1) * 4 * scale;
+        // Draw filled circle by drawing horizontal lines
+        for (int y = -radius; y <= radius; y++) {
+            int width = static_cast<int>(std::sqrt(radius * radius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                centerX - width, centerY + y,
+                centerX + width, centerY + y);
+        }
+    }
+    
+    // Draw center bullseye
+    setColor(targetRed);
+    int bullseyeRadius = 2 * scale;
+    for (int y = -bullseyeRadius; y <= bullseyeRadius; y++) {
+        int width = static_cast<int>(std::sqrt(bullseyeRadius * bullseyeRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            centerX - width, centerY + y,
+            centerX + width, centerY + y);
+    }
+    
+    // Health bar above dummy
+    int barWidth = static_cast<int>(50 * cameraScale);
+    int barHeight = static_cast<int>(6 * cameraScale);
+    int barX = centerX - barWidth / 2;
+    int barY = centerY - static_cast<int>(25 * cameraScale);
+    
+    // Background
+    SDL_Rect bgRect = {barX, barY, barWidth, barHeight};
+    setColor(healthBarBg);
+    SDL_RenderFillRect(renderer, &bgRect);
+    
+    // Foreground (red based on health percentage)
+    float healthPercent = static_cast<float>(dummy.health) / dummy.maxHealth;
+    SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
+    setColor(healthBarRed);
+    SDL_RenderFillRect(renderer, &fgRect);
+    
+    // Display health numbers
+    SDL_Color textColor = {255, 255, 255, 255};
+    setColor(textColor);
+    char healthText[32];
+    snprintf(healthText, sizeof(healthText), "%d/%d", dummy.health, dummy.maxHealth);
+    renderText(healthText, centerX - static_cast<int>(15 * cameraScale), 
+               barY - static_cast<int>(12 * cameraScale), static_cast<int>(10 * cameraScale));
+}
+
 void Renderer::renderText(const char* text, int x, int y, int size) {
     // Simple text rendering using SDL_RenderDrawPoint
     // Note: In a full implementation, you'd use SDL_ttf for proper text rendering

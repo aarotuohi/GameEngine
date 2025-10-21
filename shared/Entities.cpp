@@ -22,7 +22,7 @@ void Player::updatePosition(float dx, float dy, float dt) {
     x += dx * speed * dt;
     y += dy * speed * dt;
     
-    // No world bounds - infinite world like Minecraft
+    
 }
 
 void Player::updateVelocity(float velX, float velY) {
@@ -193,4 +193,33 @@ bool Projectile::checkCollision(const Player& player) const {
     float dy = y - player.y;
     float distance = std::sqrt(dx * dx + dy * dy);
     return distance < (size + player.size / 2.0f);
+}
+
+// Dummy implementation
+Dummy::Dummy(uint32_t dummyId, float posX, float posY)
+    : id(dummyId), x(posX), y(posY), size(40.0f),
+      health(1000), maxHealth(1000), isAlive(true) {
+    lastHitTime = std::chrono::steady_clock::now();
+}
+
+void Dummy::takeDamage(int damage) {
+    if (!isAlive) return;
+    health -= damage;
+    if (health <= 0) {
+        health = 0;
+        isAlive = false;
+    }
+    lastHitTime = std::chrono::steady_clock::now();
+}
+
+void Dummy::resetHealth() {
+    health = maxHealth;
+    isAlive = true;
+}
+
+bool Dummy::checkCollision(const Player& player) const {
+    float dx = x - player.x;
+    float dy = y - player.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    return distance < (size / 2.0f + player.size / 2.0f);
 }
