@@ -15,9 +15,14 @@ private:
     std::unique_ptr<InputHandler> inputHandler;
     std::unique_ptr<Renderer> renderer;
     
-    // Local player state (for prediction)
+    // Local player state 
     float localX, localY;
     float localVx, localVy;
+    float localRotation;  
+    
+    // Movement target in world coordinates
+    bool hasWorldTarget;
+    float worldTargetX, worldTargetY;
     
     std::chrono::steady_clock::time_point lastPositionUpdate;
     std::chrono::duration<float> positionUpdateInterval;

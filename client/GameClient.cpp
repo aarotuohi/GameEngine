@@ -6,7 +6,8 @@
 
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
-      localVx(0.0f), localVy(0.0f), fps(0), frameCount(0) {
+      localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
+      worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -61,28 +62,36 @@ void GameClient::updateLocalPlayer(float dt) {
     }
     
     // Right-click movement system
-    if (inputHandler->hasTarget()) {
-        std::pair<float, float> target = inputHandler->getTarget();
-        float screenTargetX = target.first;
-        float screenTargetY = target.second;
-        
-        // Convert screen coordinates to world coordinates
-        float targetX, targetY;
-        renderer->screenToWorld(static_cast<int>(screenTargetX), 
-                               static_cast<int>(screenTargetY), 
-                               targetX, targetY);
-        
-        // Calculate direction to target
-        float dx = targetX - localX;
-        float dy = targetY - localY;
+    // Check if user clicked a new target
+    if (inputHandler->hasTarget() && !hasWorldTarget) {
+        // New target clicked
+        std::pair<float, float> screenTarget = inputHandler->getTarget();
+        renderer->screenToWorld(static_cast<int>(screenTarget.first), 
+                               static_cast<int>(screenTarget.second), 
+                               worldTargetX, worldTargetY);
+        hasWorldTarget = true;
+        inputHandler->clearTarget();
+    }
+    
+    if (hasWorldTarget) {
+        // Calculate direction to target using stored world coordinates
+        float dx = worldTargetX - localX;
+        float dy = worldTargetY - localY;
         float distance = std::sqrt(dx * dx + dy * dy);
         
         // If we're close enough, stop
         const float arrivalThreshold = 5.0f;
         if (distance < arrivalThreshold) {
-            inputHandler->clearTarget();
+            // Snap to target position and stop
+            localX = worldTargetX;
+            localY = worldTargetY;
             localVx = 0.0f;
             localVy = 0.0f;
+            hasWorldTarget = false;
+            // Immediately send stop command to server
+            network->sendPositionUpdate(localX, localY, 0.0f, 0.0f);
+            // Update timestamp to prevent immediate regular update from overriding
+            lastPositionUpdate = std::chrono::steady_clock::now();
         } else {
             // Normalize direction and move
             float dirX = dx / distance;
@@ -90,6 +99,25 @@ void GameClient::updateLocalPlayer(float dt) {
             
             localVx = dirX;
             localVy = dirY;
+            
+            // Calculate target rotation (angle towards movement direction)
+            float targetRotation = std::atan2(dirY, dirX);
+            
+            // Smoothly interpolate rotation towards target
+            const float rotationSpeed = 10.0f; // radians per second
+            float rotationDiff = targetRotation - localRotation;
+            
+            // Normalize angle difference to [-PI, PI]
+            while (rotationDiff > 3.14159f) rotationDiff -= 2.0f * 3.14159f;
+            while (rotationDiff < -3.14159f) rotationDiff += 2.0f * 3.14159f;
+            
+            // Apply smooth rotation
+            float rotationChange = rotationSpeed * dt;
+            if (std::abs(rotationDiff) < rotationChange) {
+                localRotation = targetRotation;
+            } else {
+                localRotation += (rotationDiff > 0 ? rotationChange : -rotationChange);
+            }
             
             // Update position (client-side prediction)
             localX += dirX * Config::PLAYER_SPEED * dt;
@@ -132,6 +160,7 @@ void GameClient::render() {
             Player localPlayer = *player;
             localPlayer.x = localX;
             localPlayer.y = localY;
+            localPlayer.rotation = localRotation;
             renderer->renderPlayer(localPlayer, true);
         } else {
             renderer->renderPlayer(*player, false);
@@ -161,7 +190,7 @@ void GameClient::run() {
     using namespace std::chrono_literals;
     
     auto lastTime = Clock::now();
-    const auto targetFrameTime = 16ms;  // ~60 FPS
+    const auto targetFrameTime = 7ms;  
     
     std::cout << "\nGame started!\n";
     std::cout << "Controls: WASD or Arrow keys to move\n";
@@ -171,6 +200,10 @@ void GameClient::run() {
         auto currentTime = Clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
         float dt = elapsed.count() / 1000.0f;
+        
+        // Cap delta time to prevent large jumps (max 33ms = ~30 FPS minimum)
+        if (dt > 0.033f) dt = 0.033f;
+        
         lastTime = currentTime;
         
         // Handle events
