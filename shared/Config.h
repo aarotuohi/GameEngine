@@ -23,7 +23,7 @@ namespace Config {
 
     // Network settings
     constexpr int TICK_RATE = 60;           // Server updates per second
-    constexpr int UPDATE_RATE = 30;         // Position updates per second
+    constexpr int UPDATE_RATE = 60;         // Position updates per second (increased for smoothness)
     constexpr int BUFFER_SIZE = 1024;
 
     // Message types (for TCP reliable messages)

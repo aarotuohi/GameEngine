@@ -89,6 +89,24 @@ public:
     bool checkCollision(const Player& player) const;
 };
 
+// Target Dummy class for ability testing
+class Dummy {
+public:
+    uint32_t id;
+    float x, y;          // Position
+    float size;
+    int health;
+    int maxHealth;
+    bool isAlive;
+    std::chrono::steady_clock::time_point lastHitTime;
+    
+    Dummy(uint32_t dummyId, float posX, float posY);
+    
+    void takeDamage(int damage);
+    void resetHealth();
+    bool checkCollision(const Player& player) const;
+};
+
 #endif // ENTITIES_H
 
 

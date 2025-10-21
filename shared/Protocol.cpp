@@ -11,7 +11,7 @@ namespace Protocol {
         int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
         return result == 0;
         #else
-        return true;  // No initialization needed on Unix
+        
         #endif
     }
 
@@ -63,7 +63,7 @@ namespace Protocol {
 
     // TCP Message decoding
     bool decodeTCPMessage(const std::vector<uint8_t>& buffer, TCPMessage& message) {
-        if (buffer.size() < 5) return false;  // Minimum: 4 bytes length + 1 byte type
+        if (buffer.size() < 5) return false; 
         
         // Extract length
         uint32_t length;
@@ -126,6 +126,23 @@ namespace Protocol {
                          reinterpret_cast<const uint8_t*>(&netPlayer) + sizeof(PlayerState));
         }
         
+        // Add number of dummies
+        uint32_t numDummies = hton(state.numDummies);
+        buffer.insert(buffer.end(),
+                     reinterpret_cast<uint8_t*>(&numDummies),
+                     reinterpret_cast<uint8_t*>(&numDummies) + sizeof(numDummies));
+        
+        // Add each dummy state
+        for (const auto& dummy : state.dummies) {
+            DummyState netDummy = dummy;
+            netDummy.id = hton(dummy.id);
+            netDummy.health = hton(dummy.health);
+            
+            buffer.insert(buffer.end(),
+                         reinterpret_cast<const uint8_t*>(&netDummy),
+                         reinterpret_cast<const uint8_t*>(&netDummy) + sizeof(DummyState));
+        }
+        
         return buffer;
     }
 
@@ -150,6 +167,29 @@ namespace Protocol {
             player.id = ntoh(player.id);
             state.players.push_back(player);
             ptr += sizeof(PlayerState);
+        }
+        
+        // Extract number of dummies if data available
+        if (length >= expectedSize + sizeof(uint32_t)) {
+            std::memcpy(&state.numDummies, ptr, sizeof(uint32_t));
+            state.numDummies = ntoh(state.numDummies);
+            ptr += sizeof(uint32_t);
+            
+            expectedSize += sizeof(uint32_t) + state.numDummies * sizeof(DummyState);
+            if (length >= expectedSize) {
+                // Extract dummy states
+                state.dummies.clear();
+                for (uint32_t i = 0; i < state.numDummies; ++i) {
+                    DummyState dummy;
+                    std::memcpy(&dummy, ptr, sizeof(DummyState));
+                    dummy.id = ntoh(dummy.id);
+                    dummy.health = ntoh(dummy.health);
+                    state.dummies.push_back(dummy);
+                    ptr += sizeof(DummyState);
+                }
+            }
+        } else {
+            state.numDummies = 0;
         }
         
         return true;

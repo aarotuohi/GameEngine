@@ -14,27 +14,19 @@
     #include <ws2tcpip.h>
     #pragma comment(lib, "ws2_32.lib")
     typedef int socklen_t;
-#else
-    #include <sys/socket.h>
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <unistd.h>
-    #define SOCKET int
-    #define INVALID_SOCKET -1
-    #define SOCKET_ERROR -1
-    #define closesocket close
+
 #endif
 
 namespace Protocol {
 
     // TCP Message Structure
     struct TCPMessage {
-        uint8_t type;           // Message type
-        uint32_t dataLength;    // Length of data
-        std::vector<uint8_t> data;  // Message data
+        uint8_t type;           
+        uint32_t dataLength;    
+        std::vector<uint8_t> data;  
     };
 
-    // UDP Position Update Structure (compact binary)
+   
     struct PositionUpdate {
         uint32_t playerId;
         float x;
@@ -53,9 +45,19 @@ namespace Protocol {
         float vy;
     };
 
+    struct DummyState {
+        uint32_t id;
+        float x;
+        float y;
+        uint32_t health;
+        bool isAlive;
+    };
+
     struct StateBroadcast {
         uint32_t numPlayers;
         std::vector<PlayerState> players;
+        uint32_t numDummies;
+        std::vector<DummyState> dummies;
     };
 
     // Encoding functions
@@ -80,7 +82,7 @@ namespace Protocol {
     void cleanupNetwork();
 }
 
-#endif // PROTOCOL_H
+#endif 
 
 
-#endif /* A43EA098_68BA_4EED_8976_AFEACF663129 */
+#endif

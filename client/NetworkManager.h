@@ -25,7 +25,9 @@ private:
     std::thread udpReceiverThread;
     
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
+    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
     mutable std::mutex playersMutex;
+    mutable std::mutex dummiesMutex;
     
     void receiveTcpMessages();
     void receiveUdpMessages();
@@ -45,6 +47,7 @@ public:
     uint32_t getPlayerId() const { return playerId; }
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getPlayers();
     std::shared_ptr<Player> getPlayer(uint32_t pid);
+    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getDummies();
 };
 
 #endif 

@@ -14,8 +14,10 @@ class GameState {
 private:
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
+    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
     uint32_t nextPlayerId;
     uint32_t nextProjectileId;
+    uint32_t nextDummyId;
     uint32_t taggedPlayerId;
     mutable std::mutex mutex;
     bool running;
@@ -37,12 +39,18 @@ public:
     // Projectile management
     uint32_t createProjectile(uint32_t ownerId, float x, float y, float vx, float vy);
     
+    // Dummy management
+    uint32_t spawnDummy(float x, float y);
+    std::shared_ptr<Dummy> getDummy(uint32_t dummyId);
+    void damageDummy(uint32_t dummyId, int damage);
+    
     // Game loop
     void update(float dt);
     
     // State retrieval
     std::vector<Protocol::PlayerState> getPlayersForBroadcast();
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getAllPlayers();
+    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getAllDummies();
     
     // Control
     void setRunning(bool run) { running = run; }

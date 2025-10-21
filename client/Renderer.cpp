@@ -416,6 +416,9 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     
     int scale = static_cast<int>(2 * cameraScale); 
 
+    // Determine facing direction based on rotation, rotation is in radians: 0 = right, PI = left
+    bool facingRight = (player.rotation >= -1.5708f && player.rotation <= 1.5708f); // -90° to 90°
+    int flipMultiplier = facingRight ? 1 : -1;
     
     SDL_Color hairColor = {60, 50, 80, 255};        // Dark purple hair
     SDL_Color skinColor = {255, 220, 190, 255};     // Skin tone
@@ -432,11 +435,10 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
         armorDark = {150, 30, 30, 255};
     }
 
-    // Draw flowing cape behind Samurai
+    // Draw flowing cape behind Samurai (flips based on direction)
     setColor(capeColor);
-    // Cape flows to the left
     for (int i = 0; i < 8; i++) {
-        int capeX = centerX - 8 - i;
+        int capeX = centerX - flipMultiplier * (8 + i);
         int capeY = centerY - 10 + (i % 3);
         SDL_Rect capeRect = {capeX, capeY, 3 * scale, 12 * scale};
         SDL_RenderFillRect(renderer, &capeRect);
@@ -471,33 +473,33 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_Rect hair1 = {centerX - 4 * scale, centerY - 10 * scale, 8 * scale, 4 * scale};
     SDL_RenderFillRect(renderer, &hair1);
 
-    // Hair ponytail flowing
-    SDL_Rect ponytail = {centerX - 8 * scale, centerY - 8 * scale, 5 * scale, 3 * scale};
+    // Hair ponytail flowing (flips based on direction)
+    SDL_Rect ponytail = {centerX - flipMultiplier * 8 * scale, centerY - 8 * scale, 5 * scale, 3 * scale};
     SDL_RenderFillRect(renderer, &ponytail);
     
-    // Draw eyes 
+    // Draw eyes (flip positions based on direction)
     setColor({255, 255, 255, 255});
-    SDL_Rect leftEye = {centerX - 2 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
-    SDL_Rect rightEye = {centerX + 1 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
+    SDL_Rect leftEye = {centerX - flipMultiplier * 2 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
+    SDL_Rect rightEye = {centerX + flipMultiplier * 1 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
     SDL_RenderFillRect(renderer, &leftEye);
     SDL_RenderFillRect(renderer, &rightEye);
     
-    // Draw sword
+    // Draw sword (flips to other side when facing left)
     setColor(swordHandle);
-    SDL_Rect swordHandle_rect = {centerX + 2 * scale, centerY - 2 * scale, 3 * scale, 8 * scale};
+    SDL_Rect swordHandle_rect = {centerX + flipMultiplier * 2 * scale, centerY - 2 * scale, 3 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &swordHandle_rect);
     
     setColor(swordGray);
     // Sword blade
-    SDL_Rect blade = {centerX + 4 * scale, centerY - 8 * scale, 2 * scale, 20 * scale};
+    SDL_Rect blade = {centerX + flipMultiplier * 4 * scale, centerY - 8 * scale, 2 * scale, 20 * scale};
     SDL_RenderFillRect(renderer, &blade);
     // Sword tip
-    SDL_Rect tip = {centerX + 5 * scale, centerY + 11 * scale, 1 * scale, 3 * scale};
+    SDL_Rect tip = {centerX + flipMultiplier * 5 * scale, centerY + 11 * scale, 1 * scale, 3 * scale};
     SDL_RenderFillRect(renderer, &tip);
     
     // Sword shine effect
     setColor({255, 255, 255, 200});
-    SDL_Rect shine = {centerX + 4 * scale, centerY, 1 * scale, 6 * scale};
+    SDL_Rect shine = {centerX + flipMultiplier * 4 * scale, centerY, 1 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &shine);
 
     // wind effect WIP
@@ -514,15 +516,15 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
             SDL_RenderFillRect(renderer, &windParticle);
         }
         
-        // Add flowing wind lines
+        // Add flowing wind lines (flip based on direction)
         for (int i = 0; i < 3; i++) {
             int lineY = centerY - static_cast<int>(10 * cameraScale) + static_cast<int>(i * 8 * cameraScale);
             SDL_RenderDrawLine(renderer, 
-                centerX - static_cast<int>(20 * cameraScale), lineY, 
-                centerX - static_cast<int>(10 * cameraScale), lineY);
+                centerX - flipMultiplier * static_cast<int>(20 * cameraScale), lineY, 
+                centerX - flipMultiplier * static_cast<int>(10 * cameraScale), lineY);
             SDL_RenderDrawLine(renderer, 
-                centerX + static_cast<int>(10 * cameraScale), lineY, 
-                centerX + static_cast<int>(20 * cameraScale), lineY);
+                centerX + flipMultiplier * static_cast<int>(10 * cameraScale), lineY, 
+                centerX + flipMultiplier * static_cast<int>(20 * cameraScale), lineY);
         }
     }
     
@@ -557,6 +559,87 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
             SDL_RenderFillRect(renderer, &stackRect);
         }
     }
+}
+
+void Renderer::renderDummy(const Dummy& dummy) {
+    if (!dummy.isAlive) return;
+    
+    // Convert world position to screen coordinates
+    int screenX, screenY;
+    worldToScreen(dummy.x, dummy.y, screenX, screenY);
+    
+    // Colors
+    SDL_Color woodColor = {139, 90, 60, 255};    // Brown wood
+    SDL_Color targetRed = {220, 50, 50, 255};    // Red target
+    SDL_Color targetWhite = {240, 240, 240, 255}; // White target
+    SDL_Color healthBarBg = {60, 60, 60, 255};
+    SDL_Color healthBarRed = {200, 50, 50, 255};
+    
+    int scale = static_cast<int>(cameraScale);
+    int centerX = screenX;
+    int centerY = screenY;
+    
+    // Draw wooden post/stand
+    setColor(woodColor);
+    SDL_Rect post = {centerX - 3 * scale, centerY + 5 * scale, 6 * scale, 15 * scale};
+    SDL_RenderFillRect(renderer, &post);
+    
+    // Draw base
+    SDL_Rect base = {centerX - 8 * scale, centerY + 20 * scale, 16 * scale, 4 * scale};
+    SDL_RenderFillRect(renderer, &base);
+    
+    // Draw circular target (alternating red and white rings)
+    for (int ring = 3; ring >= 0; ring--) {
+        if (ring % 2 == 0) {
+            setColor(targetWhite);
+        } else {
+            setColor(targetRed);
+        }
+        
+        int radius = (ring + 1) * 4 * scale;
+        // Draw filled circle by drawing horizontal lines
+        for (int y = -radius; y <= radius; y++) {
+            int width = static_cast<int>(std::sqrt(radius * radius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                centerX - width, centerY + y,
+                centerX + width, centerY + y);
+        }
+    }
+    
+    // Draw center bullseye
+    setColor(targetRed);
+    int bullseyeRadius = 2 * scale;
+    for (int y = -bullseyeRadius; y <= bullseyeRadius; y++) {
+        int width = static_cast<int>(std::sqrt(bullseyeRadius * bullseyeRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            centerX - width, centerY + y,
+            centerX + width, centerY + y);
+    }
+    
+    // Health bar above dummy
+    int barWidth = static_cast<int>(50 * cameraScale);
+    int barHeight = static_cast<int>(6 * cameraScale);
+    int barX = centerX - barWidth / 2;
+    int barY = centerY - static_cast<int>(25 * cameraScale);
+    
+    // Background
+    SDL_Rect bgRect = {barX, barY, barWidth, barHeight};
+    setColor(healthBarBg);
+    SDL_RenderFillRect(renderer, &bgRect);
+    
+    // Foreground (red based on health percentage)
+    float healthPercent = static_cast<float>(dummy.health) / dummy.maxHealth;
+    SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
+    setColor(healthBarRed);
+    SDL_RenderFillRect(renderer, &fgRect);
+    
+    // Display health numbers
+    SDL_Color textColor = {255, 255, 255, 255};
+    setColor(textColor);
+    char healthText[32];
+    snprintf(healthText, sizeof(healthText), "%d/%d", dummy.health, dummy.maxHealth);
+    renderText(healthText, centerX - static_cast<int>(15 * cameraScale), 
+               barY - static_cast<int>(12 * cameraScale), static_cast<int>(10 * cameraScale));
 }
 
 void Renderer::renderText(const char* text, int x, int y, int size) {

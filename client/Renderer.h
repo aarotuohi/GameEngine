@@ -52,6 +52,7 @@ public:
     void renderDecorations();
     void renderGrid();
     void renderPlayer(const Player& player, bool isLocal = false);
+    void renderDummy(const Dummy& dummy);
     void renderUI(uint32_t playerId, int playerCount, int fps);
     
     int getWidth() const { return width; }

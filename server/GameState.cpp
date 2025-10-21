@@ -3,7 +3,11 @@
 #include <iostream>
 
 GameState::GameState()
-    : nextPlayerId(1), nextProjectileId(1), taggedPlayerId(0), running(true) {
+    : nextPlayerId(1), nextProjectileId(1), nextDummyId(1), taggedPlayerId(0), running(true) {
+    // Spawn some initial dummies for testing
+    spawnDummy(200.0f, 200.0f);
+    spawnDummy(400.0f, 300.0f);
+    spawnDummy(600.0f, 200.0f);
 }
 
 GameState::~GameState() {
@@ -26,7 +30,7 @@ uint32_t GameState::addPlayer(const std::string& name) {
     
     auto player = std::make_shared<Player>(playerId, x, y, name);
     
-    // First player is "it" in tag mode
+    // First player
     if (taggedPlayerId == 0) {
         player->isTagged = true;
         taggedPlayerId = playerId;
@@ -170,4 +174,34 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
 std::unordered_map<uint32_t, std::shared_ptr<Player>> GameState::getAllPlayers() {
     std::lock_guard<std::mutex> lock(mutex);
     return players;
+}
+
+uint32_t GameState::spawnDummy(float x, float y) {
+    std::lock_guard<std::mutex> lock(mutex);
+    uint32_t dummyId = nextDummyId++;
+    auto dummy = std::make_shared<Dummy>(dummyId, x, y);
+    dummies[dummyId] = dummy;
+    return dummyId;
+}
+
+std::shared_ptr<Dummy> GameState::getDummy(uint32_t dummyId) {
+    std::lock_guard<std::mutex> lock(mutex);
+    auto it = dummies.find(dummyId);
+    if (it != dummies.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+void GameState::damageDummy(uint32_t dummyId, int damage) {
+    std::lock_guard<std::mutex> lock(mutex);
+    auto it = dummies.find(dummyId);
+    if (it != dummies.end()) {
+        it->second->takeDamage(damage);
+    }
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<Dummy>> GameState::getAllDummies() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return dummies;
 }
