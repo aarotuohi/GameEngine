@@ -42,6 +42,7 @@ public:
     void disconnect();
     
     void sendPositionUpdate(float x, float y, float vx, float vy);
+    void sendAbilityUse(uint8_t abilityType, float targetX, float targetY);
     void sendTcpMessage(uint8_t msgType, const std::vector<uint8_t>& data);
     
     uint32_t getPlayerId() const { return playerId; }

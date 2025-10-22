@@ -106,6 +106,30 @@ namespace Protocol {
         return true;
     }
 
+    // Ability use encoding
+    std::vector<uint8_t> encodeAbilityUse(const AbilityUse& ability) {
+        std::vector<uint8_t> buffer(sizeof(AbilityUse));
+        
+        // Convert to network byte order
+        AbilityUse netAbility = ability;
+        netAbility.playerId = hton(ability.playerId);
+        
+        // Copy to buffer
+        std::memcpy(buffer.data(), &netAbility, sizeof(AbilityUse));
+        
+        return buffer;
+    }
+
+    // Ability use decoding
+    bool decodeAbilityUse(const uint8_t* data, size_t length, AbilityUse& ability) {
+        if (length < sizeof(AbilityUse)) return false;
+        
+        std::memcpy(&ability, data, sizeof(AbilityUse));
+        ability.playerId = ntoh(ability.playerId);
+        
+        return true;
+    }
+
     // State broadcast encoding
     std::vector<uint8_t> encodeStateBroadcast(const StateBroadcast& state) {
         std::vector<uint8_t> buffer;

@@ -161,11 +161,54 @@ void NetworkHandler::receiveUdpMessages() {
 }
 
 void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const sockaddr_in& senderAddr) {
-    Protocol::PositionUpdate update;
-    if (Protocol::decodePositionUpdate(data, length, update)) {
-        gameState.setPlayerPosition(update.playerId, update.x, update.y);
-        gameState.updatePlayerVelocity(update.playerId, update.vx, update.vy);
-        playerManager.registerUdpAddress(update.playerId, senderAddr);
+    if (length < 1) return;
+    
+    // Check update type
+    uint8_t updateType = data[0];
+    const uint8_t* payload = data + 1;
+    size_t payloadLength = length - 1;
+    
+    if (updateType == static_cast<uint8_t>(Config::UpdateType::POSITION)) {
+        Protocol::PositionUpdate update;
+        if (Protocol::decodePositionUpdate(payload, payloadLength, update)) {
+            gameState.setPlayerPosition(update.playerId, update.x, update.y);
+            gameState.updatePlayerVelocity(update.playerId, update.vx, update.vy);
+            playerManager.registerUdpAddress(update.playerId, senderAddr);
+        }
+    } else if (updateType == static_cast<uint8_t>(Config::UpdateType::ABILITY_USE)) {
+        Protocol::AbilityUse ability;
+        if (Protocol::decodeAbilityUse(payload, payloadLength, ability)) {
+            playerManager.registerUdpAddress(ability.playerId, senderAddr);
+            // Handle Q ability
+            if (ability.abilityType == 1) {
+                auto player = gameState.getPlayer(ability.playerId);
+                if (player && player->canUseQ()) {
+                    // Get player position and rotation
+                    float dirX = ability.targetX;
+                    float dirY = ability.targetY;
+                    
+                    // Determine if this should be a tornado (Q3)
+                    bool isTornado = (player->qStacks >= 2);
+                    int damage = isTornado ? 40 : 20;
+                    
+                    // Create projectile
+                    gameState.createQProjectile(ability.playerId, player->x, player->y, 
+                                               dirX, dirY, isTornado, damage);
+                    
+                    // Update player Q state (don't increment stacks yet - only on hit)
+                    player->lastQTime = std::chrono::steady_clock::now();
+                    player->activeAbility = SamuraiAbility::Q_STEEL_TEMPEST;
+                }
+            }
+        }
+    } else {
+        // Fallback for old clients without update type prefix
+        Protocol::PositionUpdate update;
+        if (Protocol::decodePositionUpdate(data, length, update)) {
+            gameState.setPlayerPosition(update.playerId, update.x, update.y);
+            gameState.updatePlayerVelocity(update.playerId, update.vx, update.vy);
+            playerManager.registerUdpAddress(update.playerId, senderAddr);
+        }
     }
 }
 

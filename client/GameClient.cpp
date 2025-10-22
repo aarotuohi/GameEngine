@@ -41,8 +41,11 @@ bool GameClient::connect(const std::string& serverHost) {
 void GameClient::updateLocalPlayer(float dt) {
     // Check for ability key presses
     if (inputHandler->isQPressed()) {
-        std::cout << "Q ability pressed (Steel Tempest)\n";
-        // TODO: Send ability use to server
+        std::cout << "Q ability used (Steel Tempest)\n";
+        // Send Q ability to server (direction based on character rotation)
+        float dirX = std::cos(localRotation);
+        float dirY = std::sin(localRotation);
+        network->sendAbilityUse(1, dirX, dirY);  // 1 = Q ability
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isWPressed()) {
@@ -72,7 +75,7 @@ void GameClient::updateLocalPlayer(float dt) {
         hasWorldTarget = true;
         inputHandler->clearTarget();
     }
-    
+    // Copied from github
     if (hasWorldTarget) {
         // Calculate direction to target using stored world coordinates
         float dx = worldTargetX - localX;
@@ -100,14 +103,14 @@ void GameClient::updateLocalPlayer(float dt) {
             localVx = dirX;
             localVy = dirY;
             
-            // Calculate target rotation (angle towards movement direction)
+            // Calculate target rotation 
             float targetRotation = std::atan2(dirY, dirX);
             
             // Smoothly interpolate rotation towards target
-            const float rotationSpeed = 10.0f; // radians per second
+            const float rotationSpeed = 10.0f; 
             float rotationDiff = targetRotation - localRotation;
             
-            // Normalize angle difference to [-PI, PI]
+            // Normalize angle 
             while (rotationDiff > 3.14159f) rotationDiff -= 2.0f * 3.14159f;
             while (rotationDiff < -3.14159f) rotationDiff += 2.0f * 3.14159f;
             
@@ -133,6 +136,7 @@ void GameClient::updateLocalPlayer(float dt) {
 }
 
 void GameClient::render() {
+
     // Update camera to follow local player
     renderer->updateCamera(localX, localY);
     
@@ -193,7 +197,7 @@ void GameClient::run() {
     const auto targetFrameTime = 7ms;  
     
     std::cout << "\nGame started!\n";
-    std::cout << "Controls: WASD or Arrow keys to move\n";
+    std::cout << "Controls: Right click to move character\n";
     std::cout << "Press ESC to quit\n\n";
     
     while (!inputHandler->shouldQuit()) {
@@ -201,7 +205,7 @@ void GameClient::run() {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
         float dt = elapsed.count() / 1000.0f;
         
-        // Cap delta time to prevent large jumps (max 33ms = ~30 FPS minimum)
+        // Cap delta time to prevent large jumps 
         if (dt > 0.033f) dt = 0.033f;
         
         lastTime = currentTime;

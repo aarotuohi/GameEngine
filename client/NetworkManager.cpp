@@ -191,6 +191,29 @@ void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {
            0, reinterpret_cast<const sockaddr*>(&udpAddr), sizeof(udpAddr));
 }
 
+void NetworkManager::sendAbilityUse(uint8_t abilityType, float targetX, float targetY) {
+    if (playerId == 0) return;
+    
+    Protocol::AbilityUse ability;
+    ability.playerId = playerId;
+    ability.abilityType = abilityType;
+    ability.targetX = targetX;
+    ability.targetY = targetY;
+    
+    auto data = Protocol::encodeAbilityUse(ability);
+    
+    // Prepend update type
+    std::vector<uint8_t> message;
+    message.push_back(static_cast<uint8_t>(Config::UpdateType::ABILITY_USE));
+    message.insert(message.end(), data.begin(), data.end());
+    
+    sockaddr_in udpAddr = serverAddr;
+    udpAddr.sin_port = Protocol::hton(Config::UDP_PORT);
+    
+    sendto(udpSocket, reinterpret_cast<const char*>(message.data()), static_cast<int>(message.size()),
+           0, reinterpret_cast<const sockaddr*>(&udpAddr), sizeof(udpAddr));
+}
+
 void NetworkManager::sendTcpMessage(uint8_t msgType, const std::vector<uint8_t>& data) {
     auto message = Protocol::encodeTCPMessage(msgType, data);
     send(tcpSocket, reinterpret_cast<const char*>(message.data()), 
