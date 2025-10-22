@@ -148,11 +148,17 @@ void GameClient::render() {
     // Get current game state
     auto players = network->getPlayers();
     auto dummies = network->getDummies();
+    auto projectiles = network->getProjectiles();
     uint32_t myId = network->getPlayerId();
     
     // Render all dummies
     for (const auto& [dummyId, dummy] : dummies) {
         renderer->renderDummy(*dummy);
+    }
+    
+    // Render all projectiles
+    for (const auto& [projId, projectile] : projectiles) {
+        renderer->renderProjectile(*projectile);
     }
     
     // Render all players

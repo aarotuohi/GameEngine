@@ -52,6 +52,7 @@ public:
     std::vector<Protocol::PlayerState> getPlayersForBroadcast();
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getAllPlayers();
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getAllDummies();
+    std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getAllProjectiles();
     
     // Control
     void setRunning(bool run) { running = run; }

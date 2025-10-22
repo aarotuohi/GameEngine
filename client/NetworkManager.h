@@ -26,8 +26,10 @@ private:
     
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
+    std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
     mutable std::mutex playersMutex;
     mutable std::mutex dummiesMutex;
+    mutable std::mutex projectilesMutex;
     
     void receiveTcpMessages();
     void receiveUdpMessages();
@@ -49,6 +51,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getPlayers();
     std::shared_ptr<Player> getPlayer(uint32_t pid);
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getDummies();
+    std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getProjectiles();
 };
 
 #endif 

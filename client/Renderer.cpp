@@ -642,6 +642,129 @@ void Renderer::renderDummy(const Dummy& dummy) {
                barY - static_cast<int>(12 * cameraScale), static_cast<int>(10 * cameraScale));
 }
 
+void Renderer::renderProjectile(const Projectile& projectile) {
+    // Convert world position to screen coordinates
+    int screenX, screenY;
+    worldToScreen(projectile.x, projectile.y, screenX, screenY);
+    
+    int scale = static_cast<int>(cameraScale);
+    
+    if (projectile.isTornado) {
+        // Render tornado (larger, cyan/wind colored, spinning effect)
+        SDL_Color tornadoCore = {120, 200, 255, 255};    // Bright cyan
+        SDL_Color tornadoOuter = {180, 230, 255, 180};   // Light cyan, semi-transparent
+        
+        int tornadoRadius = static_cast<int>(projectile.size * cameraScale);
+        
+        // Draw outer ring (wind effect)
+        setColor(tornadoOuter);
+        for (int y = -tornadoRadius; y <= tornadoRadius; y++) {
+            int width = static_cast<int>(std::sqrt(tornadoRadius * tornadoRadius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                screenX - width, screenY + y,
+                screenX + width, screenY + y);
+        }
+        
+        // Draw inner core
+        setColor(tornadoCore);
+        int coreRadius = tornadoRadius / 2;
+        for (int y = -coreRadius; y <= coreRadius; y++) {
+            int width = static_cast<int>(std::sqrt(coreRadius * coreRadius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                screenX - width, screenY + y,
+                screenX + width, screenY + y);
+        }
+        
+        // Add spiral lines for rotation effect
+        setColor({80, 180, 255, 255}); // Darker cyan
+        for (int i = 0; i < 3; i++) {
+            float angle = (SDL_GetTicks() / 100.0f) + (i * 2.0f * 3.14159f / 3.0f);
+            int x1 = screenX + static_cast<int>(std::cos(angle) * coreRadius);
+            int y1 = screenY + static_cast<int>(std::sin(angle) * coreRadius);
+            int x2 = screenX + static_cast<int>(std::cos(angle) * tornadoRadius);
+            int y2 = screenY + static_cast<int>(std::sin(angle) * tornadoRadius);
+            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        }
+    } else {
+        // Render normal Q blade (elongated rectangle, silver/white)
+        SDL_Color bladeColor = {240, 240, 250, 255};      // Silver/white
+        SDL_Color bladeEdge = {200, 200, 220, 255};       // Slightly darker edge
+        
+        // Calculate blade rotation based on velocity direction
+        float angle = std::atan2(projectile.vy, projectile.vx);
+        
+        // Blade dimensions (elongated in direction of travel)
+        int bladeLength = static_cast<int>(projectile.size * 2 * cameraScale);
+        int bladeWidth = static_cast<int>(projectile.size * 0.5f * cameraScale);
+        
+        // Calculate blade corners (rotated rectangle)
+        float cosA = std::cos(angle);
+        float sinA = std::sin(angle);
+        
+        // Four corners of the blade
+        SDL_Point points[5];
+        float halfLen = bladeLength / 2.0f;
+        float halfWidth = bladeWidth / 2.0f;
+        
+        // Front-right
+        points[0].x = screenX + static_cast<int>(cosA * halfLen - sinA * halfWidth);
+        points[0].y = screenY + static_cast<int>(sinA * halfLen + cosA * halfWidth);
+        
+        // Front-left
+        points[1].x = screenX + static_cast<int>(cosA * halfLen + sinA * halfWidth);
+        points[1].y = screenY + static_cast<int>(sinA * halfLen - cosA * halfWidth);
+        
+        // Back-left
+        points[2].x = screenX + static_cast<int>(-cosA * halfLen + sinA * halfWidth);
+        points[2].y = screenY + static_cast<int>(-sinA * halfLen - cosA * halfWidth);
+        
+        // Back-right
+        points[3].x = screenX + static_cast<int>(-cosA * halfLen - sinA * halfWidth);
+        points[3].y = screenY + static_cast<int>(-sinA * halfLen + cosA * halfWidth);
+        
+        // Close the polygon
+        points[4] = points[0];
+        
+        // Fill the blade (draw horizontal lines between edges)
+        setColor(bladeColor);
+        for (int i = 0; i < 4; i++) {
+            SDL_RenderDrawLine(renderer, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+        }
+        
+        // Draw filled blade by scanning through the polygon area
+        int minY = points[0].y, maxY = points[0].y;
+        for (int i = 1; i < 4; i++) {
+            minY = std::min(minY, points[i].y);
+            maxY = std::max(maxY, points[i].y);
+        }
+        
+        for (int y = minY; y <= maxY; y++) {
+            int minX = screenX + bladeLength, maxX = screenX - bladeLength;
+            
+            // Find intersections with polygon edges at this y coordinate
+            for (int i = 0; i < 4; i++) {
+                int y1 = points[i].y, y2 = points[i+1].y;
+                if ((y1 <= y && y < y2) || (y2 <= y && y < y1)) {
+                    int x1 = points[i].x, x2 = points[i+1].x;
+                    int x = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+                    minX = std::min(minX, x);
+                    maxX = std::max(maxX, x);
+                }
+            }
+            
+            if (minX <= maxX) {
+                SDL_RenderDrawLine(renderer, minX, y, maxX, y);
+            }
+        }
+        
+        // Draw edge outline
+        setColor(bladeEdge);
+        for (int i = 0; i < 4; i++) {
+            SDL_RenderDrawLine(renderer, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+        }
+    }
+}
+
 void Renderer::renderText(const char* text, int x, int y, int size) {
     // Simple text rendering using SDL_RenderDrawPoint
     // Note: In a full implementation, you'd use SDL_ttf for proper text rendering

@@ -8,6 +8,9 @@
 #include <chrono>
 #include "Config.h"
 
+// Forward declarations
+class Dummy;
+
 // Samurai ability states
 enum class SamuraiAbility {
     NONE = 0,
@@ -96,7 +99,7 @@ public:
 class Dummy {
 public:
     uint32_t id;
-    float x, y;          // Position
+    float x, y;          
     float size;
     int health;
     int maxHealth;

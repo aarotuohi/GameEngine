@@ -168,6 +168,21 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
             }
         }
     }
+    
+    {
+        std::lock_guard<std::mutex> lock(projectilesMutex);
+        
+        // Clear old projectiles and update with new state
+        projectiles.clear();
+        
+        for (const auto& state : broadcast.projectiles) {
+            auto projectile = std::make_shared<Projectile>(
+                state.id, state.x, state.y, state.vx, state.vy, 
+                state.ownerId, state.isTornado
+            );
+            projectiles[state.id] = projectile;
+        }
+    }
 }
 
 void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {
@@ -234,6 +249,11 @@ std::shared_ptr<Player> NetworkManager::getPlayer(uint32_t pid) {
 std::unordered_map<uint32_t, std::shared_ptr<Dummy>> NetworkManager::getDummies() {
     std::lock_guard<std::mutex> lock(dummiesMutex);
     return dummies;
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<Projectile>> NetworkManager::getProjectiles() {
+    std::lock_guard<std::mutex> lock(projectilesMutex);
+    return projectiles;
 }
 
 void NetworkManager::disconnect() {

@@ -60,11 +60,23 @@ namespace Protocol {
         bool isAlive;
     };
 
+    struct ProjectileState {
+        uint32_t id;
+        float x;
+        float y;
+        float vx;
+        float vy;
+        bool isTornado;
+        uint32_t ownerId;
+    };
+
     struct StateBroadcast {
         uint32_t numPlayers;
         std::vector<PlayerState> players;
         uint32_t numDummies;
         std::vector<DummyState> dummies;
+        uint32_t numProjectiles;
+        std::vector<ProjectileState> projectiles;
     };
 
     // Encoding functions

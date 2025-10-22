@@ -235,6 +235,21 @@ void NetworkHandler::broadcastUdpState() {
         broadcast.dummies.push_back(state);
     }
     
+    // Add projectiles
+    auto projectiles = gameState.getAllProjectiles();
+    broadcast.numProjectiles = static_cast<uint32_t>(projectiles.size());
+    for (const auto& [projId, proj] : projectiles) {
+        Protocol::ProjectileState state;
+        state.id = proj->id;
+        state.x = proj->x;
+        state.y = proj->y;
+        state.vx = proj->vx;
+        state.vy = proj->vy;
+        state.isTornado = proj->isTornado;
+        state.ownerId = proj->ownerId;
+        broadcast.projectiles.push_back(state);
+    }
+    
     auto data = Protocol::encodeStateBroadcast(broadcast);
     auto addresses = playerManager.getUdpAddresses();
     
