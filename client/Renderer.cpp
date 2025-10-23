@@ -650,54 +650,118 @@ void Renderer::renderProjectile(const Projectile& projectile) {
     int scale = static_cast<int>(cameraScale);
     
     if (projectile.isTornado) {
-        // Render tornado (larger, cyan/wind colored, spinning effect)
-        SDL_Color tornadoCore = {120, 200, 255, 255};    // Bright cyan
-        SDL_Color tornadoOuter = {180, 230, 255, 180};   // Light cyan, semi-transparent
-        
+        // Render beautiful spiral tornado
         int tornadoRadius = static_cast<int>(projectile.size * cameraScale);
+        float time = SDL_GetTicks() / 150.0f; 
+
+        // Define colors for the blue tornado gradient
+        SDL_Color darkBlue = {40, 100, 180, 255};      
+        SDL_Color brightBlue = {100, 180, 255, 255};   
+        SDL_Color lightBlue = {150, 210, 255, 200};    
+        SDL_Color whiteCore = {200, 230, 255, 255};    
         
-        // Draw outer ring (wind effect)
-        setColor(tornadoOuter);
-        for (int y = -tornadoRadius; y <= tornadoRadius; y++) {
-            int width = static_cast<int>(std::sqrt(tornadoRadius * tornadoRadius - y * y));
-            SDL_RenderDrawLine(renderer, 
-                screenX - width, screenY + y,
-                screenX + width, screenY + y);
+        // Draw multiple spiral arms 
+        int numSpirals = 5; 
+        int numSegments = 30; 
+        
+        for (int spiralIdx = 0; spiralIdx < numSpirals; spiralIdx++) {
+            float spiralOffset = (spiralIdx * 2.0f * 3.14159f / numSpirals) + time;
+            
+            for (int segment = 0; segment < numSegments; segment++) {
+                float t = static_cast<float>(segment) / numSegments;
+                float radius = t * tornadoRadius;
+                
+                // Create spiral curve
+                float angle = spiralOffset + (t * 6.0f * 3.14159f); 
+                
+                int x = screenX + static_cast<int>(std::cos(angle) * radius);
+                int y = screenY + static_cast<int>(std::sin(angle) * radius);
+                
+                // Gradient color based on distance from center
+                SDL_Color spiralColor;
+                if (t < 0.3f) {
+                    spiralColor = whiteCore;
+                } else if (t < 0.6f) {
+                    spiralColor = brightBlue;
+                } else {
+                    spiralColor = darkBlue;
+                }
+                
+                setColor(spiralColor);
+                
+                // Draw thicker spiral lines
+                int thickness = static_cast<int>((1.0f - t) * 3 * scale);
+                if (thickness < 1) thickness = 1;
+                
+                for (int thick = -thickness; thick <= thickness; thick++) {
+                    SDL_RenderDrawPoint(renderer, x + thick, y);
+                    SDL_RenderDrawPoint(renderer, x, y + thick);
+                }
+            }
         }
         
-        // Draw inner core
-        setColor(tornadoCore);
-        int coreRadius = tornadoRadius / 2;
-        for (int y = -coreRadius; y <= coreRadius; y++) {
-            int width = static_cast<int>(std::sqrt(coreRadius * coreRadius - y * y));
-            SDL_RenderDrawLine(renderer, 
-                screenX - width, screenY + y,
-                screenX + width, screenY + y);
+        // Draw circular rings at various radii for depth
+        for (int ring = 1; ring <= 3; ring++) {
+            int ringRadius = static_cast<int>(tornadoRadius * ring / 3.5f);
+            float ringAngleOffset = time * (1.5f - ring * 0.3f); 
+            
+            SDL_Color ringColor;
+            if (ring == 1) ringColor = lightBlue;
+            else if (ring == 2) ringColor = brightBlue;
+            else ringColor = darkBlue;
+            
+            setColor(ringColor);
+            
+            // Draw dashed ring with rotation
+            int numDashes = 12 + ring * 4;
+            for (int dash = 0; dash < numDashes; dash++) {
+                float angle = ringAngleOffset + (dash * 2.0f * 3.14159f / numDashes);
+                int x = screenX + static_cast<int>(std::cos(angle) * ringRadius);
+                int y = screenY + static_cast<int>(std::sin(angle) * ringRadius);
+                
+                // Draw small dash
+                int dashLen = 2 * scale;
+                SDL_RenderDrawLine(renderer, x - dashLen, y, x + dashLen, y);
+                SDL_RenderDrawLine(renderer, x, y - dashLen, x, y + dashLen);
+            }
         }
         
-        // Add spiral lines for rotation effect
-        setColor({80, 180, 255, 255}); // Darker cyan
-        for (int i = 0; i < 3; i++) {
-            float angle = (SDL_GetTicks() / 100.0f) + (i * 2.0f * 3.14159f / 3.0f);
-            int x1 = screenX + static_cast<int>(std::cos(angle) * coreRadius);
-            int y1 = screenY + static_cast<int>(std::sin(angle) * coreRadius);
-            int x2 = screenX + static_cast<int>(std::cos(angle) * tornadoRadius);
-            int y2 = screenY + static_cast<int>(std::sin(angle) * tornadoRadius);
-            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        // Add particle effects around the tornado
+        int numParticles = 20;
+        for (int i = 0; i < numParticles; i++) {
+            float particleAngle = time * 2.0f + (i * 2.0f * 3.14159f / numParticles);
+            float particleRadius = tornadoRadius * 1.1f + std::sin(time * 3.0f + i) * tornadoRadius * 0.2f;
+            
+            int px = screenX + static_cast<int>(std::cos(particleAngle) * particleRadius);
+            int py = screenY + static_cast<int>(std::sin(particleAngle) * particleRadius);
+            
+            setColor(lightBlue);
+            SDL_RenderDrawPoint(renderer, px, py);
+            SDL_RenderDrawPoint(renderer, px + 1, py);
+            SDL_RenderDrawPoint(renderer, px, py + 1);
         }
+        
+        // Draw bright center core
+        setColor(whiteCore);
+        int centerSize = static_cast<int>(tornadoRadius * 0.15f);
+        for (int y = -centerSize; y <= centerSize; y++) {
+            int width = static_cast<int>(std::sqrt(centerSize * centerSize - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
     } else {
-        // Render normal Q blade (elongated rectangle, silver/white)
-        SDL_Color bladeColor = {240, 240, 250, 255};      // Silver/white
-        SDL_Color bladeEdge = {200, 200, 220, 255};       // Slightly darker edge
+        // Render normal Q blade 
+        SDL_Color bladeColor = {240, 240, 250, 255};     
+        SDL_Color bladeEdge = {200, 200, 220, 255};      
         
         // Calculate blade rotation based on velocity direction
         float angle = std::atan2(projectile.vy, projectile.vx);
         
-        // Blade dimensions (elongated in direction of travel)
+        // Blade dimensions 
         int bladeLength = static_cast<int>(projectile.size * 2 * cameraScale);
         int bladeWidth = static_cast<int>(projectile.size * 0.5f * cameraScale);
         
-        // Calculate blade corners (rotated rectangle)
+        // Calculate blade corners 
         float cosA = std::cos(angle);
         float sinA = std::sin(angle);
         
@@ -725,7 +789,7 @@ void Renderer::renderProjectile(const Projectile& projectile) {
         // Close the polygon
         points[4] = points[0];
         
-        // Fill the blade (draw horizontal lines between edges)
+        // Fill the blade 
         setColor(bladeColor);
         for (int i = 0; i < 4; i++) {
             SDL_RenderDrawLine(renderer, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
@@ -766,9 +830,7 @@ void Renderer::renderProjectile(const Projectile& projectile) {
 }
 
 void Renderer::renderText(const char* text, int x, int y, int size) {
-    // Simple text rendering using SDL_RenderDrawPoint
-    // Note: In a full implementation, you'd use SDL_ttf for proper text rendering
-    // This is a placeholder that just draws a box where text would be
+    
     setColor(textColor);
     int textWidth = static_cast<int>(std::strlen(text)) * size / 2;
     SDL_Rect rect = {x, y, textWidth, size};
@@ -778,7 +840,7 @@ void Renderer::renderText(const char* text, int x, int y, int size) {
 void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
     setColor(textColor);
     
-    // Player ID indicator (top-left corner)
+    // Player ID indicator 
     SDL_Rect idRect = {10, 10, 150, 25};
     SDL_RenderDrawRect(renderer, &idRect);
     
@@ -786,13 +848,13 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
     SDL_Rect countRect = {10, 40, 150, 25};
     SDL_RenderDrawRect(renderer, &countRect);
     
-    // FPS counter (top-right corner)
+    // FPS counter 
     SDL_Rect fpsRect = {width - 80, 10, 70, 25};
     SDL_RenderDrawRect(renderer, &fpsRect);
     
-    // Controls info (bottom-left)
+    // Controls info 
     const char* controls[] = {
-        "WASD/Arrows: Move",
+        "Right-click: Move",
         "Mouse: Aim",
         "ESC: Quit"
     };
