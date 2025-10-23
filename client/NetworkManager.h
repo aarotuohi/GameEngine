@@ -26,8 +26,10 @@ private:
     
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
+    std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
     mutable std::mutex playersMutex;
     mutable std::mutex dummiesMutex;
+    mutable std::mutex projectilesMutex;
     
     void receiveTcpMessages();
     void receiveUdpMessages();
@@ -42,12 +44,14 @@ public:
     void disconnect();
     
     void sendPositionUpdate(float x, float y, float vx, float vy);
+    void sendAbilityUse(uint8_t abilityType, float targetX, float targetY);
     void sendTcpMessage(uint8_t msgType, const std::vector<uint8_t>& data);
     
     uint32_t getPlayerId() const { return playerId; }
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getPlayers();
     std::shared_ptr<Player> getPlayer(uint32_t pid);
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getDummies();
+    std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getProjectiles();
 };
 
 #endif 

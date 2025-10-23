@@ -8,6 +8,9 @@
 #include <chrono>
 #include "Config.h"
 
+// Forward declarations
+class Dummy;
+
 // Samurai ability states
 enum class SamuraiAbility {
     NONE = 0,
@@ -82,18 +85,21 @@ public:
     float size;
     float speed;
     bool active;
+    bool isTornado;      // True if this is a Q3 tornado
+    int damage;          // Damage dealt
 
-    Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner);
+    Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado = false, int dmg = 20);
     
     void update(float dt);
     bool checkCollision(const Player& player) const;
+    bool checkCollisionWithDummy(const Dummy& dummy) const;
 };
 
 // Target Dummy class for ability testing
 class Dummy {
 public:
     uint32_t id;
-    float x, y;          // Position
+    float x, y;          
     float size;
     int health;
     int maxHealth;

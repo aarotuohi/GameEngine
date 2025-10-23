@@ -171,17 +171,20 @@ void Player::respawn(float spawnX, float spawnY) {
 }
 
 // Projectile implementation
-Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner)
+Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado, int dmg)
     : id(projId), x(posX), y(posY), vx(velX), vy(velY), ownerId(owner),
-      size(5.0f), speed(400.0f), active(true) {
+      size(tornado ? 30.0f : 15.0f), speed(tornado ? 600.0f : 800.0f), active(true), 
+      isTornado(tornado), damage(dmg) {
 }
 
 void Projectile::update(float dt) {
     x += vx * speed * dt;
     y += vy * speed * dt;
     
-    // Deactivate if out of bounds
-    if (x < 0 || x > Config::WORLD_WIDTH || y < 0 || y > Config::WORLD_HEIGHT) {
+    // Deactivate if out of bounds (tornado goes farther)
+    float maxDistance = isTornado ? 800.0f : 400.0f;
+    if (x < -maxDistance || x > Config::WORLD_WIDTH + maxDistance || 
+        y < -maxDistance || y > Config::WORLD_HEIGHT + maxDistance) {
         active = false;
     }
 }
@@ -193,6 +196,15 @@ bool Projectile::checkCollision(const Player& player) const {
     float dy = y - player.y;
     float distance = std::sqrt(dx * dx + dy * dy);
     return distance < (size + player.size / 2.0f);
+}
+
+bool Projectile::checkCollisionWithDummy(const Dummy& dummy) const {
+    if (!dummy.isAlive) return false;
+    
+    float dx = x - dummy.x;
+    float dy = y - dummy.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    return distance < (size + dummy.size / 2.0f);
 }
 
 // Dummy implementation

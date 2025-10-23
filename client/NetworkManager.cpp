@@ -168,6 +168,21 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
             }
         }
     }
+    
+    {
+        std::lock_guard<std::mutex> lock(projectilesMutex);
+        
+        // Clear old projectiles and update with new state
+        projectiles.clear();
+        
+        for (const auto& state : broadcast.projectiles) {
+            auto projectile = std::make_shared<Projectile>(
+                state.id, state.x, state.y, state.vx, state.vy, 
+                state.ownerId, state.isTornado
+            );
+            projectiles[state.id] = projectile;
+        }
+    }
 }
 
 void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {
@@ -191,6 +206,29 @@ void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {
            0, reinterpret_cast<const sockaddr*>(&udpAddr), sizeof(udpAddr));
 }
 
+void NetworkManager::sendAbilityUse(uint8_t abilityType, float targetX, float targetY) {
+    if (playerId == 0) return;
+    
+    Protocol::AbilityUse ability;
+    ability.playerId = playerId;
+    ability.abilityType = abilityType;
+    ability.targetX = targetX;
+    ability.targetY = targetY;
+    
+    auto data = Protocol::encodeAbilityUse(ability);
+    
+    // Prepend update type
+    std::vector<uint8_t> message;
+    message.push_back(static_cast<uint8_t>(Config::UpdateType::ABILITY_USE));
+    message.insert(message.end(), data.begin(), data.end());
+    
+    sockaddr_in udpAddr = serverAddr;
+    udpAddr.sin_port = Protocol::hton(Config::UDP_PORT);
+    
+    sendto(udpSocket, reinterpret_cast<const char*>(message.data()), static_cast<int>(message.size()),
+           0, reinterpret_cast<const sockaddr*>(&udpAddr), sizeof(udpAddr));
+}
+
 void NetworkManager::sendTcpMessage(uint8_t msgType, const std::vector<uint8_t>& data) {
     auto message = Protocol::encodeTCPMessage(msgType, data);
     send(tcpSocket, reinterpret_cast<const char*>(message.data()), 
@@ -211,6 +249,11 @@ std::shared_ptr<Player> NetworkManager::getPlayer(uint32_t pid) {
 std::unordered_map<uint32_t, std::shared_ptr<Dummy>> NetworkManager::getDummies() {
     std::lock_guard<std::mutex> lock(dummiesMutex);
     return dummies;
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<Projectile>> NetworkManager::getProjectiles() {
+    std::lock_guard<std::mutex> lock(projectilesMutex);
+    return projectiles;
 }
 
 void NetworkManager::disconnect() {

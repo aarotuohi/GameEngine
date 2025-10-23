@@ -3,6 +3,7 @@
 #include <iostream>
 #include <csignal>
 
+// Global pointer for signal handling
 GameServer* g_server = nullptr;
 
 void signalHandler(int signal) {
@@ -24,6 +25,7 @@ int main() {
 
     // Create and start server
     GameServer server;
+    // Global pointer set for signal handling
     g_server = &server;
 
     if (server.start()) {

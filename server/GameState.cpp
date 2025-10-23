@@ -78,6 +78,7 @@ void GameState::updatePlayerPosition(uint32_t playerId, float dx, float dy, floa
     }
 }
 
+// update player velocity
 void GameState::updatePlayerVelocity(uint32_t playerId, float vx, float vy) {
     std::lock_guard<std::mutex> lock(mutex);
     auto it = players.find(playerId);
@@ -86,6 +87,7 @@ void GameState::updatePlayerVelocity(uint32_t playerId, float vx, float vy) {
     }
 }
 
+//set player position
 void GameState::setPlayerPosition(uint32_t playerId, float x, float y) {
     std::lock_guard<std::mutex> lock(mutex);
     auto it = players.find(playerId);
@@ -94,11 +96,21 @@ void GameState::setPlayerPosition(uint32_t playerId, float x, float y) {
     }
 }
 
+// create projectile
 uint32_t GameState::createProjectile(uint32_t ownerId, float x, float y, float vx, float vy) {
     std::lock_guard<std::mutex> lock(mutex);
     uint32_t projId = nextProjectileId++;
     auto projectile = std::make_shared<Projectile>(projId, x, y, vx, vy, ownerId);
     projectiles[projId] = projectile;
+    return projId;
+}
+
+uint32_t GameState::createQProjectile(uint32_t ownerId, float x, float y, float dirX, float dirY, bool isTornado, int damage) {
+    std::lock_guard<std::mutex> lock(mutex);
+    uint32_t projId = nextProjectileId++;
+    auto projectile = std::make_shared<Projectile>(projId, x, y, dirX, dirY, ownerId, isTornado, damage);
+    projectiles[projId] = projectile;
+    std::cout << "Created " << (isTornado ? "TORNADO" : "blade") << " projectile for player " << ownerId << "\n";
     return projId;
 }
 
@@ -112,16 +124,43 @@ void GameState::update(float dt) {
         if (!proj->active) {
             inactiveProjectiles.push_back(projId);
         } else {
-            // Check collisions with players
-            for (auto& [playerId, player] : players) {
-                if (proj->checkCollision(*player)) {
+            bool hit = false;
+            
+            // Check collisions with dummies first
+            for (auto& [dummyId, dummy] : dummies) {
+                if (proj->checkCollisionWithDummy(*dummy)) {
                     proj->active = false;
-                    // Award score to shooter
-                    auto shooter = players.find(proj->ownerId);
-                    if (shooter != players.end()) {
-                        shooter->second->score++;
+                    hit = true;
+                    
+                    // Deal damage
+                    dummy->takeDamage(proj->damage);
+                    
+                    // Give Q stack to owner on hit
+                    auto owner = players.find(proj->ownerId);
+                    if (owner != players.end()) {
+                        owner->second->qStacks++;
+                        if (owner->second->qStacks > 2) {
+                            owner->second->qStacks = 0;  // Reset after tornado
+                        }
+                        std::cout << "Player " << proj->ownerId << " Q stacks: " 
+                                  << owner->second->qStacks << "/2\n";
                     }
                     break;
+                }
+            }
+            
+            // Check collisions with players if didn't hit dummy
+            if (!hit) {
+                for (auto& [playerId, player] : players) {
+                    if (proj->checkCollision(*player)) {
+                        proj->active = false;
+                        // Award score to shooter
+                        auto shooter = players.find(proj->ownerId);
+                        if (shooter != players.end()) {
+                            shooter->second->score++;
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -174,6 +213,11 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
 std::unordered_map<uint32_t, std::shared_ptr<Player>> GameState::getAllPlayers() {
     std::lock_guard<std::mutex> lock(mutex);
     return players;
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<Projectile>> GameState::getAllProjectiles() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return projectiles;
 }
 
 uint32_t GameState::spawnDummy(float x, float y) {

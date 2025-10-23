@@ -39,7 +39,8 @@ namespace Config {
     enum class UpdateType : uint8_t {
         POSITION = 1,
         VELOCITY = 2,
-        STATE_BROADCAST = 3
+        STATE_BROADCAST = 3,
+        ABILITY_USE = 4
     };
 }
 

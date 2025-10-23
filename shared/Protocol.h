@@ -36,6 +36,13 @@ namespace Protocol {
         uint64_t timestamp;
     };
 
+    struct AbilityUse {
+        uint32_t playerId;
+        uint8_t abilityType;  // 1=Q, 2=W, 3=E, 4=R
+        float targetX;  // For directional abilities
+        float targetY;
+    };
+
     // UDP State Broadcast Structure
     struct PlayerState {
         uint32_t id;
@@ -53,21 +60,35 @@ namespace Protocol {
         bool isAlive;
     };
 
+    struct ProjectileState {
+        uint32_t id;
+        float x;
+        float y;
+        float vx;
+        float vy;
+        bool isTornado;
+        uint32_t ownerId;
+    };
+
     struct StateBroadcast {
         uint32_t numPlayers;
         std::vector<PlayerState> players;
         uint32_t numDummies;
         std::vector<DummyState> dummies;
+        uint32_t numProjectiles;
+        std::vector<ProjectileState> projectiles;
     };
 
     // Encoding functions
     std::vector<uint8_t> encodeTCPMessage(uint8_t type, const std::vector<uint8_t>& data);
     std::vector<uint8_t> encodePositionUpdate(const PositionUpdate& update);
+    std::vector<uint8_t> encodeAbilityUse(const AbilityUse& ability);
     std::vector<uint8_t> encodeStateBroadcast(const StateBroadcast& state);
     
     // Decoding functions
     bool decodeTCPMessage(const std::vector<uint8_t>& buffer, TCPMessage& message);
     bool decodePositionUpdate(const uint8_t* data, size_t length, PositionUpdate& update);
+    bool decodeAbilityUse(const uint8_t* data, size_t length, AbilityUse& ability);
     bool decodeStateBroadcast(const uint8_t* data, size_t length, StateBroadcast& state);
 
     // Helper function for network byte order conversion

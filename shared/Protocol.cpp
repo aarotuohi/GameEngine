@@ -106,6 +106,30 @@ namespace Protocol {
         return true;
     }
 
+    // Ability use encoding
+    std::vector<uint8_t> encodeAbilityUse(const AbilityUse& ability) {
+        std::vector<uint8_t> buffer(sizeof(AbilityUse));
+        
+        // Convert to network byte order
+        AbilityUse netAbility = ability;
+        netAbility.playerId = hton(ability.playerId);
+        
+        // Copy to buffer
+        std::memcpy(buffer.data(), &netAbility, sizeof(AbilityUse));
+        
+        return buffer;
+    }
+
+    // Ability use decoding
+    bool decodeAbilityUse(const uint8_t* data, size_t length, AbilityUse& ability) {
+        if (length < sizeof(AbilityUse)) return false;
+        
+        std::memcpy(&ability, data, sizeof(AbilityUse));
+        ability.playerId = ntoh(ability.playerId);
+        
+        return true;
+    }
+
     // State broadcast encoding
     std::vector<uint8_t> encodeStateBroadcast(const StateBroadcast& state) {
         std::vector<uint8_t> buffer;
@@ -141,6 +165,23 @@ namespace Protocol {
             buffer.insert(buffer.end(),
                          reinterpret_cast<const uint8_t*>(&netDummy),
                          reinterpret_cast<const uint8_t*>(&netDummy) + sizeof(DummyState));
+        }
+        
+        // Add number of projectiles
+        uint32_t numProjectiles = hton(state.numProjectiles);
+        buffer.insert(buffer.end(),
+                     reinterpret_cast<uint8_t*>(&numProjectiles),
+                     reinterpret_cast<uint8_t*>(&numProjectiles) + sizeof(numProjectiles));
+        
+        // Add each projectile state
+        for (const auto& proj : state.projectiles) {
+            ProjectileState netProj = proj;
+            netProj.id = hton(proj.id);
+            netProj.ownerId = hton(proj.ownerId);
+            
+            buffer.insert(buffer.end(),
+                         reinterpret_cast<const uint8_t*>(&netProj),
+                         reinterpret_cast<const uint8_t*>(&netProj) + sizeof(ProjectileState));
         }
         
         return buffer;
@@ -190,6 +231,29 @@ namespace Protocol {
             }
         } else {
             state.numDummies = 0;
+        }
+        
+        // Extract number of projectiles if data available
+        if (length >= expectedSize + sizeof(uint32_t)) {
+            std::memcpy(&state.numProjectiles, ptr, sizeof(uint32_t));
+            state.numProjectiles = ntoh(state.numProjectiles);
+            ptr += sizeof(uint32_t);
+            
+            expectedSize += sizeof(uint32_t) + state.numProjectiles * sizeof(ProjectileState);
+            if (length >= expectedSize) {
+                // Extract projectile states
+                state.projectiles.clear();
+                for (uint32_t i = 0; i < state.numProjectiles; ++i) {
+                    ProjectileState proj;
+                    std::memcpy(&proj, ptr, sizeof(ProjectileState));
+                    proj.id = ntoh(proj.id);
+                    proj.ownerId = ntoh(proj.ownerId);
+                    state.projectiles.push_back(proj);
+                    ptr += sizeof(ProjectileState);
+                }
+            }
+        } else {
+            state.numProjectiles = 0;
         }
         
         return true;
