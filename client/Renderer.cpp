@@ -829,6 +829,98 @@ void Renderer::renderProjectile(const Projectile& projectile) {
     }
 }
 
+void Renderer::renderWindWall(const Player& player) {
+    if (!player.hasWindWall) return;
+    
+    // Convert world position to screen coordinates
+    int screenX, screenY;
+    worldToScreen(player.x, player.y, screenX, screenY);
+    
+    int wallRadius = static_cast<int>(player.windWallRadius * cameraScale);
+    float time = SDL_GetTicks() / 200.0f; 
+    
+    // Define wind colors
+    SDL_Color windCore = {150, 220, 255, 200};     
+    SDL_Color windOuter = {100, 180, 255, 120};    
+    SDL_Color windParticle = {200, 240, 255, 180}; 
+    
+    // Draw effect rings
+    for (int ring = 3; ring >= 1; ring--) {
+        int ringRadius = static_cast<int>(wallRadius * ring / 3.0f);
+        float ringAlpha = 255.0f / (ring + 1); 
+        
+        SDL_Color ringColor = windOuter;
+        ringColor.a = static_cast<Uint8>(ringAlpha);
+        setColor(ringColor);
+        
+        // Draw animated dashed circle
+        int numSegments = 24 + ring * 6;
+        float angleOffset = time * (1.0f + ring * 0.3f); 
+        
+        for (int i = 0; i < numSegments; i++) {
+           
+            if (i % 2 == 0) {
+                float angle = angleOffset + (i * 2.0f * 3.14159f / numSegments);
+                int x = screenX + static_cast<int>(std::cos(angle) * ringRadius);
+                int y = screenY + static_cast<int>(std::sin(angle) * ringRadius);
+                
+                // Draw small wind segment
+                int segmentSize = 2 + ring;
+                for (int dx = -segmentSize; dx <= segmentSize; dx++) {
+                    for (int dy = -segmentSize; dy <= segmentSize; dy++) {
+                        if (dx*dx + dy*dy <= segmentSize*segmentSize) {
+                            SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Swirling
+    setColor(windParticle);
+    int numParticles = 30;
+    for (int i = 0; i < numParticles; i++) {
+        float particleAngle = time * 2.5f + (i * 2.0f * 3.14159f / numParticles);
+        float particleRadius = wallRadius * 0.7f + std::sin(time * 4.0f + i * 0.5f) * wallRadius * 0.2f;
+        
+        int px = screenX + static_cast<int>(std::cos(particleAngle) * particleRadius);
+        int py = screenY + static_cast<int>(std::sin(particleAngle) * particleRadius);
+        
+        //tail effect
+        SDL_RenderDrawPoint(renderer, px, py);
+        SDL_RenderDrawPoint(renderer, px - 1, py);
+        SDL_RenderDrawPoint(renderer, px, py - 1);
+    }
+    
+    // pulsing effect
+    setColor(windCore);
+    float pulseSize = 1.0f + 0.3f * std::sin(time * 5.0f);
+    int coreRadius = static_cast<int>(wallRadius * 0.3f * pulseSize);
+    
+    // core circle
+    for (int y = -coreRadius; y <= coreRadius; y++) {
+        int width = static_cast<int>(std::sqrt(coreRadius * coreRadius - y * y));
+        SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+    }
+    
+    // Radial rays
+    setColor({180, 230, 255, 150});
+    int numRays = 8;
+    for (int ray = 0; ray < numRays; ray++) {
+        float rayAngle = time + (ray * 2.0f * 3.14159f / numRays);
+        int innerRadius = static_cast<int>(wallRadius * 0.4f);
+        int outerRadius = static_cast<int>(wallRadius * 0.9f);
+        
+        int x1 = screenX + static_cast<int>(std::cos(rayAngle) * innerRadius);
+        int y1 = screenY + static_cast<int>(std::sin(rayAngle) * innerRadius);
+        int x2 = screenX + static_cast<int>(std::cos(rayAngle) * outerRadius);
+        int y2 = screenY + static_cast<int>(std::sin(rayAngle) * outerRadius);
+        
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    }
+}
+
 void Renderer::renderText(const char* text, int x, int y, int size) {
     
     setColor(textColor);

@@ -50,6 +50,8 @@ namespace Protocol {
         float y;
         float vx;
         float vy;
+        bool hasWindWall;
+        float windWallRadius;
     };
 
     struct DummyState {

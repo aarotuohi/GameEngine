@@ -20,7 +20,7 @@ private:
     float localVx, localVy;
     float localRotation;  
     
-    // Movement target in world coordinates
+    // Movement target
     bool hasWorldTarget;
     float worldTargetX, worldTargetY;
     
@@ -44,7 +44,7 @@ private:
     void updateFps();
 };
 
-#endif // GAMECLIENT_H
+#endif 
 
 
-#endif /* A120E132_812E_4857_A5E3_8DEAFF409759 */
+#endif

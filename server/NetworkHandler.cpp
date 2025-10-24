@@ -179,6 +179,7 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
         Protocol::AbilityUse ability;
         if (Protocol::decodeAbilityUse(payload, payloadLength, ability)) {
             playerManager.registerUdpAddress(ability.playerId, senderAddr);
+            
             // Handle Q ability
             if (ability.abilityType == 1) {
                 auto player = gameState.getPlayer(ability.playerId);
@@ -198,6 +199,13 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                     // Update player Q state (don't increment stacks yet - only on hit)
                     player->lastQTime = std::chrono::steady_clock::now();
                     player->activeAbility = SamuraiAbility::Q_STEEL_TEMPEST;
+                }
+            }
+            // Handle W ability 
+            else if (ability.abilityType == 2) {
+                auto player = gameState.getPlayer(ability.playerId);
+                if (player && player->canUseW()) {
+                    player->useW();
                 }
             }
         }

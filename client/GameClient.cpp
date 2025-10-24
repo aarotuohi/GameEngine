@@ -42,15 +42,16 @@ void GameClient::updateLocalPlayer(float dt) {
     // Check for ability key presses
     if (inputHandler->isQPressed()) {
         std::cout << "Q ability used (Steel Tempest)\n";
-        // Send Q ability to server (direction based on character rotation)
+        // Send Q ability to server, DIRECTION NEEDS TO FIXED!!!!
         float dirX = std::cos(localRotation);
         float dirY = std::sin(localRotation);
-        network->sendAbilityUse(1, dirX, dirY);  // 1 = Q ability
+        network->sendAbilityUse(1, dirX, dirY); 
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isWPressed()) {
-        std::cout << "W ability pressed (Wind Wall)\n";
-        // TODO: Send ability use to server
+        std::cout << "W ability used (Wind Wall)\n";
+        // Send W ability to server (Wind Wall doesn't need direction)
+        network->sendAbilityUse(2, 0.0f, 0.0f);
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isEPressed()) {
@@ -65,7 +66,7 @@ void GameClient::updateLocalPlayer(float dt) {
     }
     
     // Right-click movement system
-    // Check if user clicked a new target
+    // input checker
     if (inputHandler->hasTarget() && !hasWorldTarget) {
         // New target clicked
         std::pair<float, float> screenTarget = inputHandler->getTarget();
@@ -91,9 +92,9 @@ void GameClient::updateLocalPlayer(float dt) {
             localVx = 0.0f;
             localVy = 0.0f;
             hasWorldTarget = false;
-            // Immediately send stop command to server
+            
             network->sendPositionUpdate(localX, localY, 0.0f, 0.0f);
-            // Update timestamp to prevent immediate regular update from overriding
+            // last poistio
             lastPositionUpdate = std::chrono::steady_clock::now();
         } else {
             // Normalize direction and move
@@ -174,6 +175,21 @@ void GameClient::render() {
             renderer->renderPlayer(localPlayer, true);
         } else {
             renderer->renderPlayer(*player, false);
+        }
+    }
+    
+    // Render wind walls (after players so they appear on top)
+    for (const auto& [playerId, player] : players) {
+        if (player->hasWindWall) {
+            // Use local position for our player's wind wall
+            if (playerId == myId) {
+                Player localPlayer = *player;
+                localPlayer.x = localX;
+                localPlayer.y = localY;
+                renderer->renderWindWall(localPlayer);
+            } else {
+                renderer->renderWindWall(*player);
+            }
         }
     }
     

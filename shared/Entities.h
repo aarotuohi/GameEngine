@@ -46,6 +46,11 @@ public:
     std::chrono::steady_clock::time_point lastRTime;
     int qStacks;         // Steel Tempest stacks (0-2, third cast is tornado)
     
+    // Wind Wall ability
+    bool hasWindWall;    // Whether wind wall is active
+    std::chrono::steady_clock::time_point windWallStartTime;
+    float windWallRadius; // Radius of the wind wall
+    
     // Movement target (right-click movement)
     bool hasTarget;
     float targetX, targetY;
@@ -73,6 +78,10 @@ public:
     void useR(const Player& target);
     void takeDamage(int damage);
     void respawn(float spawnX, float spawnY);
+    
+    // Wind Wall methods
+    void updateWindWall(float dt);
+    bool isProjectileBlockedByWindWall(float projX, float projY) const;
 };
 
 // Projectile class
