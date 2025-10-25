@@ -39,8 +39,10 @@ public:
     void clearAbilityInputs();
     
     // Legacy methods
+
+    
     std::pair<float, float> getMovementVector() const;
-    bool isShooting() const;
+ 
     std::pair<float, float> getShootDirection(float playerX, float playerY) const;
     bool shouldQuit() const { return quit; }
     

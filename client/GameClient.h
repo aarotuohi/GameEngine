@@ -20,7 +20,7 @@ private:
     float localVx, localVy;
     float localRotation;  
     
-    // Movement target in world coordinates
+    // Movement target
     bool hasWorldTarget;
     float worldTargetX, worldTargetY;
     
@@ -30,6 +30,9 @@ private:
     int fps;
     std::chrono::steady_clock::time_point lastFpsUpdate;
     int frameCount;
+
+    std::chrono::steady_clock::time_point lastQSwingTime;
+    std::chrono::milliseconds qSwingDuration{180};
 
 public:
     GameClient(const std::string& playerName = "Player");
@@ -44,7 +47,7 @@ private:
     void updateFps();
 };
 
-#endif // GAMECLIENT_H
+#endif 
 
 
-#endif /* A120E132_812E_4857_A5E3_8DEAFF409759 */
+#endif

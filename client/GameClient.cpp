@@ -7,7 +7,7 @@
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
-      worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
+    worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -16,6 +16,7 @@ GameClient::GameClient(const std::string& playerName)
     positionUpdateInterval = std::chrono::duration<float>(1.0f / Config::UPDATE_RATE);
     lastPositionUpdate = std::chrono::steady_clock::now();
     lastFpsUpdate = std::chrono::steady_clock::now();
+    lastQSwingTime = std::chrono::steady_clock::time_point{};
 }
 
 GameClient::~GameClient() {
@@ -42,15 +43,18 @@ void GameClient::updateLocalPlayer(float dt) {
     // Check for ability key presses
     if (inputHandler->isQPressed()) {
         std::cout << "Q ability used (Steel Tempest)\n";
-        // Send Q ability to server (direction based on character rotation)
+        // Send Q ability to server, DIRECTION NEEDS TO FIXED!!!!
         float dirX = std::cos(localRotation);
         float dirY = std::sin(localRotation);
-        network->sendAbilityUse(1, dirX, dirY);  // 1 = Q ability
+        network->sendAbilityUse(1, dirX, dirY); 
+        // Trigger local sword swing visual briefly
+        lastQSwingTime = std::chrono::steady_clock::now();
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isWPressed()) {
-        std::cout << "W ability pressed (Wind Wall)\n";
-        // TODO: Send ability use to server
+        std::cout << "W ability used (Wind Wall)\n";
+        // Send W ability to server (Wind Wall doesn't need direction)
+        network->sendAbilityUse(2, 0.0f, 0.0f);
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isEPressed()) {
@@ -65,7 +69,7 @@ void GameClient::updateLocalPlayer(float dt) {
     }
     
     // Right-click movement system
-    // Check if user clicked a new target
+    // input checker
     if (inputHandler->hasTarget() && !hasWorldTarget) {
         // New target clicked
         std::pair<float, float> screenTarget = inputHandler->getTarget();
@@ -91,9 +95,9 @@ void GameClient::updateLocalPlayer(float dt) {
             localVx = 0.0f;
             localVy = 0.0f;
             hasWorldTarget = false;
-            // Immediately send stop command to server
+            
             network->sendPositionUpdate(localX, localY, 0.0f, 0.0f);
-            // Update timestamp to prevent immediate regular update from overriding
+            // last poistio
             lastPositionUpdate = std::chrono::steady_clock::now();
         } else {
             // Normalize direction and move
@@ -172,8 +176,32 @@ void GameClient::render() {
             localPlayer.y = localY;
             localPlayer.rotation = localRotation;
             renderer->renderPlayer(localPlayer, true);
+            
+            if (lastQSwingTime.time_since_epoch().count() > 0) {
+                auto now = std::chrono::steady_clock::now();
+                if (now - lastQSwingTime <= qSwingDuration) {
+                    renderer->renderSwordSwing(localX, localY, localRotation,
+                                               Config::Q_SWORD_ARC_DEGREES,
+                                               Config::Q_SWORD_RANGE);
+                }
+            }
         } else {
             renderer->renderPlayer(*player, false);
+        }
+    }
+    
+    // Render wind walls (after players so they appear on top)
+    for (const auto& [playerId, player] : players) {
+        if (player->hasWindWall) {
+            // Use local position for our player's wind wall
+            if (playerId == myId) {
+                Player localPlayer = *player;
+                localPlayer.x = localX;
+                localPlayer.y = localY;
+                renderer->renderWindWall(localPlayer);
+            } else {
+                renderer->renderWindWall(*player);
+            }
         }
     }
     

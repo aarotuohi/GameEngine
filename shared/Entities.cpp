@@ -1,6 +1,7 @@
 #include "Entities.h"
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 // Player implementation (Samurai-themed)
 Player::Player(uint32_t playerId, float posX, float posY, const std::string& playerName)
@@ -9,6 +10,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
       health(100), maxHealth(100), rotation(0.0f), isDashing(false), isAlive(true),
       activeAbility(SamuraiAbility::NONE), qStacks(0),
+      hasWindWall(false), windWallRadius(60.0f),
       hasTarget(false), targetX(0.0f), targetY(0.0f) {
     
     auto now = std::chrono::steady_clock::now();
@@ -16,6 +18,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
     lastWTime = now;
     lastETime = now;
     lastRTime = now;
+    windWallStartTime = now;
 }
 
 void Player::updatePosition(float dx, float dy, float dt) {
@@ -122,6 +125,11 @@ void Player::useW() {
     if (!canUseW()) return;
     lastWTime = std::chrono::steady_clock::now();
     activeAbility = SamuraiAbility::W_WIND_WALL;
+    
+    // Activate wind wall
+    hasWindWall = true;
+    windWallStartTime = std::chrono::steady_clock::now();
+    std::cout << "Player " << id << " activated Wind Wall!" << std::endl;
 }
 
 void Player::useE(float targetX, float targetY) {
@@ -168,6 +176,31 @@ void Player::respawn(float spawnX, float spawnY) {
     isDashing = false;
     qStacks = 0;
     activeAbility = SamuraiAbility::NONE;
+}
+
+void Player::updateWindWall(float dt) {
+    if (hasWindWall) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - windWallStartTime);
+        
+        // Wind wall lasts for 3.75 seconds (like in League of Legends)
+        if (elapsed.count() >= 3750) {
+            hasWindWall = false;
+            std::cout << "Player " << id << " wind wall expired" << std::endl;
+        }
+    }
+}
+
+bool Player::isProjectileBlockedByWindWall(float projX, float projY) const {
+    if (!hasWindWall) return false;
+    
+    // Calculate distance from player center to projectile
+    float dx = projX - x;
+    float dy = projY - y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    
+    // Block if projectile is within wind wall radius
+    return distance <= windWallRadius;
 }
 
 // Projectile implementation

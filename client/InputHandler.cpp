@@ -79,9 +79,7 @@ std::pair<float, float> InputHandler::getMovementVector() const {
     return {dx, dy};
 }
 
-bool InputHandler::isShooting() const {
-    return mouseButtons[0];  // Left mouse button
-}
+
 
 std::pair<float, float> InputHandler::getShootDirection(float playerX, float playerY) const {
     float dx = static_cast<float>(mouseX) - playerX;

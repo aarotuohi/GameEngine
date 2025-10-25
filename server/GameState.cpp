@@ -1,6 +1,7 @@
 #include "GameState.h"
 #include <random>
 #include <iostream>
+#include <cmath>
 
 GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextDummyId(1), taggedPlayerId(0), running(true) {
@@ -114,8 +115,92 @@ uint32_t GameState::createQProjectile(uint32_t ownerId, float x, float y, float 
     return projId;
 }
 
+bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
+                                   float arcDegrees, float range, int damage) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    // Normalize direction
+    float dirLen = std::sqrt(dirX * dirX + dirY * dirY);
+    if (dirLen <= 0.0001f) {
+        return false;
+    }
+    float ndx = dirX / dirLen;
+    float ndy = dirY / dirLen;
+
+    // Precompute angle threshold in radians
+    const float halfArcRad = (arcDegrees * 0.5f) * 3.1415926535f / 180.0f;
+    const float cosThreshold = std::cos(halfArcRad);
+    const float rangeSq = range * range;
+
+    bool hitDummy = false;
+
+    // Check dummies for hits
+    for (auto& [dummyId, dummy] : dummies) {
+        if (!dummy->isAlive) continue;
+        float vx = dummy->x - originX;
+        float vy = dummy->y - originY;
+        float distSq = vx * vx + vy * vy;
+        if (distSq > rangeSq) continue;
+
+        float vLen = std::sqrt(distSq);
+        if (vLen <= 0.0001f) continue;
+        float nvx = vx / vLen;
+        float nvy = vy / vLen;
+
+        // Angle check via dot product
+        float dot = ndx * nvx + ndy * nvy; 
+        if (dot >= cosThreshold) {
+            dummy->takeDamage(damage);
+            hitDummy = true;
+        }
+    }
+
+    // Check players for hits
+    for (auto& [pid, player] : players) {
+        if (pid == ownerId) continue;
+        if (!player->isAlive) continue;
+        float vx = player->x - originX;
+        float vy = player->y - originY;
+        float distSq = vx * vx + vy * vy;
+        if (distSq > rangeSq) continue;
+
+        float vLen = std::sqrt(distSq);
+        if (vLen <= 0.0001f) continue;
+        float nvx = vx / vLen;
+        float nvy = vy / vLen;
+
+        float dot = ndx * nvx + ndy * nvy;
+        if (dot >= cosThreshold) {
+    
+            auto ownerIt = players.find(ownerId);
+            if (ownerIt != players.end()) {
+                ownerIt->second->score++;
+            }
+          
+        }
+    }
+
+
+    if (hitDummy) {
+        auto ownerIt = players.find(ownerId);
+        if (ownerIt != players.end()) {
+            ownerIt->second->qStacks++;
+            if (ownerIt->second->qStacks > 2) ownerIt->second->qStacks = 0;
+            std::cout << "Player " << ownerId << " Q stacks: "
+                      << ownerIt->second->qStacks << "/2\n";
+        }
+    }
+
+    return hitDummy;
+}
+
 void GameState::update(float dt) {
     std::lock_guard<std::mutex> lock(mutex);
+    
+    // Update players 
+    for (auto& [playerId, player] : players) {
+        player->updateWindWall(dt);
+    }
     
     // Update projectiles
     std::vector<uint32_t> inactiveProjectiles;
@@ -126,26 +211,34 @@ void GameState::update(float dt) {
         } else {
             bool hit = false;
             
-            // Check collisions with dummies first
-            for (auto& [dummyId, dummy] : dummies) {
-                if (proj->checkCollisionWithDummy(*dummy)) {
+            for (auto& [playerId, player] : players) {
+                if (player->isProjectileBlockedByWindWall(proj->x, proj->y)) {
                     proj->active = false;
                     hit = true;
-                    
-                    // Deal damage
-                    dummy->takeDamage(proj->damage);
-                    
-                    // Give Q stack to owner on hit
-                    auto owner = players.find(proj->ownerId);
-                    if (owner != players.end()) {
-                        owner->second->qStacks++;
-                        if (owner->second->qStacks > 2) {
-                            owner->second->qStacks = 0;  // Reset after tornado
-                        }
-                        std::cout << "Player " << proj->ownerId << " Q stacks: " 
-                                  << owner->second->qStacks << "/2\n";
-                    }
+                    std::cout << "Projectile " << projId << " blocked by Player " << playerId << "'s Wind Wall!" << std::endl;
                     break;
+                }
+            }
+            
+            if (!hit) {
+                for (auto& [dummyId, dummy] : dummies) {
+                    if (proj->checkCollisionWithDummy(*dummy)) {
+                        proj->active = false;
+                        hit = true;
+                        dummy->takeDamage(proj->damage);
+                      
+                        // Stack Q
+                        auto owner = players.find(proj->ownerId);
+                        if (owner != players.end()) {
+                            owner->second->qStacks++;
+                            if (owner->second->qStacks > 2) {
+                                owner->second->qStacks = 0; 
+                            }
+                            std::cout << "Player " << proj->ownerId << " Q stacks: " 
+                                      << owner->second->qStacks << "/2\n";
+                        }
+                        break;
+                    }
                 }
             }
             
@@ -171,7 +264,7 @@ void GameState::update(float dt) {
         projectiles.erase(projId);
     }
     
-    // Check player collisions (tag mode)
+    // Check player collisions 
     if (taggedPlayerId != 0) {
         auto taggedIt = players.find(taggedPlayerId);
         if (taggedIt != players.end()) {
@@ -179,7 +272,7 @@ void GameState::update(float dt) {
             for (auto& [playerId, player] : players) {
                 if (playerId != taggedPlayerId) {
                     if (taggedPlayer->checkCollision(*player)) {
-                        // Transfer tag
+                        
                         taggedPlayer->isTagged = false;
                         player->isTagged = true;
                         taggedPlayer->score++;
@@ -204,6 +297,8 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.y = player->y;
         state.vx = player->vx;
         state.vy = player->vy;
+        state.hasWindWall = player->hasWindWall;
+        state.windWallRadius = player->windWallRadius;
         states.push_back(state);
     }
     

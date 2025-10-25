@@ -139,10 +139,14 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 // Update existing player
                 it->second->setPosition(state.x, state.y);
                 it->second->updateVelocity(state.vx, state.vy);
+                it->second->hasWindWall = state.hasWindWall;
+                it->second->windWallRadius = state.windWallRadius;
             } else {
                 // Add new player
                 auto player = std::make_shared<Player>(state.id, state.x, state.y);
                 player->updateVelocity(state.vx, state.vy);
+                player->hasWindWall = state.hasWindWall;
+                player->windWallRadius = state.windWallRadius;
                 players[state.id] = player;
             }
         }
