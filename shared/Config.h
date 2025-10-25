@@ -18,15 +18,22 @@ namespace Config {
 
     // Player settings
     constexpr int PLAYER_SIZE = 20;
-    constexpr float PLAYER_SPEED = 200.0f;  // pixels per second
+    constexpr float PLAYER_SPEED = 200.0f;  
     constexpr int MAX_PLAYERS = 10;
 
     // Network settings
-    constexpr int TICK_RATE = 60;           // Server updates per second
-    constexpr int UPDATE_RATE = 60;         // Position updates per second (increased for smoothness)
+    constexpr int TICK_RATE = 60;         
+    constexpr int UPDATE_RATE = 60;        
     constexpr int BUFFER_SIZE = 1024;
 
-    // Message types (for TCP reliable messages)
+   
+    constexpr float Q_SWORD_ARC_DEGREES = 90.0f;
+   
+    constexpr float Q_SWORD_RANGE = 80.0f;
+   
+    constexpr int Q_SWORD_DAMAGE = 20;
+
+    
     enum class MessageType : uint8_t {
         PLAYER_JOIN = 1,
         PLAYER_LEAVE = 2,
@@ -35,7 +42,7 @@ namespace Config {
         PLAYER_SHOOT = 5
     };
 
-    // Update types (for UDP real-time updates)
+
     enum class UpdateType : uint8_t {
         POSITION = 1,
         VELOCITY = 2,
@@ -44,7 +51,7 @@ namespace Config {
     };
 }
 
-#endif // CONFIG_H
+#endif 
 
 
-#endif /* ED1984D6_E59E_4FD3_BBF6_BD65F372CBD2 */
+#endif 

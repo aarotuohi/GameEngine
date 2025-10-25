@@ -39,6 +39,9 @@ public:
     // Projectile management
     uint32_t createProjectile(uint32_t ownerId, float x, float y, float vx, float vy);
     uint32_t createQProjectile(uint32_t ownerId, float x, float y, float dirX, float dirY, bool isTornado, int damage);
+
+    bool processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
+                            float arcDegrees, float range, int damage);
     
     // Dummy management
     uint32_t spawnDummy(float x, float y);

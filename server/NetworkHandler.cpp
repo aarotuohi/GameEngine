@@ -180,28 +180,38 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
         if (Protocol::decodeAbilityUse(payload, payloadLength, ability)) {
             playerManager.registerUdpAddress(ability.playerId, senderAddr);
             
-            // Handle Q ability
             if (ability.abilityType == 1) {
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseQ()) {
-                    // Get player position and rotation
+            
                     float dirX = ability.targetX;
                     float dirY = ability.targetY;
-                    
-                    // Determine if this should be a tornado (Q3)
+
                     bool isTornado = (player->qStacks >= 2);
-                    int damage = isTornado ? 40 : 20;
+                    if (isTornado) {
                     
-                    // Create projectile
-                    gameState.createQProjectile(ability.playerId, player->x, player->y, 
-                                               dirX, dirY, isTornado, damage);
-                    
-                    // Update player Q state (don't increment stacks yet - only on hit)
+                        const int tornadoDamage = 40;
+                        gameState.createQProjectile(ability.playerId, player->x, player->y,
+                                                    dirX, dirY, true, tornadoDamage);
+                       
+                        player->qStacks = 0;
+                    } else {
+                        
+                        gameState.processQSwordSwing(
+                            ability.playerId,
+                            player->x, player->y,
+                            dirX, dirY,
+                            Config::Q_SWORD_ARC_DEGREES,
+                            Config::Q_SWORD_RANGE,
+                            Config::Q_SWORD_DAMAGE
+                        );
+                    }
+
+               
                     player->lastQTime = std::chrono::steady_clock::now();
                     player->activeAbility = SamuraiAbility::Q_STEEL_TEMPEST;
                 }
             }
-            // Handle W ability 
             else if (ability.abilityType == 2) {
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseW()) {
@@ -210,7 +220,7 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
             }
         }
     } else {
-        // Fallback for old clients without update type prefix
+
         Protocol::PositionUpdate update;
         if (Protocol::decodePositionUpdate(data, length, update)) {
             gameState.setPlayerPosition(update.playerId, update.x, update.y);

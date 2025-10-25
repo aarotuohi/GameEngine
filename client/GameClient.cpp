@@ -7,7 +7,7 @@
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
-      worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
+    worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -16,6 +16,7 @@ GameClient::GameClient(const std::string& playerName)
     positionUpdateInterval = std::chrono::duration<float>(1.0f / Config::UPDATE_RATE);
     lastPositionUpdate = std::chrono::steady_clock::now();
     lastFpsUpdate = std::chrono::steady_clock::now();
+    lastQSwingTime = std::chrono::steady_clock::time_point{};
 }
 
 GameClient::~GameClient() {
@@ -46,6 +47,8 @@ void GameClient::updateLocalPlayer(float dt) {
         float dirX = std::cos(localRotation);
         float dirY = std::sin(localRotation);
         network->sendAbilityUse(1, dirX, dirY); 
+        // Trigger local sword swing visual briefly
+        lastQSwingTime = std::chrono::steady_clock::now();
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isWPressed()) {
@@ -173,6 +176,15 @@ void GameClient::render() {
             localPlayer.y = localY;
             localPlayer.rotation = localRotation;
             renderer->renderPlayer(localPlayer, true);
+            
+            if (lastQSwingTime.time_since_epoch().count() > 0) {
+                auto now = std::chrono::steady_clock::now();
+                if (now - lastQSwingTime <= qSwingDuration) {
+                    renderer->renderSwordSwing(localX, localY, localRotation,
+                                               Config::Q_SWORD_ARC_DEGREES,
+                                               Config::Q_SWORD_RANGE);
+                }
+            }
         } else {
             renderer->renderPlayer(*player, false);
         }

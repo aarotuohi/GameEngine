@@ -958,3 +958,51 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
         yOffset += 22;
     }
 }
+
+void Renderer::renderSwordSwing(float originX, float originY, float rotationRad,
+                                float arcDegrees, float range) {
+   
+    int cx, cy;
+    worldToScreen(originX, originY, cx, cy);
+
+    SDL_Color inner = {150, 220, 255, 200};
+    SDL_Color mid = {100, 180, 255, 180};
+    SDL_Color outer = {60, 140, 220, 160};
+
+    float halfArcRad = (arcDegrees * 0.5f) * 3.14159f / 180.0f;
+    float startAngle = rotationRad - halfArcRad;
+    float endAngle = rotationRad + halfArcRad;
+
+ 
+    const int bands = 3;
+    for (int b = 0; b < bands; ++b) {
+        float t = static_cast<float>(b) / (bands - 1);
+        float bandRange = range * (0.8f + 0.2f * t);
+        SDL_Color col = outer;
+        if (b == 1) col = mid; else if (b == 2) col = inner;
+        setColor(col);
+
+        int segments = 24;
+        int prevX = 0, prevY = 0;
+        bool hasPrev = false;
+        for (int i = 0; i <= segments; ++i) {
+            float a = startAngle + (endAngle - startAngle) * (static_cast<float>(i) / segments);
+            int x = cx + static_cast<int>(std::cos(a) * bandRange * cameraScale);
+            int y = cy + static_cast<int>(std::sin(a) * bandRange * cameraScale);
+            if (hasPrev) {
+                SDL_RenderDrawLine(renderer, prevX, prevY, x, y);
+            }
+            prevX = x; prevY = y; hasPrev = true;
+        }
+
+        int radialLines = 6;
+        for (int r = 0; r < radialLines; ++r) {
+            float a = startAngle + (endAngle - startAngle) * (static_cast<float>(r) / (radialLines - 1));
+            int x1 = cx + static_cast<int>(std::cos(a) * (bandRange * 0.5f) * cameraScale);
+            int y1 = cy + static_cast<int>(std::sin(a) * (bandRange * 0.5f) * cameraScale);
+            int x2 = cx + static_cast<int>(std::cos(a) * bandRange * cameraScale);
+            int y2 = cy + static_cast<int>(std::sin(a) * bandRange * cameraScale);
+            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        }
+    }
+}

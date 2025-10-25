@@ -31,6 +31,9 @@ private:
     std::chrono::steady_clock::time_point lastFpsUpdate;
     int frameCount;
 
+    std::chrono::steady_clock::time_point lastQSwingTime;
+    std::chrono::milliseconds qSwingDuration{180};
+
 public:
     GameClient(const std::string& playerName = "Player");
     ~GameClient();
