@@ -218,6 +218,25 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                     player->useW();
                 }
             }
+            else if (ability.abilityType == 3) {
+                auto player = gameState.getPlayer(ability.playerId);
+                if (player && player->canUseE()) {
+                  
+                    float dirX = ability.targetX;
+                    float dirY = ability.targetY;
+                    float len = std::sqrt(dirX*dirX + dirY*dirY);
+                    if (len > 0.0001f) { dirX /= len; dirY /= len; }
+                    float targetX = player->x + dirX * 200.0f; 
+                    float targetY = player->y + dirY * 200.0f;
+
+                
+                    player->useE(targetX, targetY);
+
+                
+                    gameState.processEDashDamage(ability.playerId, player->x, player->y,
+                                                 Config::E_DASH_RADIUS, Config::E_DASH_DAMAGE);
+                }
+            }
         }
     } else {
 

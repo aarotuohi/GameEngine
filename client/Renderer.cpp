@@ -1006,3 +1006,29 @@ void Renderer::renderSwordSwing(float originX, float originY, float rotationRad,
         }
     }
 }
+
+void Renderer::renderDashBurst(float originX, float originY, float rotationRad, float length) {
+    int cx, cy;
+    worldToScreen(originX, originY, cx, cy);
+
+    SDL_Color c1 = {150, 220, 255, 200};
+    SDL_Color c2 = {100, 180, 255, 160};
+    SDL_Color c3 = {60, 140, 220, 140};
+
+    float cosA = std::cos(rotationRad);
+    float sinA = std::sin(rotationRad);
+    float l = length * cameraScale;
+
+    auto drawBurstLine = [&](float offsetY, const SDL_Color& col){
+        setColor(col);
+        int x1 = cx + static_cast<int>(cosA * 10.0f * cameraScale - sinA * offsetY);
+        int y1 = cy + static_cast<int>(sinA * 10.0f * cameraScale + cosA * offsetY);
+        int x2 = cx + static_cast<int>(cosA * l - sinA * offsetY);
+        int y2 = cy + static_cast<int>(sinA * l + cosA * offsetY);
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    };
+
+    drawBurstLine(-6.0f, c1);
+    drawBurstLine(0.0f, c2);
+    drawBurstLine(6.0f, c3);
+}

@@ -42,6 +42,9 @@ public:
 
     bool processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
                             float arcDegrees, float range, int damage);
+
+  
+    void processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage);
     
     // Dummy management
     uint32_t spawnDummy(float x, float y);

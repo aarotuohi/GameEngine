@@ -27,11 +27,16 @@ namespace Config {
     constexpr int BUFFER_SIZE = 1024;
 
    
-    constexpr float Q_SWORD_ARC_DEGREES = 90.0f;
-   
-    constexpr float Q_SWORD_RANGE = 80.0f;
-   
-    constexpr int Q_SWORD_DAMAGE = 20;
+    constexpr float Q_SWORD_ARC_DEGREES = 90.0f; 
+    constexpr float Q_SWORD_RANGE = 80.0f;       
+    constexpr int Q_SWORD_DAMAGE = 20;           
+
+    
+    constexpr float E_DASH_RADIUS = 45.0f;       // AoE radius at dash end
+    constexpr int E_DASH_DAMAGE = 30;            // Damage amount
+    constexpr int E_DASH_VFX_MS = 200;           // Client VFX duration (ms)
+    constexpr float E_DASH_DISTANCE = 200.0f;    // Travel distance for dash/leap
+    constexpr int E_DASH_DURATION_MS = 180;      // Duration of the leap movement
 
     
     enum class MessageType : uint8_t {

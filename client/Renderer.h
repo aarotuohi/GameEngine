@@ -58,6 +58,7 @@ public:
   
     void renderSwordSwing(float originX, float originY, float rotationRad,
                           float arcDegrees, float range);
+    void renderDashBurst(float originX, float originY, float rotationRad, float length);
     void renderUI(uint32_t playerId, int playerCount, int fps);
     
     int getWidth() const { return width; }

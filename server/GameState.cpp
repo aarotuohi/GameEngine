@@ -200,6 +200,14 @@ void GameState::update(float dt) {
     // Update players 
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
+        if (player->activeAbility == SamuraiAbility::E_SWEEPING_BLADE) {
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - player->lastETime);
+            if (elapsed.count() >= Config::E_DASH_VFX_MS) {
+                player->isDashing = false;
+                player->activeAbility = SamuraiAbility::NONE;
+            }
+        }
     }
     
     // Update projectiles
@@ -282,6 +290,37 @@ void GameState::update(float dt) {
                     }
                 }
             }
+        }
+    }
+}
+
+void GameState::processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage) {
+    
+    std::lock_guard<std::mutex> lock(mutex);
+
+    float r2 = radius * radius;
+
+    for (auto& [dummyId, dummy] : dummies) {
+        if (!dummy->isAlive) continue;
+        float dx = dummy->x - endX;
+        float dy = dummy->y - endY;
+        if (dx*dx + dy*dy <= r2) {
+            dummy->takeDamage(damage);
+        }
+    }
+
+
+    for (auto& [pid, player] : players) {
+        if (pid == ownerId) continue;
+        if (!player->isAlive) continue;
+        float dx = player->x - endX;
+        float dy = player->y - endY;
+        if (dx*dx + dy*dy <= r2) {
+            auto ownerIt = players.find(ownerId);
+            if (ownerIt != players.end()) {
+                ownerIt->second->score++;
+            }
+         
         }
     }
 }
