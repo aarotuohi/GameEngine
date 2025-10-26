@@ -200,6 +200,29 @@ void GameState::update(float dt) {
     // Update players 
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
+            if (player->activeAbility == SamuraiAbility::E_SWEEPING_BLADE && player->isDashing) {
+                auto now = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - player->lastETime).count();
+                float duration = static_cast<float>(Config::E_DASH_DURATION_MS);
+                float t = (duration > 0.0f) ? (static_cast<float>(elapsed) / duration) : 1.0f;
+                if (t >= 1.0f) {
+                    // Land at end point
+                    player->x = player->eDashEndX;
+                    player->y = player->eDashEndY;
+                    if (!player->eDashDamageApplied) {
+                        
+                        processEDashDamage(playerId, player->x, player->y, Config::E_DASH_RADIUS, Config::E_DASH_DAMAGE);
+                        player->eDashDamageApplied = true;
+                    }
+                    player->isDashing = false;
+                    player->activeAbility = SamuraiAbility::NONE;
+                } else {
+                    
+                    float ease = 1.0f - std::pow(1.0f - t, 3.0f);
+                    player->x = player->eDashStartX + (player->eDashEndX - player->eDashStartX) * ease;
+                    player->y = player->eDashStartY + (player->eDashEndY - player->eDashStartY) * ease;
+                }
+            }
     }
     
     // Update projectiles
@@ -282,6 +305,35 @@ void GameState::update(float dt) {
                     }
                 }
             }
+        }
+    }
+}
+
+void GameState::processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage) {
+   
+    float r2 = radius * radius;
+
+    for (auto& [dummyId, dummy] : dummies) {
+        if (!dummy->isAlive) continue;
+        float dx = dummy->x - endX;
+        float dy = dummy->y - endY;
+        if (dx*dx + dy*dy <= r2) {
+            dummy->takeDamage(damage);
+        }
+    }
+
+
+    for (auto& [pid, player] : players) {
+        if (pid == ownerId) continue;
+        if (!player->isAlive) continue;
+        float dx = player->x - endX;
+        float dy = player->y - endY;
+        if (dx*dx + dy*dy <= r2) {
+            auto ownerIt = players.find(ownerId);
+            if (ownerIt != players.end()) {
+                ownerIt->second->score++;
+            }
+         
         }
     }
 }
