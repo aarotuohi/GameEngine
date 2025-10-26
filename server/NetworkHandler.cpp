@@ -2,6 +2,7 @@
 #include "../shared/Config.h"
 #include <iostream>
 #include <cstring>
+#include <cmath>
 
 NetworkHandler::NetworkHandler(GameState& state, PlayerManager& manager)
     : gameState(state), playerManager(manager), 
@@ -179,24 +180,22 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
         Protocol::AbilityUse ability;
         if (Protocol::decodeAbilityUse(payload, payloadLength, ability)) {
             playerManager.registerUdpAddress(ability.playerId, senderAddr);
-            
+
             if (ability.abilityType == 1) {
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseQ()) {
-            
                     float dirX = ability.targetX;
                     float dirY = ability.targetY;
+                    float len = std::sqrt(dirX * dirX + dirY * dirY);
+                    if (len > 0.0001f) { dirX /= len; dirY /= len; }
 
                     bool isTornado = (player->qStacks >= 2);
                     if (isTornado) {
-                    
                         const int tornadoDamage = 40;
                         gameState.createQProjectile(ability.playerId, player->x, player->y,
                                                     dirX, dirY, true, tornadoDamage);
-                       
                         player->qStacks = 0;
                     } else {
-                        
                         gameState.processQSwordSwing(
                             ability.playerId,
                             player->x, player->y,
@@ -207,34 +206,25 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                         );
                     }
 
-               
                     player->lastQTime = std::chrono::steady_clock::now();
                     player->activeAbility = SamuraiAbility::Q_STEEL_TEMPEST;
                 }
-            }
-            else if (ability.abilityType == 2) {
+            } else if (ability.abilityType == 2) {
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseW()) {
                     player->useW();
                 }
-            }
-            else if (ability.abilityType == 3) {
+            } else if (ability.abilityType == 3) {
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseE()) {
-                  
                     float dirX = ability.targetX;
                     float dirY = ability.targetY;
-                    float len = std::sqrt(dirX*dirX + dirY*dirY);
+                    float len = std::sqrt(dirX * dirX + dirY * dirY);
                     if (len > 0.0001f) { dirX /= len; dirY /= len; }
-                    float targetX = player->x + dirX * 200.0f; 
-                    float targetY = player->y + dirY * 200.0f;
+                    float targetX = player->x + dirX * Config::E_DASH_DISTANCE;
+                    float targetY = player->y + dirY * Config::E_DASH_DISTANCE;
 
-                
                     player->useE(targetX, targetY);
-
-                
-                    gameState.processEDashDamage(ability.playerId, player->x, player->y,
-                                                 Config::E_DASH_RADIUS, Config::E_DASH_DAMAGE);
                 }
             }
         }

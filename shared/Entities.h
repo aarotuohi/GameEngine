@@ -44,14 +44,18 @@ public:
     std::chrono::steady_clock::time_point lastWTime;
     std::chrono::steady_clock::time_point lastETime;
     std::chrono::steady_clock::time_point lastRTime;
-    int qStacks;         // Steel Tempest stacks (0-2, third cast is tornado)
+    int qStacks;         
+    
+    float eDashStartX{0}, eDashStartY{0};
+    float eDashEndX{0}, eDashEndY{0};
+    bool eDashDamageApplied{false};
     
     // Wind Wall ability
-    bool hasWindWall;    // Whether wind wall is active
+    bool hasWindWall;   
     std::chrono::steady_clock::time_point windWallStartTime;
-    float windWallRadius; // Radius of the wind wall
+    float windWallRadius; 
     
-    // Movement target (right-click movement)
+   
     bool hasTarget;
     float targetX, targetY;
     

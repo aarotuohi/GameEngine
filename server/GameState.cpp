@@ -200,14 +200,29 @@ void GameState::update(float dt) {
     // Update players 
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
-        if (player->activeAbility == SamuraiAbility::E_SWEEPING_BLADE) {
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - player->lastETime);
-            if (elapsed.count() >= Config::E_DASH_VFX_MS) {
-                player->isDashing = false;
-                player->activeAbility = SamuraiAbility::NONE;
+            if (player->activeAbility == SamuraiAbility::E_SWEEPING_BLADE && player->isDashing) {
+                auto now = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - player->lastETime).count();
+                float duration = static_cast<float>(Config::E_DASH_DURATION_MS);
+                float t = (duration > 0.0f) ? (static_cast<float>(elapsed) / duration) : 1.0f;
+                if (t >= 1.0f) {
+                    // Land at end point
+                    player->x = player->eDashEndX;
+                    player->y = player->eDashEndY;
+                    if (!player->eDashDamageApplied) {
+                        
+                        processEDashDamage(playerId, player->x, player->y, Config::E_DASH_RADIUS, Config::E_DASH_DAMAGE);
+                        player->eDashDamageApplied = true;
+                    }
+                    player->isDashing = false;
+                    player->activeAbility = SamuraiAbility::NONE;
+                } else {
+                    
+                    float ease = 1.0f - std::pow(1.0f - t, 3.0f);
+                    player->x = player->eDashStartX + (player->eDashEndX - player->eDashStartX) * ease;
+                    player->y = player->eDashStartY + (player->eDashEndY - player->eDashStartY) * ease;
+                }
             }
-        }
     }
     
     // Update projectiles
@@ -295,9 +310,7 @@ void GameState::update(float dt) {
 }
 
 void GameState::processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage) {
-    
-    std::lock_guard<std::mutex> lock(mutex);
-
+   
     float r2 = radius * radius;
 
     for (auto& [dummyId, dummy] : dummies) {

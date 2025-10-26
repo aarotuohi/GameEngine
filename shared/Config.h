@@ -32,12 +32,11 @@ namespace Config {
     constexpr int Q_SWORD_DAMAGE = 20;           
 
     
-    constexpr float E_DASH_RADIUS = 45.0f;       // AoE radius at dash end
-    constexpr int E_DASH_DAMAGE = 30;            // Damage amount
-    constexpr int E_DASH_VFX_MS = 200;           // Client VFX duration (ms)
-    constexpr float E_DASH_DISTANCE = 200.0f;    // Travel distance for dash/leap
-    constexpr int E_DASH_DURATION_MS = 180;      // Duration of the leap movement
-
+    constexpr float E_DASH_RADIUS = 45.0f;      
+    constexpr int E_DASH_DAMAGE = 30;        
+    constexpr int E_DASH_VFX_MS = 200;           
+    constexpr float E_DASH_DISTANCE = 200.0f;    
+    constexpr int E_DASH_DURATION_MS = 180;     
     
     enum class MessageType : uint8_t {
         PLAYER_JOIN = 1,

@@ -137,15 +137,25 @@ void Player::useE(float targetX, float targetY) {
     lastETime = std::chrono::steady_clock::now();
     activeAbility = SamuraiAbility::E_SWEEPING_BLADE;
     isDashing = true;
+    eDashDamageApplied = false;
     
-    // Dash towards target
+    // Prepare leap towards target (animate over time in GameState::update)
     float dx = targetX - x;
     float dy = targetY - y;
     float distance = std::sqrt(dx * dx + dy * dy);
-    if (distance > 0) {
-        float dashDistance = 200.0f; // E dash range
-        x += (dx / distance) * dashDistance;
-        y += (dy / distance) * dashDistance;
+    if (distance > 0.0f) {
+        float ndx = dx / distance;
+        float ndy = dy / distance;
+        rotation = std::atan2(ndy, ndx);
+        eDashStartX = x;
+        eDashStartY = y;
+        
+        eDashEndX = x + ndx * Config::E_DASH_DISTANCE;
+        eDashEndY = y + ndy * Config::E_DASH_DISTANCE;
+    } else {
+        
+        isDashing = false;
+        activeAbility = SamuraiAbility::NONE;
     }
 }
 
@@ -182,8 +192,6 @@ void Player::updateWindWall(float dt) {
     if (hasWindWall) {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - windWallStartTime);
-        
-        // Wind wall lasts for 3.75 seconds (like in League of Legends)
         if (elapsed.count() >= 3750) {
             hasWindWall = false;
             std::cout << "Player " << id << " wind wall expired" << std::endl;
