@@ -66,8 +66,10 @@ void GameClient::updateLocalPlayer(float dt) {
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isRPressed()) {
-        std::cout << "R ability pressed (Last Breath)\n";
-        // TODO: Send ability use to server
+        std::cout << "R ability used (Circulating Tornadoes)\n";
+        
+        network->sendAbilityUse(4, 0.0f, 0.0f);
+        lastRTime = std::chrono::steady_clock::now();
         inputHandler->clearAbilityInputs();
     }
     
@@ -144,7 +146,7 @@ void GameClient::updateLocalPlayer(float dt) {
 
 void GameClient::render() {
 
-    // Update camera to follow local player
+
     renderer->updateCamera(localX, localY);
     
     renderer->clear();
@@ -152,27 +154,27 @@ void GameClient::render() {
     renderer->renderDecorations(); // Cabins, spruces, and campfires
     renderer->renderGrid();
     
-    // Get current game state
     auto players = network->getPlayers();
     auto dummies = network->getDummies();
     auto projectiles = network->getProjectiles();
+    auto rTornadoes = network->getRTornadoes();
     uint32_t myId = network->getPlayerId();
     
-    // Render all dummies
+
     for (const auto& [dummyId, dummy] : dummies) {
         renderer->renderDummy(*dummy);
     }
     
-    // Render all projectiles
+   
     for (const auto& [projId, projectile] : projectiles) {
         renderer->renderProjectile(*projectile);
     }
     
-    // Render all players
+
     for (const auto& [playerId, player] : players) {
         bool isLocal = (playerId == myId);
         
-        // Use local prediction for our player
+       
         if (isLocal) {
             Player localPlayer = *player;
             localPlayer.x = localX;
@@ -200,10 +202,9 @@ void GameClient::render() {
         }
     }
     
-    // Render wind walls (after players so they appear on top)
     for (const auto& [playerId, player] : players) {
         if (player->hasWindWall) {
-            // Use local position for our player's wind wall
+            
             if (playerId == myId) {
                 Player localPlayer = *player;
                 localPlayer.x = localX;
@@ -213,6 +214,10 @@ void GameClient::render() {
                 renderer->renderWindWall(*player);
             }
         }
+    }
+
+    for (const auto& [tornadoId, tornado] : rTornadoes) {
+        renderer->renderRTornado(tornado->x, tornado->y);
     }
     
     // Render UI

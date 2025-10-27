@@ -4,8 +4,8 @@
 #include <cmath>
 
 GameState::GameState()
-    : nextPlayerId(1), nextProjectileId(1), nextDummyId(1), taggedPlayerId(0), running(true) {
-    // Spawn some initial dummies for testing
+    : nextPlayerId(1), nextProjectileId(1), nextDummyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true) {
+
     spawnDummy(200.0f, 200.0f);
     spawnDummy(400.0f, 300.0f);
     spawnDummy(600.0f, 200.0f);
@@ -196,10 +196,13 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
 
 void GameState::update(float dt) {
     std::lock_guard<std::mutex> lock(mutex);
+
+    updateRTornadoes(dt);
     
     // Update players 
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
+        player->updateRTornadoes(dt);
             if (player->activeAbility == SamuraiAbility::E_SWEEPING_BLADE && player->isDashing) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - player->lastETime).count();
@@ -395,4 +398,106 @@ void GameState::damageDummy(uint32_t dummyId, int damage) {
 std::unordered_map<uint32_t, std::shared_ptr<Dummy>> GameState::getAllDummies() {
     std::lock_guard<std::mutex> lock(mutex);
     return dummies;
+}
+
+void GameState::createRTornadoes(uint32_t ownerId) {
+    std::lock_guard<std::mutex> lock(mutex);
+    float angleStep = (2.0f * 3.14159265f) / static_cast<float>(Config::R_TORNADO_COUNT);
+    
+    for (int i = 0; i < Config::R_TORNADO_COUNT; i++) {
+        uint32_t tornadoId = nextRTornadoId++;
+        float angle = angleStep * static_cast<float>(i);
+        auto tornado = std::make_shared<RTornado>(tornadoId, ownerId, angle, i);
+        rTornadoes[tornadoId] = tornado;
+    }
+    
+    std::cout << "Created " << Config::R_TORNADO_COUNT << " R tornadoes for player " << ownerId << "\n";
+}
+
+void GameState::updateRTornadoes(float dt) {
+    // NOTE: Caller (update loop) already holds mutex; do not lock here
+    
+    std::vector<uint32_t> tornadoesToRemove;
+    
+    for (auto& [tornadoId, tornado] : rTornadoes) {
+        auto ownerIt = players.find(tornado->ownerId);
+        if (ownerIt == players.end() || !ownerIt->second->hasRTornadoes) {
+            tornadoesToRemove.push_back(tornadoId);
+            continue;
+        }
+        
+        auto& owner = ownerIt->second;
+        
+        // Update tornado angle based on player's rotation angle
+        tornado->angle = owner->rTornadoAngle + (2.0f * 3.14159265f / Config::R_TORNADO_COUNT) * tornado->tornadoIndex;
+        
+        // Calculate tornado position
+        float tornadoX = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
+        float tornadoY = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;
+        
+        // Check collisions with dummies (with cooldown to prevent multiple hits)
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceLastHit = std::chrono::duration_cast<std::chrono::milliseconds>(now - tornado->lastHitTime);
+        
+        if (timeSinceLastHit.count() >= 500) { // 0.5 second cooldown per tornado
+            for (auto& [dummyId, dummy] : dummies) {
+                if (!dummy->isAlive) continue;
+                
+                float dx = dummy->x - tornadoX;
+                float dy = dummy->y - tornadoY;
+                float distSq = dx * dx + dy * dy;
+                float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
+                
+                if (distSq <= hitRadius * hitRadius) {
+                    dummy->takeDamage(Config::R_TORNADO_DAMAGE);
+                    tornado->lastHitTime = now;
+                    std::cout << "R tornado hit dummy " << dummyId << " for " << Config::R_TORNADO_DAMAGE << " damage\n";
+                    break; // One hit per update
+                }
+            }
+            
+            // Check collisions with other players
+            for (auto& [pid, player] : players) {
+                if (pid == tornado->ownerId || !player->isAlive) continue;
+                
+                float dx = player->x - tornadoX;
+                float dy = player->y - tornadoY;
+                float distSq = dx * dx + dy * dy;
+                float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
+                
+                if (distSq <= hitRadius * hitRadius) {
+                    // Award score to R tornado owner
+                    owner->score++;
+                    tornado->lastHitTime = now;
+                    std::cout << "R tornado hit player " << pid << "\n";
+                    break; // One hit per update
+                }
+            }
+        }
+    }
+    
+    // Remove expired tornadoes
+    for (uint32_t tid : tornadoesToRemove) {
+        rTornadoes.erase(tid);
+    }
+}
+
+void GameState::removeRTornadoes(uint32_t ownerId) {
+    std::lock_guard<std::mutex> lock(mutex);
+    
+    std::vector<uint32_t> toRemove;
+    for (auto& [tornadoId, tornado] : rTornadoes) {
+        if (tornado->ownerId == ownerId) {
+            toRemove.push_back(tornadoId);
+        }
+    }
+    
+    for (uint32_t tid : toRemove) {
+        rTornadoes.erase(tid);
+    }
+}
+
+std::unordered_map<uint32_t, std::shared_ptr<RTornado>> GameState::getAllRTornadoes() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return rTornadoes;
 }

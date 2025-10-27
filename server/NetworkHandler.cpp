@@ -226,6 +226,12 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
 
                     player->useE(targetX, targetY);
                 }
+            } else if (ability.abilityType == 4) {
+                auto player = gameState.getPlayer(ability.playerId);
+                if (player && player->canUseR()) {
+                    player->useR();
+                    gameState.createRTornadoes(ability.playerId);
+                }
             }
         }
     } else {
@@ -275,6 +281,20 @@ void NetworkHandler::broadcastUdpState() {
         state.isTornado = proj->isTornado;
         state.ownerId = proj->ownerId;
         broadcast.projectiles.push_back(state);
+    }
+    
+    auto rTornadoes = gameState.getAllRTornadoes();
+    broadcast.numRTornadoes = static_cast<uint32_t>(rTornadoes.size());
+    for (const auto& [tornadoId, tornado] : rTornadoes) {
+        auto owner = gameState.getPlayer(tornado->ownerId);
+        if (owner) {
+            Protocol::RTornadoState state;
+            state.id = tornado->id;
+            state.ownerId = tornado->ownerId;
+            state.x = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
+            state.y = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;
+            broadcast.rTornadoes.push_back(state);
+        }
     }
     
     auto data = Protocol::encodeStateBroadcast(broadcast);

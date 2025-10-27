@@ -37,6 +37,8 @@ private:
     std::chrono::steady_clock::time_point lastEDashTime;
     std::chrono::milliseconds eDashVfxDuration{Config::E_DASH_VFX_MS};
 
+    std::chrono::steady_clock::time_point lastRTime;
+
 public:
     GameClient(const std::string& playerName = "Player");
     ~GameClient();

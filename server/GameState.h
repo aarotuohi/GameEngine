@@ -10,14 +10,28 @@
 #include "../shared/Entities.h"
 #include "../shared/Protocol.h"
 
+struct RTornado {
+    uint32_t id;
+    uint32_t ownerId;
+    float angle;  
+    int tornadoIndex;  
+    std::chrono::steady_clock::time_point lastHitTime;
+    
+    RTornado(uint32_t tid, uint32_t owner, float ang, int idx)
+        : id(tid), ownerId(owner), angle(ang), tornadoIndex(idx),
+          lastHitTime(std::chrono::steady_clock::now()) {}
+};
+
 class GameState {
 private:
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
+    std::unordered_map<uint32_t, std::shared_ptr<RTornado>> rTornadoes;
     uint32_t nextPlayerId;
     uint32_t nextProjectileId;
     uint32_t nextDummyId;
+    uint32_t nextRTornadoId;
     uint32_t taggedPlayerId;
     mutable std::mutex mutex;
     bool running;
@@ -43,8 +57,12 @@ public:
     bool processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
                             float arcDegrees, float range, int damage);
 
-  
     void processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage);
+    
+  
+    void createRTornadoes(uint32_t ownerId);
+    void updateRTornadoes(float dt);
+    void removeRTornadoes(uint32_t ownerId);
     
     // Dummy management
     uint32_t spawnDummy(float x, float y);
@@ -59,6 +77,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getAllPlayers();
     std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getAllDummies();
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getAllProjectiles();
+    std::unordered_map<uint32_t, std::shared_ptr<RTornado>> getAllRTornadoes();
     
     // Control
     void setRunning(bool run) { running = run; }

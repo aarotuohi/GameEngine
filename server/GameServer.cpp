@@ -45,10 +45,8 @@ void GameServer::gameLoop() {
         float dt = elapsed.count() / 1000.0f;
         lastTime = currentTime;
         
-        // Update game state
         gameState->update(dt);
         
-        // Sleep to maintain tick rate
         auto processingTime = Clock::now() - currentTime;
         auto sleepTime = tickInterval - processingTime;
         if (sleepTime > 0ms) {
@@ -64,10 +62,8 @@ void GameServer::udpBroadcastLoop() {
     while (running) {
         auto startTime = std::chrono::steady_clock::now();
         
-        // Broadcast state to all clients
         networkHandler->broadcastUdpState();
-        
-        // Maintain update rate
+
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         auto sleepTime = updateInterval - elapsed;
         if (sleepTime > 0ms) {
