@@ -11,6 +11,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       health(100), maxHealth(100), rotation(0.0f), isDashing(false), isAlive(true),
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
+      hasRTornadoes(false), rTornadoAngle(0.0f),
       hasTarget(false), targetX(0.0f), targetY(0.0f) {
     
     auto now = std::chrono::steady_clock::now();
@@ -19,6 +20,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
     lastETime = now;
     lastRTime = now;
     windWallStartTime = now;
+    rTornadoesStartTime = now;
 }
 
 void Player::updatePosition(float dx, float dy, float dt) {
@@ -159,14 +161,16 @@ void Player::useE(float targetX, float targetY) {
     }
 }
 
-void Player::useR(const Player& target) {
+void Player::useR() {
     if (!canUseR()) return;
     lastRTime = std::chrono::steady_clock::now();
     activeAbility = SamuraiAbility::R_LAST_BREATH;
     
-    // Teleport to target and deal massive damage
-    x = target.x;
-    y = target.y - 50; // Appear above target
+   
+    hasRTornadoes = true;
+    rTornadoesStartTime = std::chrono::steady_clock::now();
+    rTornadoAngle = 0.0f;
+    std::cout << "Player " << id << " activated R - Circulating Tornadoes!" << std::endl;
 }
 
 void Player::takeDamage(int damage) {
@@ -202,13 +206,30 @@ void Player::updateWindWall(float dt) {
 bool Player::isProjectileBlockedByWindWall(float projX, float projY) const {
     if (!hasWindWall) return false;
     
-    // Calculate distance from player center to projectile
+
     float dx = projX - x;
     float dy = projY - y;
     float distance = std::sqrt(dx * dx + dy * dy);
     
-    // Block if projectile is within wind wall radius
+ 
     return distance <= windWallRadius;
+}
+
+void Player::updateRTornadoes(float dt) {
+    if (hasRTornadoes) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - rTornadoesStartTime);
+        
+        if (elapsed.count() >= Config::R_DURATION_MS) {
+            hasRTornadoes = false;
+            std::cout << "Player " << id << " R tornadoes expired" << std::endl;
+        } else {
+            rTornadoAngle += Config::R_ROTATION_SPEED * dt;
+            if (rTornadoAngle >= 2.0f * 3.14159265f) {
+                rTornadoAngle -= 2.0f * 3.14159265f;
+            }
+        }
+    }
 }
 
 // Projectile implementation

@@ -52,6 +52,7 @@ void InputHandler::handleEvent(const SDL_Event& event) {
     }
 }
 
+/*
 std::pair<float, float> InputHandler::getMovementVector() const {
     float dx = 0.0f, dy = 0.0f;
     
@@ -78,6 +79,8 @@ std::pair<float, float> InputHandler::getMovementVector() const {
     
     return {dx, dy};
 }
+
+*/
 
 
 

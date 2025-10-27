@@ -183,6 +183,21 @@ namespace Protocol {
                          reinterpret_cast<const uint8_t*>(&netProj),
                          reinterpret_cast<const uint8_t*>(&netProj) + sizeof(ProjectileState));
         }
+
+        uint32_t netNumRTornadoes = hton(state.numRTornadoes);
+        buffer.insert(buffer.end(),
+                     reinterpret_cast<const uint8_t*>(&netNumRTornadoes),
+                     reinterpret_cast<const uint8_t*>(&netNumRTornadoes) + sizeof(uint32_t));
+        
+        for (const auto& tornado : state.rTornadoes) {
+            RTornadoState netTornado = tornado;
+            netTornado.id = hton(tornado.id);
+            netTornado.ownerId = hton(tornado.ownerId);
+            
+            buffer.insert(buffer.end(),
+                         reinterpret_cast<const uint8_t*>(&netTornado),
+                         reinterpret_cast<const uint8_t*>(&netTornado) + sizeof(RTornadoState));
+        }
         
         return buffer;
     }
@@ -254,6 +269,28 @@ namespace Protocol {
             }
         } else {
             state.numProjectiles = 0;
+        }
+        
+        if (length >= expectedSize + sizeof(uint32_t)) {
+            std::memcpy(&state.numRTornadoes, ptr, sizeof(uint32_t));
+            state.numRTornadoes = ntoh(state.numRTornadoes);
+            ptr += sizeof(uint32_t);
+            
+            expectedSize += sizeof(uint32_t) + state.numRTornadoes * sizeof(RTornadoState);
+            if (length >= expectedSize) {
+                
+                state.rTornadoes.clear();
+                for (uint32_t i = 0; i < state.numRTornadoes; ++i) {
+                    RTornadoState tornado;
+                    std::memcpy(&tornado, ptr, sizeof(RTornadoState));
+                    tornado.id = ntoh(tornado.id);
+                    tornado.ownerId = ntoh(tornado.ownerId);
+                    state.rTornadoes.push_back(tornado);
+                    ptr += sizeof(RTornadoState);
+                }
+            }
+        } else {
+            state.numRTornadoes = 0;
         }
         
         return true;

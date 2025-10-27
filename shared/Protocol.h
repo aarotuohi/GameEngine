@@ -72,6 +72,13 @@ namespace Protocol {
         uint32_t ownerId;
     };
 
+    struct RTornadoState {
+        uint32_t id;
+        uint32_t ownerId;
+        float x;
+        float y;
+    };
+
     struct StateBroadcast {
         uint32_t numPlayers;
         std::vector<PlayerState> players;
@@ -79,6 +86,8 @@ namespace Protocol {
         std::vector<DummyState> dummies;
         uint32_t numProjectiles;
         std::vector<ProjectileState> projectiles;
+        uint32_t numRTornadoes;
+        std::vector<RTornadoState> rTornadoes;
     };
 
     // Encoding functions

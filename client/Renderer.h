@@ -16,19 +16,17 @@ private:
     int width;
     int height;
     
-    // Camera system
     float cameraX;
     float cameraY;
     float cameraScale;
     
-    // Colors
     SDL_Color bgColor;
-    SDL_Color grassColor1;         // Light grass
-    SDL_Color grassColor2;         // Dark grass
-    SDL_Color grassColor3;         // Accent grass
-    SDL_Color samuraiColor;        // Samurai blue/teal
-    SDL_Color samuraiSwordColor;   // Silver/white
-    SDL_Color windColor;         // Light blue/cyan
+    SDL_Color grassColor1;       
+    SDL_Color grassColor2;        
+    SDL_Color grassColor3;        
+    SDL_Color samuraiColor;       
+    SDL_Color samuraiSwordColor;  
+    SDL_Color windColor;         
     SDL_Color otherPlayerColor;
     SDL_Color gridColor;
     SDL_Color textColor;
@@ -59,6 +57,7 @@ public:
     void renderSwordSwing(float originX, float originY, float rotationRad,
                           float arcDegrees, float range);
     void renderDashBurst(float originX, float originY, float rotationRad, float length);
+    void renderRTornado(float x, float y);
     void renderUI(uint32_t playerId, int playerCount, int fps);
     
     int getWidth() const { return width; }

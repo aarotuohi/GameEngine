@@ -5,14 +5,14 @@
 Renderer::Renderer(int w, int h)
     : window(nullptr), renderer(nullptr), width(w), height(h),
       cameraX(0.0f), cameraY(0.0f), cameraScale(1.0f),
-      bgColor{30, 30, 40, 255},           // Dark blue-gray
-      grassColor1{85, 140, 60, 255},      // Base grass green
-      grassColor2{70, 120, 50, 255},      // Darker grass
-      grassColor3{95, 150, 70, 255},      // Lighter grass accent
-      samuraiColor{0, 180, 255, 255},       //  teal/cyan
-      samuraiSwordColor{220, 220, 255, 255}, // Silver-white
-      windColor{100, 200, 255, 180},      // Light wind effect
-      otherPlayerColor{200, 50, 50, 255}, // Enemy red
+      bgColor{30, 30, 40, 255},          
+      grassColor1{85, 140, 60, 255},     
+      grassColor2{70, 120, 50, 255},    
+      grassColor3{95, 150, 70, 255},     
+      samuraiColor{0, 180, 255, 255},      
+      samuraiSwordColor{220, 220, 255, 255}, 
+      windColor{100, 200, 255, 180},      
+      otherPlayerColor{200, 50, 50, 255},
       gridColor{50, 50, 60, 255},
       textColor{255, 255, 255, 255},
       healthBarGreen{50, 255, 50, 255},
@@ -69,10 +69,8 @@ void Renderer::setColor(const SDL_Color& color) {
 
 void Renderer::updateCamera(float playerX, float playerY) {
   
-    // No world bounds - infinite world generation
     cameraScale = 1.0f;
     
-    // Center camera on player
     cameraX = playerX - (width / 2.0f);
     cameraY = playerY - (height / 2.0f);
 }
@@ -88,17 +86,15 @@ void Renderer::screenToWorld(int screenX, int screenY, float& worldX, float& wor
 }
 
 void Renderer::renderGrass() {
-    // Draw base grass layer
+
     setColor(grassColor1);
     SDL_RenderClear(renderer);
-    
-    // Calculate visible world area 
+
     float worldStartX = cameraX;
     float worldStartY = cameraY;
     float worldEndX = cameraX + width;
     float worldEndY = cameraY + height;
-    
-    // Draw grass patternworks for any world position
+
     const int grassSize = 20;
     const int grassBladeHeight = 8;
     
@@ -107,7 +103,7 @@ void Renderer::renderGrass() {
         for (int worldY = static_cast<int>(worldStartY / grassSize) * grassSize; 
              worldY < worldEndY; worldY += grassSize) {
             
-            // Create variation using position-based random
+        
             int variation = (worldX * 7 + worldY * 13) % 3;
             
             int screenX, screenY;
@@ -115,7 +111,7 @@ void Renderer::renderGrass() {
             int scaledSize = static_cast<int>(grassSize * cameraScale);
             int scaledBladeHeight = static_cast<int>(grassBladeHeight * cameraScale);
             
-            // Draw grass patch with darker/lighter variations
+      
             if (variation == 0) {
                 setColor(grassColor2);
             } else if (variation == 1) {
@@ -127,7 +123,7 @@ void Renderer::renderGrass() {
             SDL_Rect grassPatch = {screenX, screenY, scaledSize, scaledSize};
             SDL_RenderFillRect(renderer, &grassPatch);
             
-            // Draw grass blades on top for detail
+         
             setColor(grassColor2);
             for (int i = 0; i < 3; i++) {
                 int bladeX = screenX + (i * scaledSize / 3) + (scaledSize / 6);
@@ -173,22 +169,22 @@ bool Renderer::shouldSpawnDecoration(int worldX, int worldY, int decorationType)
     int seed1 = 73, seed2 = 149;
     
     if (decorationType == 0) {
-        // Cabins with unique seeds
+    
         seed1 = 73;
         seed2 = 149;
     } else if (decorationType == 1) {
-        // Spruces with different seeds
+    
         seed1 = 211;
         seed2 = 317;
     } else if (decorationType == 2) {
-        // Campfires with different seeds
+      
         seed1 = 431;
         seed2 = 523;
     }
     
     int hash = (worldX * seed1 + worldY * seed2) % 1000;
     
-    // All decorations have the same spawn rate: 5%
+  
     return hash < 50;
 }
 
@@ -198,23 +194,22 @@ void Renderer::renderCabin(int worldX, int worldY) {
     
     int scale = static_cast<int>(cameraScale);
     
-    // Cabin base
+
     SDL_Color cabinWood = {139, 90, 60, 255};
     SDL_Color cabinRoof = {100, 50, 30, 255};
     SDL_Color cabinWindow = {255, 220, 150, 255}; 
     SDL_Color cabinDoor = {80, 50, 30, 255};
     
-    // Main cabin structure
+
     setColor(cabinWood);
     SDL_Rect cabin = {screenX, screenY, 40 * scale, 30 * scale};
     SDL_RenderFillRect(renderer, &cabin);
     
-    // Roof 
+
     setColor(cabinRoof);
     int roofHeight = 15 * scale;
     int roofWidth = 50 * scale; 
     
-    // Draw triangle roof
     for (int i = 0; i < roofHeight; i++) {
         
         int currentWidth = (roofWidth * i) / roofHeight;
@@ -229,24 +224,22 @@ void Renderer::renderCabin(int worldX, int worldY) {
         SDL_RenderFillRect(renderer, &roofLine);
     }
     
-    // Windows
     setColor(cabinWindow);
     SDL_Rect window1 = {screenX + 5 * scale, screenY + 8 * scale, 8 * scale, 8 * scale};
     SDL_Rect window2 = {screenX + 27 * scale, screenY + 8 * scale, 8 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &window1);
     SDL_RenderFillRect(renderer, &window2);
     
-    // Door
+
     setColor(cabinDoor);
     SDL_Rect door = {screenX + 16 * scale, screenY + 15 * scale, 8 * scale, 15 * scale};
     SDL_RenderFillRect(renderer, &door);
     
-    // Chimney
     setColor(cabinRoof);
     SDL_Rect chimney = {screenX + 30 * scale, screenY - 20 * scale, 6 * scale, 10 * scale};
     SDL_RenderFillRect(renderer, &chimney);
     
-    // Smoke from chimney
+  
     SDL_Color smoke = {200, 200, 200, 150};
     setColor(smoke);
     for (int i = 0; i < 3; i++) {
@@ -265,12 +258,11 @@ void Renderer::renderSpruce(int worldX, int worldY) {
     
     int scale = static_cast<int>(cameraScale);
     
-    // Tree colors
     SDL_Color trunk = {101, 67, 33, 255};
-    SDL_Color needles1 = {34, 80, 49, 255}; // Dark 
-    SDL_Color needles2 = {45, 95, 60, 255}; // Medium 
+    SDL_Color needles1 = {34, 80, 49, 255}; 
+    SDL_Color needles2 = {45, 95, 60, 255}; 
     
-    // Trunk 
+ 
     setColor(trunk);
     SDL_Rect trunkRect = {screenX + 13 * scale, screenY - 5 * scale, 4 * scale, 40 * scale};
     SDL_RenderFillRect(renderer, &trunkRect);
@@ -353,38 +345,31 @@ void Renderer::renderCampfire(int worldX, int worldY) {
 
 void Renderer::renderDecorations() {
 
-    // wrolds area for decorations
     float worldStartX = cameraX - 100;
     float worldStartY = cameraY - 100;
     float worldEndX = cameraX + width + 100;
     float worldEndY = cameraY + height + 100;
     
-    // Grid size for decoration placement 
     const int decorationGrid = 100;
     
-    // grid and place decorations
     for (int worldX = static_cast<int>(worldStartX / decorationGrid) * decorationGrid; 
          worldX < worldEndX; worldX += decorationGrid) {
         for (int worldY = static_cast<int>(worldStartY / decorationGrid) * decorationGrid; 
              worldY < worldEndY; worldY += decorationGrid) {
             
           
-            // Check all types and pick the first one that wants to spawn
             bool hasDecoration = false;
             
-            // Check Cabins
             if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 0)) {
                 renderCabin(worldX + 30, worldY + 30);
                 hasDecoration = true;
             }
             
-            // Check Spruces (only if no cabin)
             if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 1)) {
                 renderSpruce(worldX + 10, worldY + 10);
                 hasDecoration = true;
             }
-            
-            // Check Campfires (only if no cabin or spruce)
+           
             if (!hasDecoration && shouldSpawnDecoration(worldX, worldY, 2)) {
                 renderCampfire(worldX + 20, worldY + 20);
             }
@@ -409,33 +394,31 @@ void Renderer::renderCircle(int centerX, int centerY, int radius) {
 void Renderer::renderPlayer(const Player& player, bool isLocal) {
     if (!player.isAlive) return; 
     
-    // Convert world coordinates to screen coordinates
     int centerX, centerY;
     worldToScreen(player.x, player.y, centerX, centerY);
     
     
     int scale = static_cast<int>(2 * cameraScale); 
 
-    // Determine facing direction based on rotation, rotation is in radians: 0 = right, PI = left
-    bool facingRight = (player.rotation >= -1.5708f && player.rotation <= 1.5708f); // -90° to 90°
+    bool facingRight = (player.rotation >= -1.5708f && player.rotation <= 1.5708f); 
     int flipMultiplier = facingRight ? 1 : -1;
     
-    SDL_Color hairColor = {60, 50, 80, 255};        // Dark purple hair
-    SDL_Color skinColor = {255, 220, 190, 255};     // Skin tone
-    SDL_Color armorBlue = {80, 150, 200, 255};      // Blue armor
-    SDL_Color armorDark = {50, 90, 130, 255};       // Dark blue
-    SDL_Color capeColor = {100, 120, 180, 255};     // Purple-blue cape
-    SDL_Color swordGray = {180, 180, 190, 255};     // Sword metal
-    SDL_Color swordHandle = {100, 70, 50, 255};     // Sword handle
-    SDL_Color enemyColor = {200, 50, 50, 255};      // Enemy red
+    SDL_Color hairColor = {60, 50, 80, 255};        
+    SDL_Color skinColor = {255, 220, 190, 255};    
+    SDL_Color armorBlue = {80, 150, 200, 255};      
+    SDL_Color armorDark = {50, 90, 130, 255};      
+    SDL_Color capeColor = {100, 120, 180, 255};     
+    SDL_Color swordGray = {180, 180, 190, 255};   
+    SDL_Color swordHandle = {100, 70, 50, 255};     
+    SDL_Color enemyColor = {200, 50, 50, 255};     
     
     if (!isLocal) {
-        // Make enemies red-tinted
+    
         armorBlue = enemyColor;
         armorDark = {150, 30, 30, 255};
     }
 
-    // Draw flowing cape behind Samurai (flips based on direction)
+
     setColor(capeColor);
     for (int i = 0; i < 8; i++) {
         int capeX = centerX - flipMultiplier * (8 + i);
@@ -444,56 +427,54 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
         SDL_RenderFillRect(renderer, &capeRect);
     }
     
-    // Draw legs 
+
     setColor(armorDark);
     SDL_Rect leftLeg = {centerX - 4 * scale, centerY + 6 * scale, 3 * scale, 8 * scale};
     SDL_Rect rightLeg = {centerX + 1 * scale, centerY + 6 * scale, 3 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &leftLeg);
     SDL_RenderFillRect(renderer, &rightLeg);
-    
-    // Draw body 
+
     setColor(armorBlue);
     SDL_Rect body = {centerX - 5 * scale, centerY - 2 * scale, 10 * scale, 10 * scale};
     SDL_RenderFillRect(renderer, &body);
     
-    // Draw armor details 
+ 
     setColor(armorDark);
     SDL_Rect armorDetail1 = {centerX - 3 * scale, centerY, 2 * scale, 6 * scale};
     SDL_Rect armorDetail2 = {centerX + 1 * scale, centerY, 2 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &armorDetail1);
     SDL_RenderFillRect(renderer, &armorDetail2);
     
-    // Draw head 
+ 
     setColor(skinColor);
     SDL_Rect head = {centerX - 3 * scale, centerY - 8 * scale, 6 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &head);
     
-    // Draw hair 
+  
     setColor(hairColor);
     SDL_Rect hair1 = {centerX - 4 * scale, centerY - 10 * scale, 8 * scale, 4 * scale};
     SDL_RenderFillRect(renderer, &hair1);
 
-    // Hair ponytail flowing (flips based on direction)
     SDL_Rect ponytail = {centerX - flipMultiplier * 8 * scale, centerY - 8 * scale, 5 * scale, 3 * scale};
     SDL_RenderFillRect(renderer, &ponytail);
     
-    // Draw eyes (flip positions based on direction)
+    
     setColor({255, 255, 255, 255});
     SDL_Rect leftEye = {centerX - flipMultiplier * 2 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
     SDL_Rect rightEye = {centerX + flipMultiplier * 1 * scale, centerY - 6 * scale, 1 * scale, 1 * scale};
     SDL_RenderFillRect(renderer, &leftEye);
     SDL_RenderFillRect(renderer, &rightEye);
     
-    // Draw sword (flips to other side when facing left)
+    
     setColor(swordHandle);
     SDL_Rect swordHandle_rect = {centerX + flipMultiplier * 2 * scale, centerY - 2 * scale, 3 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &swordHandle_rect);
     
     setColor(swordGray);
-    // Sword blade
+   
     SDL_Rect blade = {centerX + flipMultiplier * 4 * scale, centerY - 8 * scale, 2 * scale, 20 * scale};
     SDL_RenderFillRect(renderer, &blade);
-    // Sword tip
+  
     SDL_Rect tip = {centerX + flipMultiplier * 5 * scale, centerY + 11 * scale, 1 * scale, 3 * scale};
     SDL_RenderFillRect(renderer, &tip);
     
@@ -505,7 +486,7 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     // wind effect WIP
     if (player.isDashing || player.activeAbility != SamuraiAbility::NONE) {
         setColor(windColor);
-        // Circular wind particles
+      
         for (int i = 0; i < 360; i += 40) {
             float angle = i * 3.14159f / 180.0f;
             int windRadius = static_cast<int>(18 * cameraScale);
@@ -516,7 +497,7 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
             SDL_RenderFillRect(renderer, &windParticle);
         }
         
-        // Add flowing wind lines (flip based on direction)
+      
         for (int i = 0; i < 3; i++) {
             int lineY = centerY - static_cast<int>(10 * cameraScale) + static_cast<int>(i * 8 * cameraScale);
             SDL_RenderDrawLine(renderer, 
@@ -528,31 +509,31 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
         }
     }
     
-    // Health bar above character
+
     int barWidth = static_cast<int>(40 * cameraScale);
     int barHeight = static_cast<int>(5 * cameraScale);
     int barX = centerX - barWidth / 2;
     int barY = centerY - 25 * scale;
     
-    // Background (red)
+   
     SDL_Rect bgRect = {barX, barY, barWidth, barHeight};
     setColor(healthBarRed);
     SDL_RenderFillRect(renderer, &bgRect);
     
-    // Foreground (green based on health percentage)
+  
     float healthPercent = static_cast<float>(player.health) / player.maxHealth;
     SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
     setColor(healthBarGreen);
     SDL_RenderFillRect(renderer, &fgRect);
     
-    // Player name
+   
     setColor(textColor);
     renderText(player.name.c_str(), centerX - static_cast<int>(20 * cameraScale), 
                centerY + static_cast<int>(20 * cameraScale), static_cast<int>(12 * cameraScale));
     
     // Draw ability indicators for local player
     if (isLocal) {
-        // Q stacks indicator
+        
         for (int i = 0; i < player.qStacks; i++) {
             SDL_Rect stackRect = {centerX - 15 + i * 12, centerY + 25, 10, 3};
             setColor(windColor);
@@ -564,14 +545,14 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
 void Renderer::renderDummy(const Dummy& dummy) {
     if (!dummy.isAlive) return;
     
-    // Convert world position to screen coordinates
+   
     int screenX, screenY;
     worldToScreen(dummy.x, dummy.y, screenX, screenY);
     
-    // Colors
-    SDL_Color woodColor = {139, 90, 60, 255};    // Brown wood
-    SDL_Color targetRed = {220, 50, 50, 255};    // Red target
-    SDL_Color targetWhite = {240, 240, 240, 255}; // White target
+  
+    SDL_Color woodColor = {139, 90, 60, 255};    
+    SDL_Color targetRed = {220, 50, 50, 255};   
+    SDL_Color targetWhite = {240, 240, 240, 255}; 
     SDL_Color healthBarBg = {60, 60, 60, 255};
     SDL_Color healthBarRed = {200, 50, 50, 255};
     
@@ -643,24 +624,23 @@ void Renderer::renderDummy(const Dummy& dummy) {
 }
 
 void Renderer::renderProjectile(const Projectile& projectile) {
-    // Convert world position to screen coordinates
+
     int screenX, screenY;
     worldToScreen(projectile.x, projectile.y, screenX, screenY);
     
     int scale = static_cast<int>(cameraScale);
     
     if (projectile.isTornado) {
-        // Render beautiful spiral tornado
+      
         int tornadoRadius = static_cast<int>(projectile.size * cameraScale);
         float time = SDL_GetTicks() / 150.0f; 
 
-        // Define colors for the blue tornado gradient
+      
         SDL_Color darkBlue = {40, 100, 180, 255};      
         SDL_Color brightBlue = {100, 180, 255, 255};   
         SDL_Color lightBlue = {150, 210, 255, 200};    
         SDL_Color whiteCore = {200, 230, 255, 255};    
         
-        // Draw multiple spiral arms 
         int numSpirals = 5; 
         int numSegments = 30; 
         
@@ -1031,4 +1011,44 @@ void Renderer::renderDashBurst(float originX, float originY, float rotationRad, 
     drawBurstLine(-6.0f, c1);
     drawBurstLine(0.0f, c2);
     drawBurstLine(6.0f, c3);
+}
+
+void Renderer::renderRTornado(float x, float y) {
+    int screenX, screenY;
+    worldToScreen(x, y, screenX, screenY);
+
+    SDL_Color windCore = {100, 180, 255, 220};
+    SDL_Color windOuter = {150, 220, 255, 160};
+    SDL_Color windGlow = {200, 240, 255, 100};
+    
+    int tornadoSize = static_cast<int>(Config::R_TORNADO_SIZE * cameraScale);
+
+    setColor(windGlow);
+    for (int r = tornadoSize + 8; r >= tornadoSize + 2; r -= 2) {
+        renderCircle(screenX, screenY, r);
+    }
+    
+    setColor(windOuter);
+    for (int r = tornadoSize; r >= tornadoSize - 4; r--) {
+        renderCircle(screenX, screenY, r);
+    }
+    
+    setColor(windCore);
+    for (int r = tornadoSize - 6; r >= tornadoSize - 10; r--) {
+        renderCircle(screenX, screenY, r);
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    float time = std::chrono::duration<float>(now.time_since_epoch()).count();
+    float angle = time * 3.0f; 
+    
+    setColor(windCore);
+    for (int i = 0; i < 3; i++) {
+        float swirlAngle = angle + (i * 2.0f * 3.14159f / 3.0f);
+        int x1 = screenX + static_cast<int>(std::cos(swirlAngle) * (tornadoSize - 8));
+        int y1 = screenY + static_cast<int>(std::sin(swirlAngle) * (tornadoSize - 8));
+        int x2 = screenX + static_cast<int>(std::cos(swirlAngle) * tornadoSize);
+        int y2 = screenY + static_cast<int>(std::sin(swirlAngle) * tornadoSize);
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    }
 }

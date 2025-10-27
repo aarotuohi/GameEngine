@@ -55,6 +55,10 @@ public:
     std::chrono::steady_clock::time_point windWallStartTime;
     float windWallRadius; 
     
+    
+    bool hasRTornadoes;
+    std::chrono::steady_clock::time_point rTornadoesStartTime;
+    float rTornadoAngle; 
    
     bool hasTarget;
     float targetX, targetY;
@@ -79,13 +83,15 @@ public:
     void useQ();
     void useW();
     void useE(float targetX, float targetY);
-    void useR(const Player& target);
+    void useR();
     void takeDamage(int damage);
     void respawn(float spawnX, float spawnY);
     
     // Wind Wall methods
     void updateWindWall(float dt);
     bool isProjectileBlockedByWindWall(float projX, float projY) const;
+    
+    void updateRTornadoes(float dt);
 };
 
 // Projectile class

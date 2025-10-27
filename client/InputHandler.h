@@ -17,7 +17,7 @@ private:
     bool hasMovementTarget;
     float targetX, targetY;
     
-    // Ability key presses (single frame detection)
+    // Ability key presses 
     bool qPressed, wPressed, ePressed, rPressed;
 
 public:

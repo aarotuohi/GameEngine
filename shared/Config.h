@@ -38,6 +38,14 @@ namespace Config {
     constexpr float E_DASH_DISTANCE = 200.0f;    
     constexpr int E_DASH_DURATION_MS = 180;     
     
+
+    constexpr int R_DURATION_MS = 10000;        
+    constexpr int R_TORNADO_COUNT = 3;           
+    constexpr float R_ORBIT_RADIUS = 80.0f;      
+    constexpr float R_ROTATION_SPEED = 2.0f;     
+    constexpr int R_TORNADO_DAMAGE = 25;         
+    constexpr int R_TORNADO_SIZE = 30;          
+    
     enum class MessageType : uint8_t {
         PLAYER_JOIN = 1,
         PLAYER_LEAVE = 2,
