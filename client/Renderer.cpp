@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include <iostream>
 #include <cmath>
+#include <cctype>
 
 Renderer::Renderer(int w, int h)
     : window(nullptr), renderer(nullptr), width(w), height(h),
@@ -527,11 +528,15 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_RenderFillRect(renderer, &fgRect);
     
    
-    setColor(textColor);
-    renderText(player.name.c_str(), centerX - static_cast<int>(20 * cameraScale), 
-               centerY + static_cast<int>(20 * cameraScale), static_cast<int>(12 * cameraScale));
     
-    // Draw ability indicators for local player
+    setColor(textColor);
+    int nameSize = static_cast<int>(12 * cameraScale);
+    int nameWidth = static_cast<int>(player.name.length()) * nameSize / 2;
+    int nameX = centerX - nameWidth / 2;
+    int nameY = barY - nameSize - static_cast<int>(4 * cameraScale);
+    renderText(player.name.c_str(), nameX, nameY, nameSize);
+    
+   
     if (isLocal) {
         
         for (int i = 0; i < player.qStacks; i++) {
@@ -902,11 +907,92 @@ void Renderer::renderWindWall(const Player& player) {
 }
 
 void Renderer::renderText(const char* text, int x, int y, int size) {
-    
+    // Simple 5x7 bitmap font for A-Z and 0-9. Characters outside this set are skipped.
     setColor(textColor);
-    int textWidth = static_cast<int>(std::strlen(text)) * size / 2;
-    SDL_Rect rect = {x, y, textWidth, size};
-    SDL_RenderDrawRect(renderer, &rect);
+
+    static const uint8_t font5x7[] = {
+        // A-Z (26 chars), each 5 bytes (columns), LSB = top pixel
+        0x7C,0x12,0x11,0x12,0x7C, // A
+        0x7F,0x49,0x49,0x49,0x36, // B
+        0x3E,0x41,0x41,0x41,0x22, // C
+        0x7F,0x41,0x41,0x22,0x1C, // D
+        0x7F,0x49,0x49,0x49,0x41, // E
+        0x7F,0x09,0x09,0x09,0x01, // F
+        0x3E,0x41,0x49,0x49,0x7A, // G
+        0x7F,0x08,0x08,0x08,0x7F, // H
+        0x00,0x41,0x7F,0x41,0x00, // I
+        0x20,0x40,0x41,0x3F,0x01, // J
+        0x7F,0x08,0x14,0x22,0x41, // K
+        0x7F,0x40,0x40,0x40,0x40, // L
+        0x7F,0x02,0x0C,0x02,0x7F, // M
+        0x7F,0x04,0x08,0x10,0x7F, // N
+        0x3E,0x41,0x41,0x41,0x3E, // O
+        0x7F,0x09,0x09,0x09,0x06, // P
+        0x3E,0x41,0x51,0x21,0x5E, // Q
+        0x7F,0x09,0x19,0x29,0x46, // R
+        0x46,0x49,0x49,0x49,0x31, // S
+        0x01,0x01,0x7F,0x01,0x01, // T
+        0x3F,0x40,0x40,0x40,0x3F, // U
+        0x1F,0x20,0x40,0x20,0x1F, // V
+        0x3F,0x40,0x38,0x40,0x3F, // W
+        0x63,0x14,0x08,0x14,0x63, // X
+        0x07,0x08,0x70,0x08,0x07, // Y
+        0x61,0x51,0x49,0x45,0x43, // Z
+        // 0-9 (10 chars)
+        0x3E,0x45,0x49,0x51,0x3E, // 0
+        0x00,0x21,0x7F,0x01,0x00, // 1
+        0x23,0x45,0x49,0x49,0x31, // 2
+        0x22,0x41,0x49,0x49,0x36, // 3
+        0x0C,0x14,0x24,0x7F,0x04, // 4
+        0x72,0x51,0x51,0x51,0x4E, // 5
+        0x3E,0x49,0x49,0x49,0x26, // 6
+        0x40,0x47,0x48,0x50,0x60, // 7
+        0x36,0x49,0x49,0x49,0x36, // 8
+        0x32,0x49,0x49,0x49,0x3E  // 9
+    };
+
+    const int glyphsLetters = 26;
+    const int glyphsDigits = 10;
+    const int bytesPerGlyph = 5;
+
+    int px = std::max(1, size / 6); // pixel block size
+    int glyphW = 5 * px;
+    int glyphH = 7 * px;
+    int spacing = px; // space between glyphs
+
+    int cursorX = x;
+    // Render each character as a 5x7 pixel block font
+    for (const char* p = text; *p != '\0'; ++p) {
+        char ch = *p;
+        if (ch == ' ') {
+            cursorX += glyphW / 2 + spacing;
+            continue;
+        }
+        int index = -1;
+        if (std::isdigit(static_cast<unsigned char>(ch))) {
+            index = glyphsLetters + (ch - '0');
+        } else if (std::isalpha(static_cast<unsigned char>(ch))) {
+            char up = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+            index = up - 'A';
+            if (index < 0 || index >= glyphsLetters) index = -1;
+        }
+
+        if (index >= 0) {
+            const uint8_t* glyph = &font5x7[index * bytesPerGlyph];
+            // for each column
+            for (int col = 0; col < 5; ++col) {
+                uint8_t colBits = glyph[col];
+                for (int row = 0; row < 7; ++row) {
+                    if (colBits & (1 << row)) {
+                        SDL_Rect pixelRect = {cursorX + col * px, y + row * px, px, px};
+                        SDL_RenderFillRect(renderer, &pixelRect);
+                    }
+                }
+            }
+        }
+
+        cursorX += glyphW + spacing;
+    }
 }
 
 void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
