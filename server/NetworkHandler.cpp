@@ -255,17 +255,18 @@ void NetworkHandler::broadcastUdpState() {
     broadcast.numPlayers = static_cast<uint32_t>(players.size());
     broadcast.players = players;
     
-    // Add dummies 
-    auto dummies = gameState.getAllDummies();
-    broadcast.numDummies = static_cast<uint32_t>(dummies.size());
-    for (const auto& [dummyId, dummy] : dummies) {
-        Protocol::DummyState state;
-        state.id = dummy->id;
-        state.x = dummy->x;
-        state.y = dummy->y;
-        state.health = dummy->health;
-        state.isAlive = dummy->isAlive;
-        broadcast.dummies.push_back(state);
+   
+    auto enemies = gameState.getAllEnemies();
+    broadcast.numEnemies = static_cast<uint32_t>(enemies.size());
+    for (const auto& [enemyId, enemy] : enemies) {
+        Protocol::EnemyState state;
+        state.id = enemy->id;
+        state.x = enemy->x;
+        state.y = enemy->y;
+        state.health = enemy->health;
+        state.isAlive = enemy->isAlive;
+        state.targetPlayerId = enemy->targetPlayerId;
+        broadcast.enemies.push_back(state);
     }
     
     // Add projectiles

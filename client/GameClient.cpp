@@ -155,14 +155,14 @@ void GameClient::render() {
     renderer->renderGrid();
     
     auto players = network->getPlayers();
-    auto dummies = network->getDummies();
+    auto enemies = network->getEnemies();
     auto projectiles = network->getProjectiles();
     auto rTornadoes = network->getRTornadoes();
     uint32_t myId = network->getPlayerId();
     
 
-    for (const auto& [dummyId, dummy] : dummies) {
-        renderer->renderDummy(*dummy);
+    for (const auto& [enemyId, enemy] : enemies) {
+        renderer->renderEnemy(*enemy);
     }
     
    

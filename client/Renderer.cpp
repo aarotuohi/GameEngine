@@ -1,7 +1,6 @@
 #include "Renderer.h"
 #include <iostream>
 #include <cmath>
-#include <cctype>
 
 Renderer::Renderer(int w, int h)
     : window(nullptr), renderer(nullptr), width(w), height(h),
@@ -547,17 +546,19 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     }
 }
 
-void Renderer::renderDummy(const Dummy& dummy) {
-    if (!dummy.isAlive) return;
+void Renderer::renderEnemy(const Enemy& enemy) {
+    if (!enemy.isAlive) return;
     
-   
     int screenX, screenY;
-    worldToScreen(dummy.x, dummy.y, screenX, screenY);
+    worldToScreen(enemy.x, enemy.y, screenX, screenY);
     
-  
-    SDL_Color woodColor = {139, 90, 60, 255};    
-    SDL_Color targetRed = {220, 50, 50, 255};   
-    SDL_Color targetWhite = {240, 240, 240, 255}; 
+
+    SDL_Color bodyOrange = {255, 120, 50, 255};    
+    SDL_Color bodyDark = {200, 80, 30, 255};         
+    SDL_Color eyeWhite = {255, 255, 255, 255};      
+    SDL_Color eyeBlack = {20, 20, 20, 255};          
+    SDL_Color wingRed = {220, 60, 40, 255};          
+    SDL_Color accentYellow = {255, 200, 80, 255};    
     SDL_Color healthBarBg = {60, 60, 60, 255};
     SDL_Color healthBarRed = {200, 50, 50, 255};
     
@@ -565,67 +566,95 @@ void Renderer::renderDummy(const Dummy& dummy) {
     int centerX = screenX;
     int centerY = screenY;
     
-    // Draw wooden post/stand
-    setColor(woodColor);
-    SDL_Rect post = {centerX - 3 * scale, centerY + 5 * scale, 6 * scale, 15 * scale};
-    SDL_RenderFillRect(renderer, &post);
+   
+    setColor(wingRed);
+   
+    SDL_Rect leftWing = {centerX - 12 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
+    SDL_RenderFillRect(renderer, &leftWing);
+  
+    SDL_Rect rightWing = {centerX + 7 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
+    SDL_RenderFillRect(renderer, &rightWing);
     
-    // Draw base
-    SDL_Rect base = {centerX - 8 * scale, centerY + 20 * scale, 16 * scale, 4 * scale};
-    SDL_RenderFillRect(renderer, &base);
-    
-    // Draw circular target (alternating red and white rings)
-    for (int ring = 3; ring >= 0; ring--) {
-        if (ring % 2 == 0) {
-            setColor(targetWhite);
-        } else {
-            setColor(targetRed);
-        }
-        
-        int radius = (ring + 1) * 4 * scale;
-        // Draw filled circle by drawing horizontal lines
-        for (int y = -radius; y <= radius; y++) {
-            int width = static_cast<int>(std::sqrt(radius * radius - y * y));
-            SDL_RenderDrawLine(renderer, 
-                centerX - width, centerY + y,
-                centerX + width, centerY + y);
-        }
-    }
-    
-    // Draw center bullseye
-    setColor(targetRed);
-    int bullseyeRadius = 2 * scale;
-    for (int y = -bullseyeRadius; y <= bullseyeRadius; y++) {
-        int width = static_cast<int>(std::sqrt(bullseyeRadius * bullseyeRadius - y * y));
+
+    setColor(bodyOrange);
+    int bodyRadius = 8 * scale;
+    for (int y = -bodyRadius; y <= bodyRadius; y++) {
+        int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
         SDL_RenderDrawLine(renderer, 
             centerX - width, centerY + y,
             centerX + width, centerY + y);
     }
     
-    // Health bar above dummy
-    int barWidth = static_cast<int>(50 * cameraScale);
-    int barHeight = static_cast<int>(6 * cameraScale);
-    int barX = centerX - barWidth / 2;
-    int barY = centerY - static_cast<int>(25 * cameraScale);
+   
+    setColor(bodyDark);
+    for (int y = 2 * scale; y <= bodyRadius; y++) {
+        int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            centerX - width, centerY + y,
+            centerX + width, centerY + y);
+    }
     
-    // Background
+ 
+    setColor(eyeWhite);
+    int eyeRadius = 3 * scale;
+
+    int leftEyeX = centerX - 4 * scale;
+    int eyeY = centerY - 2 * scale;
+    for (int y = -eyeRadius; y <= eyeRadius; y++) {
+        int width = static_cast<int>(std::sqrt(eyeRadius * eyeRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            leftEyeX - width, eyeY + y,
+            leftEyeX + width, eyeY + y);
+    }
+
+    int rightEyeX = centerX + 4 * scale;
+    for (int y = -eyeRadius; y <= eyeRadius; y++) {
+        int width = static_cast<int>(std::sqrt(eyeRadius * eyeRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            rightEyeX - width, eyeY + y,
+            rightEyeX + width, eyeY + y);
+    }
+    
+    // Draw pupils (black dots)
+    setColor(eyeBlack);
+    int pupilRadius = 1 * scale + 1;
+    // Left pupil
+    for (int y = -pupilRadius; y <= pupilRadius; y++) {
+        int width = static_cast<int>(std::sqrt(pupilRadius * pupilRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            leftEyeX - width, eyeY + y,
+            leftEyeX + width, eyeY + y);
+    }
+    // Right pupil
+    for (int y = -pupilRadius; y <= pupilRadius; y++) {
+        int width = static_cast<int>(std::sqrt(pupilRadius * pupilRadius - y * y));
+        SDL_RenderDrawLine(renderer, 
+            rightEyeX - width, eyeY + y,
+            rightEyeX + width, eyeY + y);
+    }
+    
+    // Add yellow accent dots on body
+    setColor(accentYellow);
+    SDL_Rect dot1 = {centerX - 2 * scale, centerY + 4 * scale, 2 * scale, 2 * scale};
+    SDL_RenderFillRect(renderer, &dot1);
+    SDL_Rect dot2 = {centerX + 1 * scale, centerY + 5 * scale, 2 * scale, 2 * scale};
+    SDL_RenderFillRect(renderer, &dot2);
+    
+
+    int barWidth = static_cast<int>(40 * cameraScale);
+    int barHeight = static_cast<int>(5 * cameraScale);
+    int barX = centerX - barWidth / 2;
+    int barY = centerY - static_cast<int>(18 * cameraScale);
+    
     SDL_Rect bgRect = {barX, barY, barWidth, barHeight};
     setColor(healthBarBg);
     SDL_RenderFillRect(renderer, &bgRect);
     
-    // Foreground (red based on health percentage)
-    float healthPercent = static_cast<float>(dummy.health) / dummy.maxHealth;
+ 
+    float healthPercent = static_cast<float>(enemy.health) / enemy.maxHealth;
     SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
     setColor(healthBarRed);
     SDL_RenderFillRect(renderer, &fgRect);
-    
-    // Display health numbers
-    SDL_Color textColor = {255, 255, 255, 255};
-    setColor(textColor);
-    char healthText[32];
-    snprintf(healthText, sizeof(healthText), "%d/%d", dummy.health, dummy.maxHealth);
-    renderText(healthText, centerX - static_cast<int>(15 * cameraScale), 
-               barY - static_cast<int>(12 * cameraScale), static_cast<int>(10 * cameraScale));
 }
 
 void Renderer::renderProjectile(const Projectile& projectile) {
@@ -639,7 +668,6 @@ void Renderer::renderProjectile(const Projectile& projectile) {
       
         int tornadoRadius = static_cast<int>(projectile.size * cameraScale);
         float time = SDL_GetTicks() / 150.0f; 
-
       
         SDL_Color darkBlue = {40, 100, 180, 255};      
         SDL_Color brightBlue = {100, 180, 255, 255};   
@@ -907,92 +935,11 @@ void Renderer::renderWindWall(const Player& player) {
 }
 
 void Renderer::renderText(const char* text, int x, int y, int size) {
-    // Simple 5x7 bitmap font for A-Z and 0-9. Characters outside this set are skipped.
+    
     setColor(textColor);
-
-    static const uint8_t font5x7[] = {
-        // A-Z (26 chars), each 5 bytes (columns), LSB = top pixel
-        0x7C,0x12,0x11,0x12,0x7C, // A
-        0x7F,0x49,0x49,0x49,0x36, // B
-        0x3E,0x41,0x41,0x41,0x22, // C
-        0x7F,0x41,0x41,0x22,0x1C, // D
-        0x7F,0x49,0x49,0x49,0x41, // E
-        0x7F,0x09,0x09,0x09,0x01, // F
-        0x3E,0x41,0x49,0x49,0x7A, // G
-        0x7F,0x08,0x08,0x08,0x7F, // H
-        0x00,0x41,0x7F,0x41,0x00, // I
-        0x20,0x40,0x41,0x3F,0x01, // J
-        0x7F,0x08,0x14,0x22,0x41, // K
-        0x7F,0x40,0x40,0x40,0x40, // L
-        0x7F,0x02,0x0C,0x02,0x7F, // M
-        0x7F,0x04,0x08,0x10,0x7F, // N
-        0x3E,0x41,0x41,0x41,0x3E, // O
-        0x7F,0x09,0x09,0x09,0x06, // P
-        0x3E,0x41,0x51,0x21,0x5E, // Q
-        0x7F,0x09,0x19,0x29,0x46, // R
-        0x46,0x49,0x49,0x49,0x31, // S
-        0x01,0x01,0x7F,0x01,0x01, // T
-        0x3F,0x40,0x40,0x40,0x3F, // U
-        0x1F,0x20,0x40,0x20,0x1F, // V
-        0x3F,0x40,0x38,0x40,0x3F, // W
-        0x63,0x14,0x08,0x14,0x63, // X
-        0x07,0x08,0x70,0x08,0x07, // Y
-        0x61,0x51,0x49,0x45,0x43, // Z
-        // 0-9 (10 chars)
-        0x3E,0x45,0x49,0x51,0x3E, // 0
-        0x00,0x21,0x7F,0x01,0x00, // 1
-        0x23,0x45,0x49,0x49,0x31, // 2
-        0x22,0x41,0x49,0x49,0x36, // 3
-        0x0C,0x14,0x24,0x7F,0x04, // 4
-        0x72,0x51,0x51,0x51,0x4E, // 5
-        0x3E,0x49,0x49,0x49,0x26, // 6
-        0x40,0x47,0x48,0x50,0x60, // 7
-        0x36,0x49,0x49,0x49,0x36, // 8
-        0x32,0x49,0x49,0x49,0x3E  // 9
-    };
-
-    const int glyphsLetters = 26;
-    const int glyphsDigits = 10;
-    const int bytesPerGlyph = 5;
-
-    int px = std::max(1, size / 6); // pixel block size
-    int glyphW = 5 * px;
-    int glyphH = 7 * px;
-    int spacing = px; // space between glyphs
-
-    int cursorX = x;
-    // Render each character as a 5x7 pixel block font
-    for (const char* p = text; *p != '\0'; ++p) {
-        char ch = *p;
-        if (ch == ' ') {
-            cursorX += glyphW / 2 + spacing;
-            continue;
-        }
-        int index = -1;
-        if (std::isdigit(static_cast<unsigned char>(ch))) {
-            index = glyphsLetters + (ch - '0');
-        } else if (std::isalpha(static_cast<unsigned char>(ch))) {
-            char up = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
-            index = up - 'A';
-            if (index < 0 || index >= glyphsLetters) index = -1;
-        }
-
-        if (index >= 0) {
-            const uint8_t* glyph = &font5x7[index * bytesPerGlyph];
-            // for each column
-            for (int col = 0; col < 5; ++col) {
-                uint8_t colBits = glyph[col];
-                for (int row = 0; row < 7; ++row) {
-                    if (colBits & (1 << row)) {
-                        SDL_Rect pixelRect = {cursorX + col * px, y + row * px, px, px};
-                        SDL_RenderFillRect(renderer, &pixelRect);
-                    }
-                }
-            }
-        }
-
-        cursorX += glyphW + spacing;
-    }
+    int textWidth = static_cast<int>(std::strlen(text)) * size / 2;
+    SDL_Rect rect = {x, y, textWidth, size};
+    SDL_RenderDrawRect(renderer, &rect);
 }
 
 void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {

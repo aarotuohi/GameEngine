@@ -153,22 +153,23 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
     }
     
     {
-        std::lock_guard<std::mutex> lock(dummiesMutex);
+        std::lock_guard<std::mutex> lock(enemiesMutex);
         
-        for (const auto& state : broadcast.dummies) {
-            auto it = dummies.find(state.id);
-            if (it != dummies.end()) {
-                // Update existing dummy
+        for (const auto& state : broadcast.enemies) {
+            auto it = enemies.find(state.id);
+            if (it != enemies.end()) {
+                
                 it->second->x = state.x;
                 it->second->y = state.y;
                 it->second->health = state.health;
                 it->second->isAlive = state.isAlive;
+                it->second->targetPlayerId = state.targetPlayerId;
             } else {
-                // Add new dummy
-                auto dummy = std::make_shared<Dummy>(state.id, state.x, state.y);
-                dummy->health = state.health;
-                dummy->isAlive = state.isAlive;
-                dummies[state.id] = dummy;
+                
+                auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId);
+                enemy->health = state.health;
+                enemy->isAlive = state.isAlive;
+                enemies[state.id] = enemy;
             }
         }
     }
@@ -261,9 +262,9 @@ std::shared_ptr<Player> NetworkManager::getPlayer(uint32_t pid) {
     return (it != players.end()) ? it->second : nullptr;
 }
 
-std::unordered_map<uint32_t, std::shared_ptr<Dummy>> NetworkManager::getDummies() {
-    std::lock_guard<std::mutex> lock(dummiesMutex);
-    return dummies;
+std::unordered_map<uint32_t, std::shared_ptr<Enemy>> NetworkManager::getEnemies() {
+    std::lock_guard<std::mutex> lock(enemiesMutex);
+    return enemies;
 }
 
 std::unordered_map<uint32_t, std::shared_ptr<Projectile>> NetworkManager::getProjectiles() {

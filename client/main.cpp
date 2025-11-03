@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout << "=== Multiplayer Game Client ===\n\n";
+    std::cout << "=== Game Client ===\n\n";
     
     // Get player name
     std::string playerName;

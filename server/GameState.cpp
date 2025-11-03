@@ -4,11 +4,12 @@
 #include <cmath>
 
 GameState::GameState()
-    : nextPlayerId(1), nextProjectileId(1), nextDummyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true) {
+    : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true) {
 
-    spawnDummy(200.0f, 200.0f);
-    spawnDummy(400.0f, 300.0f);
-    spawnDummy(600.0f, 200.0f);
+    
+    spawnEnemy(200.0f, 200.0f);
+    spawnEnemy(400.0f, 300.0f);
+    spawnEnemy(600.0f, 200.0f);
 }
 
 GameState::~GameState() {
@@ -132,13 +133,13 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
     const float cosThreshold = std::cos(halfArcRad);
     const float rangeSq = range * range;
 
-    bool hitDummy = false;
+    bool hitEnemy = false;
 
-    // Check dummies for hits
-    for (auto& [dummyId, dummy] : dummies) {
-        if (!dummy->isAlive) continue;
-        float vx = dummy->x - originX;
-        float vy = dummy->y - originY;
+    
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive) continue;
+        float vx = enemy->x - originX;
+        float vy = enemy->y - originY;
         float distSq = vx * vx + vy * vy;
         if (distSq > rangeSq) continue;
 
@@ -147,11 +148,11 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
         float nvx = vx / vLen;
         float nvy = vy / vLen;
 
-        // Angle check via dot product
+        
         float dot = ndx * nvx + ndy * nvy; 
         if (dot >= cosThreshold) {
-            dummy->takeDamage(damage);
-            hitDummy = true;
+            enemy->takeDamage(damage);
+            hitEnemy = true;
         }
     }
 
@@ -181,7 +182,7 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
     }
 
 
-    if (hitDummy) {
+    if (hitEnemy) {
         auto ownerIt = players.find(ownerId);
         if (ownerIt != players.end()) {
             ownerIt->second->qStacks++;
@@ -191,7 +192,7 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
         }
     }
 
-    return hitDummy;
+    return hitEnemy;
 }
 
 void GameState::update(float dt) {
@@ -247,11 +248,11 @@ void GameState::update(float dt) {
             }
             
             if (!hit) {
-                for (auto& [dummyId, dummy] : dummies) {
-                    if (proj->checkCollisionWithDummy(*dummy)) {
+                for (auto& [enemyId, enemy] : enemies) {
+                    if (proj->checkCollisionWithEnemy(*enemy)) {
                         proj->active = false;
                         hit = true;
-                        dummy->takeDamage(proj->damage);
+                        enemy->takeDamage(proj->damage);
                       
                         // Stack Q
                         auto owner = players.find(proj->ownerId);
@@ -268,7 +269,7 @@ void GameState::update(float dt) {
                 }
             }
             
-            // Check collisions with players if didn't hit dummy
+            
             if (!hit) {
                 for (auto& [playerId, player] : players) {
                     if (proj->checkCollision(*player)) {
@@ -316,12 +317,12 @@ void GameState::processEDashDamage(uint32_t ownerId, float endX, float endY, flo
    
     float r2 = radius * radius;
 
-    for (auto& [dummyId, dummy] : dummies) {
-        if (!dummy->isAlive) continue;
-        float dx = dummy->x - endX;
-        float dy = dummy->y - endY;
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive) continue;
+        float dx = enemy->x - endX;
+        float dy = enemy->y - endY;
         if (dx*dx + dy*dy <= r2) {
-            dummy->takeDamage(damage);
+            enemy->takeDamage(damage);
         }
     }
 
@@ -370,34 +371,35 @@ std::unordered_map<uint32_t, std::shared_ptr<Projectile>> GameState::getAllProje
     return projectiles;
 }
 
-uint32_t GameState::spawnDummy(float x, float y) {
+uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
     std::lock_guard<std::mutex> lock(mutex);
-    uint32_t dummyId = nextDummyId++;
-    auto dummy = std::make_shared<Dummy>(dummyId, x, y);
-    dummies[dummyId] = dummy;
-    return dummyId;
+    uint32_t enemyId = nextEnemyId++;
+    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId);
+    enemies[enemyId] = enemy;
+    std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ")\n";
+    return enemyId;
 }
 
-std::shared_ptr<Dummy> GameState::getDummy(uint32_t dummyId) {
+std::shared_ptr<Enemy> GameState::getEnemy(uint32_t enemyId) {
     std::lock_guard<std::mutex> lock(mutex);
-    auto it = dummies.find(dummyId);
-    if (it != dummies.end()) {
+    auto it = enemies.find(enemyId);
+    if (it != enemies.end()) {
         return it->second;
     }
     return nullptr;
 }
 
-void GameState::damageDummy(uint32_t dummyId, int damage) {
+void GameState::damageEnemy(uint32_t enemyId, int damage) {
     std::lock_guard<std::mutex> lock(mutex);
-    auto it = dummies.find(dummyId);
-    if (it != dummies.end()) {
+    auto it = enemies.find(enemyId);
+    if (it != enemies.end()) {
         it->second->takeDamage(damage);
     }
 }
 
-std::unordered_map<uint32_t, std::shared_ptr<Dummy>> GameState::getAllDummies() {
+std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() {
     std::lock_guard<std::mutex> lock(mutex);
-    return dummies;
+    return enemies;
 }
 
 void GameState::createRTornadoes(uint32_t ownerId) {
@@ -415,7 +417,6 @@ void GameState::createRTornadoes(uint32_t ownerId) {
 }
 
 void GameState::updateRTornadoes(float dt) {
-    // NOTE: Caller (update loop) already holds mutex; do not lock here
     
     std::vector<uint32_t> tornadoesToRemove;
     
@@ -428,31 +429,30 @@ void GameState::updateRTornadoes(float dt) {
         
         auto& owner = ownerIt->second;
         
-        // Update tornado angle based on player's rotation angle
         tornado->angle = owner->rTornadoAngle + (2.0f * 3.14159265f / Config::R_TORNADO_COUNT) * tornado->tornadoIndex;
         
-        // Calculate tornado position
+        
         float tornadoX = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
         float tornadoY = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;
         
-        // Check collisions with dummies (with cooldown to prevent multiple hits)
+      
         auto now = std::chrono::steady_clock::now();
         auto timeSinceLastHit = std::chrono::duration_cast<std::chrono::milliseconds>(now - tornado->lastHitTime);
         
-        if (timeSinceLastHit.count() >= 500) { // 0.5 second cooldown per tornado
-            for (auto& [dummyId, dummy] : dummies) {
-                if (!dummy->isAlive) continue;
+        if (timeSinceLastHit.count() >= 500) { 
+            for (auto& [enemyId, enemy] : enemies) {
+                if (!enemy->isAlive) continue;
                 
-                float dx = dummy->x - tornadoX;
-                float dy = dummy->y - tornadoY;
+                float dx = enemy->x - tornadoX;
+                float dy = enemy->y - tornadoY;
                 float distSq = dx * dx + dy * dy;
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    dummy->takeDamage(Config::R_TORNADO_DAMAGE);
+                    enemy->takeDamage(Config::R_TORNADO_DAMAGE);
                     tornado->lastHitTime = now;
-                    std::cout << "R tornado hit dummy " << dummyId << " for " << Config::R_TORNADO_DAMAGE << " damage\n";
-                    break; // One hit per update
+                    std::cout << "R tornado hit enemy " << enemyId << " for " << Config::R_TORNADO_DAMAGE << " damage\n";
+                    break; 
                 }
             }
             

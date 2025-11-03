@@ -54,12 +54,13 @@ namespace Protocol {
         float windWallRadius;
     };
 
-    struct DummyState {
+    struct EnemyState {
         uint32_t id;
         float x;
         float y;
         uint32_t health;
         bool isAlive;
+        uint32_t targetPlayerId;
     };
 
     struct ProjectileState {
@@ -82,8 +83,8 @@ namespace Protocol {
     struct StateBroadcast {
         uint32_t numPlayers;
         std::vector<PlayerState> players;
-        uint32_t numDummies;
-        std::vector<DummyState> dummies;
+        uint32_t numEnemies;
+        std::vector<EnemyState> enemies;
         uint32_t numProjectiles;
         std::vector<ProjectileState> projectiles;
         uint32_t numRTornadoes;
