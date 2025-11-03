@@ -243,7 +243,6 @@ void Projectile::update(float dt) {
     x += vx * speed * dt;
     y += vy * speed * dt;
     
-    // Deactivate if out of bounds (tornado goes farther)
     float maxDistance = isTornado ? 800.0f : 400.0f;
     if (x < -maxDistance || x > Config::WORLD_WIDTH + maxDistance || 
         y < -maxDistance || y > Config::WORLD_HEIGHT + maxDistance) {
@@ -260,23 +259,25 @@ bool Projectile::checkCollision(const Player& player) const {
     return distance < (size + player.size / 2.0f);
 }
 
-bool Projectile::checkCollisionWithDummy(const Dummy& dummy) const {
-    if (!dummy.isAlive) return false;
+bool Projectile::checkCollisionWithEnemy(const Enemy& enemy) const {
+    if (!enemy.isAlive) return false;
     
-    float dx = x - dummy.x;
-    float dy = y - dummy.y;
+    float dx = x - enemy.x;
+    float dy = y - enemy.y;
     float distance = std::sqrt(dx * dx + dy * dy);
-    return distance < (size + dummy.size / 2.0f);
+    return distance < (size + enemy.size / 2.0f);
 }
 
-// Dummy implementation
-Dummy::Dummy(uint32_t dummyId, float posX, float posY)
-    : id(dummyId), x(posX), y(posY), size(40.0f),
-      health(1000), maxHealth(1000), isAlive(true) {
+
+Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer)
+    : id(enemyId), x(posX), y(posY), size(40.0f),
+      health(100), maxHealth(100), isAlive(true), 
+      targetPlayerId(targetPlayer), rotation(0.0f) {
     lastHitTime = std::chrono::steady_clock::now();
+    spawnTime = std::chrono::steady_clock::now();
 }
 
-void Dummy::takeDamage(int damage) {
+void Enemy::takeDamage(int damage) {
     if (!isAlive) return;
     health -= damage;
     if (health <= 0) {
@@ -286,12 +287,11 @@ void Dummy::takeDamage(int damage) {
     lastHitTime = std::chrono::steady_clock::now();
 }
 
-void Dummy::resetHealth() {
-    health = maxHealth;
-    isAlive = true;
+void Enemy::setTarget(uint32_t playerId) {
+    targetPlayerId = playerId;
 }
 
-bool Dummy::checkCollision(const Player& player) const {
+bool Enemy::checkCollision(const Player& player) const {
     float dx = x - player.x;
     float dy = y - player.y;
     float distance = std::sqrt(dx * dx + dy * dy);

@@ -25,11 +25,11 @@ private:
     std::thread udpReceiverThread;
     
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
-    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
+    std::unordered_map<uint32_t, std::shared_ptr<Enemy>> enemies;
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
     std::unordered_map<uint32_t, std::shared_ptr<Protocol::RTornadoState>> rTornadoes;
     mutable std::mutex playersMutex;
-    mutable std::mutex dummiesMutex;
+    mutable std::mutex enemiesMutex;
     mutable std::mutex projectilesMutex;
     mutable std::mutex rTornadoesMutex;
     
@@ -52,7 +52,7 @@ public:
     uint32_t getPlayerId() const { return playerId; }
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getPlayers();
     std::shared_ptr<Player> getPlayer(uint32_t pid);
-    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getDummies();
+    std::unordered_map<uint32_t, std::shared_ptr<Enemy>> getEnemies();
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<Protocol::RTornadoState>> getRTornadoes();
 };

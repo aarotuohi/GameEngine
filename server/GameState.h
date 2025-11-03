@@ -26,11 +26,11 @@ class GameState {
 private:
     std::unordered_map<uint32_t, std::shared_ptr<Player>> players;
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> projectiles;
-    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> dummies;
+    std::unordered_map<uint32_t, std::shared_ptr<Enemy>> enemies;
     std::unordered_map<uint32_t, std::shared_ptr<RTornado>> rTornadoes;
     uint32_t nextPlayerId;
     uint32_t nextProjectileId;
-    uint32_t nextDummyId;
+    uint32_t nextEnemyId;
     uint32_t nextRTornadoId;
     uint32_t taggedPlayerId;
     mutable std::mutex mutex;
@@ -64,10 +64,10 @@ public:
     void updateRTornadoes(float dt);
     void removeRTornadoes(uint32_t ownerId);
     
-    // Dummy management
-    uint32_t spawnDummy(float x, float y);
-    std::shared_ptr<Dummy> getDummy(uint32_t dummyId);
-    void damageDummy(uint32_t dummyId, int damage);
+   
+    uint32_t spawnEnemy(float x, float y, uint32_t targetPlayerId = 0);
+    std::shared_ptr<Enemy> getEnemy(uint32_t enemyId);
+    void damageEnemy(uint32_t enemyId, int damage);
     
     // Game loop
     void update(float dt);
@@ -75,7 +75,7 @@ public:
     // State retrieval
     std::vector<Protocol::PlayerState> getPlayersForBroadcast();
     std::unordered_map<uint32_t, std::shared_ptr<Player>> getAllPlayers();
-    std::unordered_map<uint32_t, std::shared_ptr<Dummy>> getAllDummies();
+    std::unordered_map<uint32_t, std::shared_ptr<Enemy>> getAllEnemies();
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getAllProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<RTornado>> getAllRTornadoes();
     

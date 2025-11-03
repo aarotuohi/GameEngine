@@ -50,7 +50,7 @@ public:
     void renderDecorations();
     void renderGrid();
     void renderPlayer(const Player& player, bool isLocal = false);
-    void renderDummy(const Dummy& dummy);
+    void renderEnemy(const Enemy& enemy);
     void renderProjectile(const Projectile& projectile);
     void renderWindWall(const Player& player);
   

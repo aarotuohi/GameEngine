@@ -130,7 +130,7 @@ namespace Protocol {
         return true;
     }
 
-    // State broadcast encoding
+
     std::vector<uint8_t> encodeStateBroadcast(const StateBroadcast& state) {
         std::vector<uint8_t> buffer;
         
@@ -150,21 +150,22 @@ namespace Protocol {
                          reinterpret_cast<const uint8_t*>(&netPlayer) + sizeof(PlayerState));
         }
         
-        // Add number of dummies
-        uint32_t numDummies = hton(state.numDummies);
+      
+        uint32_t numEnemies = hton(state.numEnemies);
         buffer.insert(buffer.end(),
-                     reinterpret_cast<uint8_t*>(&numDummies),
-                     reinterpret_cast<uint8_t*>(&numDummies) + sizeof(numDummies));
+                     reinterpret_cast<uint8_t*>(&numEnemies),
+                     reinterpret_cast<uint8_t*>(&numEnemies) + sizeof(numEnemies));
         
-        // Add each dummy state
-        for (const auto& dummy : state.dummies) {
-            DummyState netDummy = dummy;
-            netDummy.id = hton(dummy.id);
-            netDummy.health = hton(dummy.health);
+        
+        for (const auto& enemy : state.enemies) {
+            EnemyState netEnemy = enemy;
+            netEnemy.id = hton(enemy.id);
+            netEnemy.health = hton(enemy.health);
+            netEnemy.targetPlayerId = hton(enemy.targetPlayerId);
             
             buffer.insert(buffer.end(),
-                         reinterpret_cast<const uint8_t*>(&netDummy),
-                         reinterpret_cast<const uint8_t*>(&netDummy) + sizeof(DummyState));
+                         reinterpret_cast<const uint8_t*>(&netEnemy),
+                         reinterpret_cast<const uint8_t*>(&netEnemy) + sizeof(EnemyState));
         }
         
         // Add number of projectiles
@@ -206,14 +207,13 @@ namespace Protocol {
     bool decodeStateBroadcast(const uint8_t* data, size_t length, StateBroadcast& state) {
         if (length < sizeof(uint32_t)) return false;
         
-        // Extract number of players
         std::memcpy(&state.numPlayers, data, sizeof(uint32_t));
         state.numPlayers = ntoh(state.numPlayers);
         
         size_t expectedSize = sizeof(uint32_t) + state.numPlayers * sizeof(PlayerState);
         if (length < expectedSize) return false;
         
-        // Extract player states
+        
         state.players.clear();
         const uint8_t* ptr = data + sizeof(uint32_t);
         
@@ -225,27 +225,28 @@ namespace Protocol {
             ptr += sizeof(PlayerState);
         }
         
-        // Extract number of dummies if data available
+        
         if (length >= expectedSize + sizeof(uint32_t)) {
-            std::memcpy(&state.numDummies, ptr, sizeof(uint32_t));
-            state.numDummies = ntoh(state.numDummies);
+            std::memcpy(&state.numEnemies, ptr, sizeof(uint32_t));
+            state.numEnemies = ntoh(state.numEnemies);
             ptr += sizeof(uint32_t);
             
-            expectedSize += sizeof(uint32_t) + state.numDummies * sizeof(DummyState);
+            expectedSize += sizeof(uint32_t) + state.numEnemies * sizeof(EnemyState);
             if (length >= expectedSize) {
-                // Extract dummy states
-                state.dummies.clear();
-                for (uint32_t i = 0; i < state.numDummies; ++i) {
-                    DummyState dummy;
-                    std::memcpy(&dummy, ptr, sizeof(DummyState));
-                    dummy.id = ntoh(dummy.id);
-                    dummy.health = ntoh(dummy.health);
-                    state.dummies.push_back(dummy);
-                    ptr += sizeof(DummyState);
+              
+                state.enemies.clear();
+                for (uint32_t i = 0; i < state.numEnemies; ++i) {
+                    EnemyState enemy;
+                    std::memcpy(&enemy, ptr, sizeof(EnemyState));
+                    enemy.id = ntoh(enemy.id);
+                    enemy.health = ntoh(enemy.health);
+                    enemy.targetPlayerId = ntoh(enemy.targetPlayerId);
+                    state.enemies.push_back(enemy);
+                    ptr += sizeof(EnemyState);
                 }
             }
         } else {
-            state.numDummies = 0;
+            state.numEnemies = 0;
         }
         
         // Extract number of projectiles if data available
@@ -256,7 +257,7 @@ namespace Protocol {
             
             expectedSize += sizeof(uint32_t) + state.numProjectiles * sizeof(ProjectileState);
             if (length >= expectedSize) {
-                // Extract projectile states
+             
                 state.projectiles.clear();
                 for (uint32_t i = 0; i < state.numProjectiles; ++i) {
                     ProjectileState proj;
