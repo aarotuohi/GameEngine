@@ -280,6 +280,7 @@ void NetworkHandler::broadcastUdpState() {
         state.vx = proj->vx;
         state.vy = proj->vy;
         state.isTornado = proj->isTornado;
+        state.isEnemyProjectile = proj->isEnemyProjectile;
         state.ownerId = proj->ownerId;
         broadcast.projectiles.push_back(state);
     }

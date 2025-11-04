@@ -199,6 +199,7 @@ void GameState::update(float dt) {
     std::lock_guard<std::mutex> lock(mutex);
 
     updateRTornadoes(dt);
+    updateEnemyShooting(dt);
     
     // Update players 
     for (auto& [playerId, player] : players) {
@@ -238,6 +239,7 @@ void GameState::update(float dt) {
         } else {
             bool hit = false;
             
+            
             for (auto& [playerId, player] : players) {
                 if (player->isProjectileBlockedByWindWall(proj->x, proj->y)) {
                     proj->active = false;
@@ -247,14 +249,27 @@ void GameState::update(float dt) {
                 }
             }
             
-            if (!hit) {
+            
+            if (!hit && proj->isEnemyProjectile) {
+                for (auto& [playerId, player] : players) {
+                    if (!player->isAlive) continue;
+                    if (proj->checkCollision(*player)) {
+                        proj->active = false;
+                        hit = true;
+                        player->takeDamage(proj->damage);
+                        std::cout << "Enemy bullet hit Player " << playerId << " for " << proj->damage << " damage! HP: " << player->health << "/" << player->maxHealth << "\n";
+                        break;
+                    }
+                }
+            }
+        
+            if (!hit && !proj->isEnemyProjectile) {
                 for (auto& [enemyId, enemy] : enemies) {
                     if (proj->checkCollisionWithEnemy(*enemy)) {
                         proj->active = false;
                         hit = true;
                         enemy->takeDamage(proj->damage);
-                      
-                        // Stack Q
+                
                         auto owner = players.find(proj->ownerId);
                         if (owner != players.end()) {
                             owner->second->qStacks++;
@@ -269,8 +284,8 @@ void GameState::update(float dt) {
                 }
             }
             
-            
-            if (!hit) {
+           
+            if (!hit && !proj->isEnemyProjectile) {
                 for (auto& [playerId, player] : players) {
                     if (proj->checkCollision(*player)) {
                         proj->active = false;
@@ -400,6 +415,58 @@ void GameState::damageEnemy(uint32_t enemyId, int damage) {
 std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() {
     std::lock_guard<std::mutex> lock(mutex);
     return enemies;
+}
+
+void GameState::updateEnemyShooting(float dt) {
+    
+    
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive || !enemy->canShoot()) continue;
+        
+       
+        std::shared_ptr<Player> nearestPlayer = nullptr;
+        float nearestDist = Config::ENEMY_SHOOT_RANGE;
+        
+        for (auto& [playerId, player] : players) {
+            if (!player->isAlive) continue;
+            
+            float dx = player->x - enemy->x;
+            float dy = player->y - enemy->y;
+            float dist = std::sqrt(dx * dx + dy * dy);
+            
+            if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestPlayer = player;
+            }
+        }
+        
+       
+        if (nearestPlayer) {
+            float dx = nearestPlayer->x - enemy->x;
+            float dy = nearestPlayer->y - enemy->y;
+            float dist = std::sqrt(dx * dx + dy * dy);
+            
+            if (dist > 0.0f) {
+            
+                float dirX = dx / dist;
+                float dirY = dy / dist;
+                
+          
+                enemy->rotation = std::atan2(dirY, dirX);
+                
+         
+                uint32_t projId = nextProjectileId++;
+                auto projectile = std::make_shared<Projectile>(
+                    projId, enemy->x, enemy->y, dirX, dirY, 
+                    enemyId, false, Config::ENEMY_BULLET_DAMAGE, true  
+                );
+                projectiles[projId] = projectile;
+                
+                enemy->shoot();
+                std::cout << "Enemy " << enemyId << " shot laser at player " << nearestPlayer->id << "\n";
+            }
+        }
+    }
 }
 
 void GameState::createRTornadoes(uint32_t ownerId) {

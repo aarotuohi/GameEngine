@@ -105,9 +105,10 @@ public:
     float speed;
     bool active;
     bool isTornado;     
+    bool isEnemyProjectile;  
     int damage;      
 
-    Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado = false, int dmg = 20);
+    Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado = false, int dmg = 20, bool enemyProj = false);
     
     void update(float dt);
     bool checkCollision(const Player& player) const;
@@ -127,12 +128,15 @@ public:
     float rotation;          
     std::chrono::steady_clock::time_point lastHitTime;
     std::chrono::steady_clock::time_point spawnTime;
+    std::chrono::steady_clock::time_point lastShootTime;
     
     Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer = 0);
     
     void takeDamage(int damage);
     void setTarget(uint32_t playerId);
     bool checkCollision(const Player& player) const;
+    bool canShoot() const;
+    void shoot();
 };
 
 #endif // ENTITIES_H

@@ -68,6 +68,7 @@ public:
     uint32_t spawnEnemy(float x, float y, uint32_t targetPlayerId = 0);
     std::shared_ptr<Enemy> getEnemy(uint32_t enemyId);
     void damageEnemy(uint32_t enemyId, int damage);
+    void updateEnemyShooting(float dt);
     
     // Game loop
     void update(float dt);

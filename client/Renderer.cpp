@@ -762,6 +762,63 @@ void Renderer::renderProjectile(const Projectile& projectile) {
             SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
         }
         
+    } else if (projectile.isEnemyProjectile) {
+        
+        SDL_Color laserCore = {255, 50, 50, 255};     
+        SDL_Color laserGlow = {255, 100, 80, 180};     
+        SDL_Color laserOuter = {255, 150, 120, 100};   
+        
+        float angle = std::atan2(projectile.vy, projectile.vx);
+        
+        int laserLength = static_cast<int>(projectile.size * 1.5f * cameraScale);
+        int laserWidth = static_cast<int>(projectile.size * 0.3f * cameraScale);
+        
+        float cosA = std::cos(angle);
+        float sinA = std::sin(angle);
+        
+        setColor(laserOuter);
+        for (int thick = -laserWidth * 2; thick <= laserWidth * 2; thick++) {
+            int startX = screenX - static_cast<int>(cosA * laserLength / 2);
+            int startY = screenY - static_cast<int>(sinA * laserLength / 2);
+            int endX = screenX + static_cast<int>(cosA * laserLength / 2);
+            int endY = screenY + static_cast<int>(sinA * laserLength / 2);
+            
+            int offsetX = static_cast<int>(-sinA * thick);
+            int offsetY = static_cast<int>(cosA * thick);
+            
+            SDL_RenderDrawLine(renderer, 
+                startX + offsetX, startY + offsetY,
+                endX + offsetX, endY + offsetY);
+        }
+        
+        setColor(laserGlow);
+        for (int thick = -laserWidth; thick <= laserWidth; thick++) {
+            int startX = screenX - static_cast<int>(cosA * laserLength / 2);
+            int startY = screenY - static_cast<int>(sinA * laserLength / 2);
+            int endX = screenX + static_cast<int>(cosA * laserLength / 2);
+            int endY = screenY + static_cast<int>(sinA * laserLength / 2);
+            
+            int offsetX = static_cast<int>(-sinA * thick);
+            int offsetY = static_cast<int>(cosA * thick);
+            
+            SDL_RenderDrawLine(renderer, 
+                startX + offsetX, startY + offsetY,
+                endX + offsetX, endY + offsetY);
+        }
+        
+        setColor(laserCore);
+        int startX = screenX - static_cast<int>(cosA * laserLength / 2);
+        int startY = screenY - static_cast<int>(sinA * laserLength / 2);
+        int endX = screenX + static_cast<int>(cosA * laserLength / 2);
+        int endY = screenY + static_cast<int>(sinA * laserLength / 2);
+        
+        for (int i = -1; i <= 1; i++) {
+            SDL_RenderDrawLine(renderer, 
+                startX + i, startY, endX + i, endY);
+            SDL_RenderDrawLine(renderer, 
+                startX, startY + i, endX, endY + i);
+        }
+        
     } else {
         // Render normal Q blade 
         SDL_Color bladeColor = {240, 240, 250, 255};     
