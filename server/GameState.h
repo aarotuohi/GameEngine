@@ -33,8 +33,11 @@ private:
     uint32_t nextEnemyId;
     uint32_t nextRTornadoId;
     uint32_t taggedPlayerId;
-    mutable std::mutex mutex;
+    mutable std::recursive_mutex mutex; 
     bool running;
+
+
+    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0);
 
 public:
     GameState();

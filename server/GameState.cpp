@@ -17,7 +17,7 @@ GameState::~GameState() {
 }
 
 uint32_t GameState::addPlayer(const std::string& name) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     
     uint32_t playerId = nextPlayerId++;
     
@@ -45,7 +45,7 @@ uint32_t GameState::addPlayer(const std::string& name) {
 }
 
 void GameState::removePlayer(uint32_t playerId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     
     auto it = players.find(playerId);
     if (it != players.end()) {
@@ -67,13 +67,13 @@ void GameState::removePlayer(uint32_t playerId) {
 }
 
 std::shared_ptr<Player> GameState::getPlayer(uint32_t playerId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = players.find(playerId);
     return (it != players.end()) ? it->second : nullptr;
 }
 
 void GameState::updatePlayerPosition(uint32_t playerId, float dx, float dy, float dt) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = players.find(playerId);
     if (it != players.end()) {
         it->second->updatePosition(dx, dy, dt);
@@ -82,7 +82,7 @@ void GameState::updatePlayerPosition(uint32_t playerId, float dx, float dy, floa
 
 // update player velocity
 void GameState::updatePlayerVelocity(uint32_t playerId, float vx, float vy) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = players.find(playerId);
     if (it != players.end()) {
         it->second->updateVelocity(vx, vy);
@@ -91,7 +91,7 @@ void GameState::updatePlayerVelocity(uint32_t playerId, float vx, float vy) {
 
 //set player position
 void GameState::setPlayerPosition(uint32_t playerId, float x, float y) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = players.find(playerId);
     if (it != players.end()) {
         it->second->setPosition(x, y);
@@ -100,7 +100,7 @@ void GameState::setPlayerPosition(uint32_t playerId, float x, float y) {
 
 // create projectile
 uint32_t GameState::createProjectile(uint32_t ownerId, float x, float y, float vx, float vy) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     uint32_t projId = nextProjectileId++;
     auto projectile = std::make_shared<Projectile>(projId, x, y, vx, vy, ownerId);
     projectiles[projId] = projectile;
@@ -108,7 +108,7 @@ uint32_t GameState::createProjectile(uint32_t ownerId, float x, float y, float v
 }
 
 uint32_t GameState::createQProjectile(uint32_t ownerId, float x, float y, float dirX, float dirY, bool isTornado, int damage) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     uint32_t projId = nextProjectileId++;
     auto projectile = std::make_shared<Projectile>(projId, x, y, dirX, dirY, ownerId, isTornado, damage);
     projectiles[projId] = projectile;
@@ -118,7 +118,7 @@ uint32_t GameState::createQProjectile(uint32_t ownerId, float x, float y, float 
 
 bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
                                    float arcDegrees, float range, int damage) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     // Normalize direction
     float dirLen = std::sqrt(dirX * dirX + dirY * dirY);
@@ -153,6 +153,9 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
         if (dot >= cosThreshold) {
             enemy->takeDamage(damage);
             hitEnemy = true;
+            std::cout << "Player " << ownerId << " Q hit enemy " << enemyId 
+                      << " for " << damage << " damage! Enemy HP: " 
+                      << enemy->health << "/" << enemy->maxHealth << "\n";
         }
     }
 
@@ -196,7 +199,7 @@ bool GameState::processQSwordSwing(uint32_t ownerId, float originX, float origin
 }
 
 void GameState::update(float dt) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     updateRTornadoes(dt);
     updateEnemyShooting(dt);
@@ -265,6 +268,7 @@ void GameState::update(float dt) {
         
             if (!hit && !proj->isEnemyProjectile) {
                 for (auto& [enemyId, enemy] : enemies) {
+                    if (!enemy->isAlive) continue; 
                     if (proj->checkCollisionWithEnemy(*enemy)) {
                         proj->active = false;
                         hit = true;
@@ -301,9 +305,32 @@ void GameState::update(float dt) {
         }
     }
     
-    // Remove inactive projectiles
     for (uint32_t projId : inactiveProjectiles) {
         projectiles.erase(projId);
+    }
+    
+    std::vector<uint32_t> deadEnemies;
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive) {
+            deadEnemies.push_back(enemyId);
+        }
+    }
+    
+    for (uint32_t enemyId : deadEnemies) {
+        auto it = enemies.find(enemyId);
+        if (it != enemies.end()) {
+            std::cout << "Enemy " << enemyId << " died! Respawning new enemy...\n";
+            enemies.erase(it);
+            
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> distX(50, Config::WORLD_WIDTH - 50);
+            std::uniform_int_distribution<> distY(50, Config::WORLD_HEIGHT - 50);
+            
+            float spawnX = static_cast<float>(distX(gen));
+            float spawnY = static_cast<float>(distY(gen));
+            spawnEnemyInternal(spawnX, spawnY); 
+        }
     }
     
     // Check player collisions 
@@ -358,7 +385,7 @@ void GameState::processEDashDamage(uint32_t ownerId, float endX, float endY, flo
 }
 
 std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     std::vector<Protocol::PlayerState> states;
     
     for (const auto& [playerId, player] : players) {
@@ -377,17 +404,22 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
 }
 
 std::unordered_map<uint32_t, std::shared_ptr<Player>> GameState::getAllPlayers() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return players;
 }
 
 std::unordered_map<uint32_t, std::shared_ptr<Projectile>> GameState::getAllProjectiles() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return projectiles;
 }
 
 uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return spawnEnemyInternal(x, y, targetPlayerId);
+}
+
+uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId) {
+    
     uint32_t enemyId = nextEnemyId++;
     auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId);
     enemies[enemyId] = enemy;
@@ -396,7 +428,7 @@ uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
 }
 
 std::shared_ptr<Enemy> GameState::getEnemy(uint32_t enemyId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = enemies.find(enemyId);
     if (it != enemies.end()) {
         return it->second;
@@ -405,7 +437,7 @@ std::shared_ptr<Enemy> GameState::getEnemy(uint32_t enemyId) {
 }
 
 void GameState::damageEnemy(uint32_t enemyId, int damage) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto it = enemies.find(enemyId);
     if (it != enemies.end()) {
         it->second->takeDamage(damage);
@@ -413,8 +445,15 @@ void GameState::damageEnemy(uint32_t enemyId, int damage) {
 }
 
 std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() {
-    std::lock_guard<std::mutex> lock(mutex);
-    return enemies;
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    
+    std::unordered_map<uint32_t, std::shared_ptr<Enemy>> aliveEnemies;
+    for (const auto& [enemyId, enemy] : enemies) {
+        if (enemy->isAlive) {
+            aliveEnemies[enemyId] = enemy;
+        }
+    }
+    return aliveEnemies;
 }
 
 void GameState::updateEnemyShooting(float dt) {
@@ -470,7 +509,7 @@ void GameState::updateEnemyShooting(float dt) {
 }
 
 void GameState::createRTornadoes(uint32_t ownerId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     float angleStep = (2.0f * 3.14159265f) / static_cast<float>(Config::R_TORNADO_COUNT);
     
     for (int i = 0; i < Config::R_TORNADO_COUNT; i++) {
@@ -550,7 +589,7 @@ void GameState::updateRTornadoes(float dt) {
 }
 
 void GameState::removeRTornadoes(uint32_t ownerId) {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     
     std::vector<uint32_t> toRemove;
     for (auto& [tornadoId, tornado] : rTornadoes) {
@@ -565,6 +604,6 @@ void GameState::removeRTornadoes(uint32_t ownerId) {
 }
 
 std::unordered_map<uint32_t, std::shared_ptr<RTornado>> GameState::getAllRTornadoes() {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return rTornadoes;
 }
