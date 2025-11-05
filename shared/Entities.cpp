@@ -232,11 +232,11 @@ void Player::updateRTornadoes(float dt) {
     }
 }
 
-// Projectile implementation
-Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado, int dmg)
+
+Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado, int dmg, bool enemyProj)
     : id(projId), x(posX), y(posY), vx(velX), vy(velY), ownerId(owner),
-      size(tornado ? 30.0f : 15.0f), speed(tornado ? 600.0f : 800.0f), active(true), 
-      isTornado(tornado), damage(dmg) {
+      size(tornado ? 30.0f : 15.0f), speed(tornado ? 600.0f : (enemyProj ? Config::ENEMY_BULLET_SPEED : 800.0f)), 
+      active(true), isTornado(tornado), isEnemyProjectile(enemyProj), damage(dmg) {
 }
 
 void Projectile::update(float dt) {
@@ -275,6 +275,7 @@ Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer)
       targetPlayerId(targetPlayer), rotation(0.0f) {
     lastHitTime = std::chrono::steady_clock::now();
     spawnTime = std::chrono::steady_clock::now();
+    lastShootTime = std::chrono::steady_clock::now();
 }
 
 void Enemy::takeDamage(int damage) {
@@ -296,4 +297,15 @@ bool Enemy::checkCollision(const Player& player) const {
     float dy = y - player.y;
     float distance = std::sqrt(dx * dx + dy * dy);
     return distance < (size / 2.0f + player.size / 2.0f);
+}
+
+bool Enemy::canShoot() const {
+    if (!isAlive) return false;
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastShootTime);
+    return elapsed.count() >= Config::ENEMY_SHOOT_INTERVAL_MS;
+}
+
+void Enemy::shoot() {
+    lastShootTime = std::chrono::steady_clock::now();
 }

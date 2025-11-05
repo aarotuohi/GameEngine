@@ -151,7 +151,7 @@ void GameClient::render() {
     
     renderer->clear();
     renderer->renderGrass();
-    renderer->renderDecorations(); // Cabins, spruces, and campfires
+    renderer->renderDecorations(); 
     renderer->renderGrid();
     
     auto players = network->getPlayers();

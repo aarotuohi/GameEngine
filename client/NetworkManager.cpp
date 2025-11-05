@@ -183,7 +183,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
         for (const auto& state : broadcast.projectiles) {
             auto projectile = std::make_shared<Projectile>(
                 state.id, state.x, state.y, state.vx, state.vy, 
-                state.ownerId, state.isTornado
+                state.ownerId, state.isTornado, 20, state.isEnemyProjectile
             );
             projectiles[state.id] = projectile;
         }

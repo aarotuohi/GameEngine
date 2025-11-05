@@ -70,6 +70,7 @@ namespace Protocol {
         float vx;
         float vy;
         bool isTornado;
+        bool isEnemyProjectile;
         uint32_t ownerId;
     };
 

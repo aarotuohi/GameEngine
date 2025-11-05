@@ -33,8 +33,11 @@ private:
     uint32_t nextEnemyId;
     uint32_t nextRTornadoId;
     uint32_t taggedPlayerId;
-    mutable std::mutex mutex;
+    mutable std::recursive_mutex mutex; 
     bool running;
+
+
+    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0);
 
 public:
     GameState();
@@ -68,6 +71,7 @@ public:
     uint32_t spawnEnemy(float x, float y, uint32_t targetPlayerId = 0);
     std::shared_ptr<Enemy> getEnemy(uint32_t enemyId);
     void damageEnemy(uint32_t enemyId, int damage);
+    void updateEnemyShooting(float dt);
     
     // Game loop
     void update(float dt);
