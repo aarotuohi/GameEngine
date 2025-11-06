@@ -38,8 +38,8 @@ namespace Protocol {
 
     struct AbilityUse {
         uint32_t playerId;
-        uint8_t abilityType;  // 1=Q, 2=W, 3=E, 4=R
-        float targetX;  // For directional abilities
+        uint8_t abilityType;  
+        float targetX;  
         float targetY;
     };
 
@@ -104,14 +104,14 @@ namespace Protocol {
     bool decodeAbilityUse(const uint8_t* data, size_t length, AbilityUse& ability);
     bool decodeStateBroadcast(const uint8_t* data, size_t length, StateBroadcast& state);
 
-    // Helper function for network byte order conversion
+    // Helper function for network byte order
     template<typename T>
     T ntoh(T value);
     
     template<typename T>
     T hton(T value);
 
-    // Initialize network subsystem (Windows specific)
+    
     bool initializeNetwork();
     void cleanupNetwork();
 }
