@@ -2,6 +2,7 @@
 #include "../shared/Config.h"
 #include <iostream>
 #include <cstring>
+#include <unordered_set>
 
 NetworkManager::NetworkManager(const std::string& name)
     : playerName(name), playerId(0), tcpSocket(INVALID_SOCKET), 
@@ -155,7 +156,12 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
     {
         std::lock_guard<std::mutex> lock(enemiesMutex);
         
+        // Track which enemies are in this broadcast
+        std::unordered_set<uint32_t> currentEnemyIds;
+        
         for (const auto& state : broadcast.enemies) {
+            currentEnemyIds.insert(state.id);
+            
             auto it = enemies.find(state.id);
             if (it != enemies.end()) {
                 
@@ -171,6 +177,17 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 enemy->isAlive = state.isAlive;
                 enemies[state.id] = enemy;
             }
+        }
+        
+        std::vector<uint32_t> enemiesToRemove;
+        for (const auto& [enemyId, enemy] : enemies) {
+            if (currentEnemyIds.find(enemyId) == currentEnemyIds.end()) {
+                enemiesToRemove.push_back(enemyId);
+            }
+        }
+        for (uint32_t enemyId : enemiesToRemove) {
+            std::cout << "Removing enemy " << enemyId << " from client (no longer in broadcast)\n";
+            enemies.erase(enemyId);
         }
     }
     
