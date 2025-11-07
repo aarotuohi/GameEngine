@@ -167,12 +167,16 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 
                 it->second->x = state.x;
                 it->second->y = state.y;
+                it->second->vx = state.vx;
+                it->second->vy = state.vy;
                 it->second->health = state.health;
                 it->second->isAlive = state.isAlive;
                 it->second->targetPlayerId = state.targetPlayerId;
             } else {
                 
                 auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId);
+                enemy->vx = state.vx;
+                enemy->vy = state.vy;
                 enemy->health = state.health;
                 enemy->isAlive = state.isAlive;
                 enemies[state.id] = enemy;

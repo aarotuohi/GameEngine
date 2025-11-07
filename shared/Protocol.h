@@ -58,6 +58,8 @@ namespace Protocol {
         uint32_t id;
         float x;
         float y;
+        float vx;
+        float vy;
         uint32_t health;
         bool isAlive;
         uint32_t targetPlayerId;

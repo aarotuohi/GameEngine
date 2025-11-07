@@ -120,7 +120,9 @@ class Enemy {
 public:
     uint32_t id;
     float x, y;          
+    float vx, vy;       
     float size;
+    float speed;        
     int health;
     int maxHealth;
     bool isAlive;
@@ -134,6 +136,8 @@ public:
     
     void takeDamage(int damage);
     void setTarget(uint32_t playerId);
+    void moveTowards(float targetX, float targetY, float dt);
+    void update(float dt);
     bool checkCollision(const Player& player) const;
     bool canShoot() const;
     void shoot();

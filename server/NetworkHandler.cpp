@@ -263,6 +263,8 @@ void NetworkHandler::broadcastUdpState() {
         state.id = enemy->id;
         state.x = enemy->x;
         state.y = enemy->y;
+        state.vx = enemy->vx;
+        state.vy = enemy->vy;
         state.health = enemy->health;
         state.isAlive = enemy->isAlive;
         state.targetPlayerId = enemy->targetPlayerId;

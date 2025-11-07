@@ -49,7 +49,8 @@ namespace Config {
     constexpr int ENEMY_SHOOT_INTERVAL_MS = 2000; 
     constexpr float ENEMY_SHOOT_RANGE = 300.0f;    
     constexpr float ENEMY_BULLET_SPEED = 400.0f;   
-    constexpr int ENEMY_BULLET_DAMAGE = 15;        
+    constexpr int ENEMY_BULLET_DAMAGE = 15;
+    constexpr float ENEMY_SPEED = 80.0f;       
     
     enum class MessageType : uint8_t {
         PLAYER_JOIN = 1,

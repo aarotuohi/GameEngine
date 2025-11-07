@@ -270,8 +270,8 @@ bool Projectile::checkCollisionWithEnemy(const Enemy& enemy) const {
 
 
 Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer)
-    : id(enemyId), x(posX), y(posY), size(40.0f),
-      health(100), maxHealth(100), isAlive(true), 
+    : id(enemyId), x(posX), y(posY), vx(0.0f), vy(0.0f), size(40.0f),
+      speed(Config::ENEMY_SPEED), health(100), maxHealth(100), isAlive(true), 
       targetPlayerId(targetPlayer), rotation(0.0f) {
     lastHitTime = std::chrono::steady_clock::now();
     spawnTime = std::chrono::steady_clock::now();
@@ -290,6 +290,36 @@ void Enemy::takeDamage(int damage) {
 
 void Enemy::setTarget(uint32_t playerId) {
     targetPlayerId = playerId;
+}
+
+void Enemy::moveTowards(float targetX, float targetY, float dt) {
+    if (!isAlive) return;
+    
+    float dx = targetX - x;
+    float dy = targetY - y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    
+    if (distance > 100.0f) {
+      
+        float dirX = dx / distance;
+        float dirY = dy / distance;
+        
+        vx = dirX * speed;
+        vy = dirY * speed;
+        
+        x += vx * dt;
+        y += vy * dt;
+        
+        rotation = std::atan2(dirY, dirX);
+    } else {
+        vx = 0.0f;
+        vy = 0.0f;
+    }
+}
+
+void Enemy::update(float dt) {
+    
+    //  can be used for other updates if needed in the future
 }
 
 bool Enemy::checkCollision(const Player& player) const {
