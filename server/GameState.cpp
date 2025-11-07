@@ -457,14 +457,14 @@ std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() 
 }
 
 void GameState::updateEnemyShooting(float dt) {
-    
+  
     
     for (auto& [enemyId, enemy] : enemies) {
-        if (!enemy->isAlive || !enemy->canShoot()) continue;
+        if (!enemy->isAlive) continue;
         
-       
+      
         std::shared_ptr<Player> nearestPlayer = nullptr;
-        float nearestDist = Config::ENEMY_SHOOT_RANGE;
+        float nearestDist = 999999.0f;
         
         for (auto& [playerId, player] : players) {
             if (!player->isAlive) continue;
@@ -481,6 +481,10 @@ void GameState::updateEnemyShooting(float dt) {
         
        
         if (nearestPlayer) {
+            enemy->moveTowards(nearestPlayer->x, nearestPlayer->y, dt);
+        }
+        
+        if (nearestPlayer && enemy->canShoot() && nearestDist <= Config::ENEMY_SHOOT_RANGE) {
             float dx = nearestPlayer->x - enemy->x;
             float dy = nearestPlayer->y - enemy->y;
             float dist = std::sqrt(dx * dx + dy * dy);
