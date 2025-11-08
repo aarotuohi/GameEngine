@@ -457,12 +457,39 @@ std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() 
 }
 
 void GameState::updateEnemyShooting(float dt) {
-  
+
+    const float separationDistance = 60.0f; 
+    const float separationStrength = 150.0f; 
     
     for (auto& [enemyId, enemy] : enemies) {
         if (!enemy->isAlive) continue;
         
-      
+        float separationX = 0.0f;
+        float separationY = 0.0f;
+        
+        for (auto& [otherId, other] : enemies) {
+            if (otherId == enemyId || !other->isAlive) continue;
+            
+            float dx = enemy->x - other->x;
+            float dy = enemy->y - other->y;
+            float dist = std::sqrt(dx * dx + dy * dy);
+            
+            if (dist < separationDistance && dist > 0.001f) {
+                float force = (separationDistance - dist) / separationDistance;
+                separationX += (dx / dist) * force;
+                separationY += (dy / dist) * force;
+            }
+        }
+
+        if (separationX != 0.0f || separationY != 0.0f) {
+            enemy->x += separationX * separationStrength * dt;
+            enemy->y += separationY * separationStrength * dt;
+        }
+    }
+    
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive) continue;
+
         std::shared_ptr<Player> nearestPlayer = nullptr;
         float nearestDist = 999999.0f;
         
@@ -479,11 +506,12 @@ void GameState::updateEnemyShooting(float dt) {
             }
         }
         
-       
+        // Move towards nearest player
         if (nearestPlayer) {
             enemy->moveTowards(nearestPlayer->x, nearestPlayer->y, dt);
         }
         
+        // Shoot at nearest player if in range and can shoot
         if (nearestPlayer && enemy->canShoot() && nearestDist <= Config::ENEMY_SHOOT_RANGE) {
             float dx = nearestPlayer->x - enemy->x;
             float dy = nearestPlayer->y - enemy->y;
