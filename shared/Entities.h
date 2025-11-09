@@ -11,32 +11,32 @@
 // Forward declarations
 class Enemy;
 
-// Samurai ability states
+
 enum class SamuraiAbility {
     NONE = 0,
-    Q_STEEL_TEMPEST = 1,    // Linear dash/slash
-    W_WIND_WALL = 2,         // Projectile blocking
-    E_SWEEPING_BLADE = 3,    // Dash through enemies
-    R_LAST_BREATH = 4        // Ultimate
+    Q_STEEL_TEMPEST = 1,  
+    W_WIND_WALL = 2,        
+    E_SWEEPING_BLADE = 3,   
+    R_LAST_BREATH = 4       
 };
 
-// Player class (Samurai-themed)
+
 class Player {
 public:
     uint32_t id;
     std::string name;
-    float x, y;          // Position
-    float vx, vy;        // Velocity
+    float x, y;     
+    float vx, vy;      
     float size;
     float speed;
     bool isTagged;
     int score;
     std::chrono::steady_clock::time_point lastUpdate;
 
-    // Samurai-specific attributes
+
     int health;
     int maxHealth;
-    float rotation;      // Character facing direction
+    float rotation;      
     bool isDashing;
     bool isAlive;
     SamuraiAbility activeAbility;
@@ -50,7 +50,7 @@ public:
     float eDashEndX{0}, eDashEndY{0};
     bool eDashDamageApplied{false};
     
-    // Wind Wall ability
+    
     bool hasWindWall;   
     std::chrono::steady_clock::time_point windWallStartTime;
     float windWallRadius; 
@@ -94,12 +94,12 @@ public:
     void updateRTornadoes(float dt);
 };
 
-// Projectile class
+
 class Projectile {
 public:
     uint32_t id;
-    float x, y;          // Position
-    float vx, vy;        // Velocity
+    float x, y;          
+    float vx, vy;        
     uint32_t ownerId;
     float size;
     float speed;

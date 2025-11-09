@@ -176,8 +176,11 @@ void Player::useR() {
 void Player::takeDamage(int damage) {
     if (!isAlive) return;
     health -= damage;
-    if (health <= 0) {
+    
+    if (health < 0) {
         health = 0;
+    }
+    if (health <= 0) {
         isAlive = false;
     }
 }
@@ -281,8 +284,11 @@ Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer)
 void Enemy::takeDamage(int damage) {
     if (!isAlive) return;
     health -= damage;
-    if (health <= 0) {
+    
+    if (health < 0) {
         health = 0;
+    }
+    if (health <= 0) {
         isAlive = false;
     }
     lastHitTime = std::chrono::steady_clock::now();
@@ -299,22 +305,28 @@ void Enemy::moveTowards(float targetX, float targetY, float dt) {
     float dy = targetY - y;
     float distance = std::sqrt(dx * dx + dy * dy);
     
-    if (distance > 100.0f) {
-      
-        float dirX = dx / distance;
-        float dirY = dy / distance;
+    if (distance < 0.001f) {
+        vx = 0.0f;
+        vy = 0.0f;
+        return;
+    }
+
+    float dirX = dx / distance;
+    float dirY = dy / distance;
+    
+    if (distance > 50.0f) {
         
         vx = dirX * speed;
         vy = dirY * speed;
-        
-        x += vx * dt;
-        y += vy * dt;
-        
-        rotation = std::atan2(dirY, dirX);
     } else {
-        vx = 0.0f;
-        vy = 0.0f;
+        
+        vx = dirX * speed * 0.3f;
+        vy = dirY * speed * 0.3f;
     }
+    
+    x += vx * dt;
+    y += vy * dt;
+    rotation = std::atan2(dirY, dirX);
 }
 
 void Enemy::update(float dt) {

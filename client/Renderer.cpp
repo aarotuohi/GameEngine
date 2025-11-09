@@ -520,11 +520,15 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     setColor(healthBarRed);
     SDL_RenderFillRect(renderer, &bgRect);
     
-  
-    float healthPercent = static_cast<float>(player.health) / player.maxHealth;
-    SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
-    setColor(healthBarGreen);
-    SDL_RenderFillRect(renderer, &fgRect);
+    
+    float healthPercent = static_cast<float>(std::max(0, player.health)) / player.maxHealth;
+    healthPercent = std::max(0.0f, std::min(1.0f, healthPercent)); 
+    int fgWidth = static_cast<int>(barWidth * healthPercent);
+    if (fgWidth > 0) {
+        SDL_Rect fgRect = {barX, barY, fgWidth, barHeight};
+        setColor(healthBarGreen);
+        SDL_RenderFillRect(renderer, &fgRect);
+    }
     
    
     
@@ -650,11 +654,15 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     setColor(healthBarBg);
     SDL_RenderFillRect(renderer, &bgRect);
     
- 
-    float healthPercent = static_cast<float>(enemy.health) / enemy.maxHealth;
-    SDL_Rect fgRect = {barX, barY, static_cast<int>(barWidth * healthPercent), barHeight};
-    setColor(healthBarRed);
-    SDL_RenderFillRect(renderer, &fgRect);
+    
+    float healthPercent = static_cast<float>(std::max(0, enemy.health)) / enemy.maxHealth;
+    healthPercent = std::max(0.0f, std::min(1.0f, healthPercent)); 
+    int fgWidth = static_cast<int>(barWidth * healthPercent);
+    if (fgWidth > 0) {
+        SDL_Rect fgRect = {barX, barY, fgWidth, barHeight};
+        setColor(healthBarRed);
+        SDL_RenderFillRect(renderer, &fgRect);
+    }
 }
 
 void Renderer::renderProjectile(const Projectile& projectile) {

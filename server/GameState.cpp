@@ -458,11 +458,23 @@ std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() 
 
 void GameState::updateEnemyShooting(float dt) {
 
+    
     const float separationDistance = 60.0f; 
     const float separationStrength = 150.0f; 
     
+   
     for (auto& [enemyId, enemy] : enemies) {
         if (!enemy->isAlive) continue;
+        
+       
+        if (std::isnan(enemy->x) || std::isnan(enemy->y)) {
+            std::cout << "WARNING: Enemy " << enemyId << " has NaN position! Resetting...\n";
+            enemy->x = Config::WORLD_WIDTH / 2.0f;
+            enemy->y = Config::WORLD_HEIGHT / 2.0f;
+            enemy->vx = 0.0f;
+            enemy->vy = 0.0f;
+            continue;
+        }
         
         float separationX = 0.0f;
         float separationY = 0.0f;
@@ -484,8 +496,13 @@ void GameState::updateEnemyShooting(float dt) {
         if (separationX != 0.0f || separationY != 0.0f) {
             enemy->x += separationX * separationStrength * dt;
             enemy->y += separationY * separationStrength * dt;
+            
+            // Clamp to world bounds
+            enemy->x = (std::max)(10.0f, (std::min)(enemy->x, static_cast<float>(Config::WORLD_WIDTH) - 10.0f));
+            enemy->y = (std::max)(10.0f, (std::min)(enemy->y, static_cast<float>(Config::WORLD_HEIGHT) - 10.0f));
         }
     }
+    
     
     for (auto& [enemyId, enemy] : enemies) {
         if (!enemy->isAlive) continue;
@@ -506,12 +523,10 @@ void GameState::updateEnemyShooting(float dt) {
             }
         }
         
-        // Move towards nearest player
         if (nearestPlayer) {
             enemy->moveTowards(nearestPlayer->x, nearestPlayer->y, dt);
         }
         
-        // Shoot at nearest player if in range and can shoot
         if (nearestPlayer && enemy->canShoot() && nearestDist <= Config::ENEMY_SHOOT_RANGE) {
             float dx = nearestPlayer->x - enemy->x;
             float dy = nearestPlayer->y - enemy->y;
