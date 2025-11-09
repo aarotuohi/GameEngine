@@ -457,12 +457,56 @@ std::unordered_map<uint32_t, std::shared_ptr<Enemy>> GameState::getAllEnemies() 
 }
 
 void GameState::updateEnemyShooting(float dt) {
-  
+
     
+    const float separationDistance = 60.0f; 
+    const float separationStrength = 150.0f; 
+    
+   
     for (auto& [enemyId, enemy] : enemies) {
         if (!enemy->isAlive) continue;
         
-      
+       
+        if (std::isnan(enemy->x) || std::isnan(enemy->y)) {
+            std::cout << "WARNING: Enemy " << enemyId << " has NaN position! Resetting...\n";
+            enemy->x = Config::WORLD_WIDTH / 2.0f;
+            enemy->y = Config::WORLD_HEIGHT / 2.0f;
+            enemy->vx = 0.0f;
+            enemy->vy = 0.0f;
+            continue;
+        }
+        
+        float separationX = 0.0f;
+        float separationY = 0.0f;
+        
+        for (auto& [otherId, other] : enemies) {
+            if (otherId == enemyId || !other->isAlive) continue;
+            
+            float dx = enemy->x - other->x;
+            float dy = enemy->y - other->y;
+            float dist = std::sqrt(dx * dx + dy * dy);
+            
+            if (dist < separationDistance && dist > 0.001f) {
+                float force = (separationDistance - dist) / separationDistance;
+                separationX += (dx / dist) * force;
+                separationY += (dy / dist) * force;
+            }
+        }
+
+        if (separationX != 0.0f || separationY != 0.0f) {
+            enemy->x += separationX * separationStrength * dt;
+            enemy->y += separationY * separationStrength * dt;
+            
+            // Clamp to world bounds
+            enemy->x = (std::max)(10.0f, (std::min)(enemy->x, static_cast<float>(Config::WORLD_WIDTH) - 10.0f));
+            enemy->y = (std::max)(10.0f, (std::min)(enemy->y, static_cast<float>(Config::WORLD_HEIGHT) - 10.0f));
+        }
+    }
+    
+    
+    for (auto& [enemyId, enemy] : enemies) {
+        if (!enemy->isAlive) continue;
+
         std::shared_ptr<Player> nearestPlayer = nullptr;
         float nearestDist = 999999.0f;
         
@@ -479,7 +523,6 @@ void GameState::updateEnemyShooting(float dt) {
             }
         }
         
-       
         if (nearestPlayer) {
             enemy->moveTowards(nearestPlayer->x, nearestPlayer->y, dt);
         }
