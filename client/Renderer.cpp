@@ -378,6 +378,9 @@ void Renderer::renderDecorations() {
 }
 
 void Renderer::renderCircle(int centerX, int centerY, int radius) {
+    
+    if (radius <= 0 || radius > 500) return;
+    
     const int diameter = radius * 2;
     
     for (int w = 0; w < diameter; w++) {
@@ -673,8 +676,11 @@ void Renderer::renderProjectile(const Projectile& projectile) {
     int scale = static_cast<int>(cameraScale);
     
     if (projectile.isTornado) {
-      
         int tornadoRadius = static_cast<int>(projectile.size * cameraScale);
+        
+        if (tornadoRadius < 5) tornadoRadius = 5;
+        if (tornadoRadius > 200) tornadoRadius = 200;
+        
         float time = SDL_GetTicks() / 150.0f; 
       
         SDL_Color darkBlue = {40, 100, 180, 255};      
@@ -1120,6 +1126,9 @@ void Renderer::renderRTornado(float x, float y) {
     SDL_Color windGlow = {200, 240, 255, 100};
     
     int tornadoSize = static_cast<int>(Config::R_TORNADO_SIZE * cameraScale);
+   
+    if (tornadoSize < 10) tornadoSize = 10;
+    if (tornadoSize > 200) tornadoSize = 200;
 
     setColor(windGlow);
     for (int r = tornadoSize + 8; r >= tornadoSize + 2; r -= 2) {
@@ -1128,12 +1137,14 @@ void Renderer::renderRTornado(float x, float y) {
     
     setColor(windOuter);
     for (int r = tornadoSize; r >= tornadoSize - 4; r--) {
-        renderCircle(screenX, screenY, r);
+        if (r > 0) renderCircle(screenX, screenY, r);
     }
     
     setColor(windCore);
-    for (int r = tornadoSize - 6; r >= tornadoSize - 10; r--) {
-        renderCircle(screenX, screenY, r);
+    int minR = tornadoSize - 10;
+    if (minR < 1) minR = 1;
+    for (int r = tornadoSize - 6; r >= minR; r--) {
+        if (r > 0) renderCircle(screenX, screenY, r);
     }
 
     auto now = std::chrono::steady_clock::now();

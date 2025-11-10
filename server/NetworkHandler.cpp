@@ -289,15 +289,30 @@ void NetworkHandler::broadcastUdpState() {
     
     auto rTornadoes = gameState.getAllRTornadoes();
     broadcast.numRTornadoes = static_cast<uint32_t>(rTornadoes.size());
+    
+   
+    
     for (const auto& [tornadoId, tornado] : rTornadoes) {
         auto owner = gameState.getPlayer(tornado->ownerId);
         if (owner) {
             Protocol::RTornadoState state;
             state.id = tornado->id;
             state.ownerId = tornado->ownerId;
-            state.x = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
-            state.y = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;
+            
+            // Calculate tornado position with NaN protection
+            float tornadoX = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
+            float tornadoY = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;
+            
+            // Protect against NaN positions being sent to clients
+            if (std::isnan(tornadoX) || std::isnan(tornadoY) || std::isinf(tornadoX) || std::isinf(tornadoY)) {
+                std::cout << "WARNING: RTornado " << tornado->id << " has invalid position! Skipping...\n";
+                continue;
+            }
+            
+            state.x = tornadoX;
+            state.y = tornadoY;
             broadcast.rTornadoes.push_back(state);
+            
         }
     }
     
