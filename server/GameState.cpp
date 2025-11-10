@@ -6,10 +6,8 @@
 GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true) {
 
-    
-    spawnEnemy(200.0f, 200.0f);
-    spawnEnemy(400.0f, 300.0f);
-    spawnEnemy(600.0f, 200.0f);
+    // Spawn only one enemy for testing
+    spawnEnemy(300.0f, 250.0f);
 }
 
 GameState::~GameState() {
@@ -557,6 +555,14 @@ void GameState::updateEnemyShooting(float dt) {
 
 void GameState::createRTornadoes(uint32_t ownerId) {
     std::lock_guard<std::recursive_mutex> lock(mutex);
+    
+    // Debug: Check if player exists
+    auto playerIt = players.find(ownerId);
+    if (playerIt == players.end()) {
+        std::cout << "ERROR: Cannot create R tornadoes - player " << ownerId << " not found!\n";
+        return;
+    }
+    
     float angleStep = (2.0f * 3.14159265f) / static_cast<float>(Config::R_TORNADO_COUNT);
     
     for (int i = 0; i < Config::R_TORNADO_COUNT; i++) {
@@ -564,6 +570,8 @@ void GameState::createRTornadoes(uint32_t ownerId) {
         float angle = angleStep * static_cast<float>(i);
         auto tornado = std::make_shared<RTornado>(tornadoId, ownerId, angle, i);
         rTornadoes[tornadoId] = tornado;
+        
+        
     }
     
     std::cout << "Created " << Config::R_TORNADO_COUNT << " R tornadoes for player " << ownerId << "\n";
@@ -582,8 +590,19 @@ void GameState::updateRTornadoes(float dt) {
         
         auto& owner = ownerIt->second;
         
+        // Protect against NaN values in tornado angles
+        if (std::isnan(owner->rTornadoAngle)) {
+            std::cout << "WARNING: Player " << tornado->ownerId << " has NaN rTornadoAngle! Resetting...\n";
+            owner->rTornadoAngle = 0.0f;
+        }
+        
         tornado->angle = owner->rTornadoAngle + (2.0f * 3.14159265f / Config::R_TORNADO_COUNT) * tornado->tornadoIndex;
         
+        // Additional protection for calculated tornado angle
+        if (std::isnan(tornado->angle)) {
+            std::cout << "WARNING: Tornado " << tornado->id << " has NaN angle! Resetting...\n";
+            tornado->angle = 0.0f;
+        }
         
         float tornadoX = owner->x + std::cos(tornado->angle) * Config::R_ORBIT_RADIUS;
         float tornadoY = owner->y + std::sin(tornado->angle) * Config::R_ORBIT_RADIUS;

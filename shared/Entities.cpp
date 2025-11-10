@@ -227,9 +227,21 @@ void Player::updateRTornadoes(float dt) {
             hasRTornadoes = false;
             std::cout << "Player " << id << " R tornadoes expired" << std::endl;
         } else {
-            rTornadoAngle += Config::R_ROTATION_SPEED * dt;
+            float angleIncrement = Config::R_ROTATION_SPEED * dt;
+            // Protect against NaN and invalid increments
+            if (std::isnan(angleIncrement) || std::isinf(angleIncrement)) {
+                std::cout << "WARNING: Player " << id << " has invalid R tornado angle increment! Skipping update...\n";
+                return;
+            }
+            
+            rTornadoAngle += angleIncrement;
             if (rTornadoAngle >= 2.0f * 3.14159265f) {
                 rTornadoAngle -= 2.0f * 3.14159265f;
+            }
+            // Additional protection against accumulated NaN
+            if (std::isnan(rTornadoAngle) || std::isinf(rTornadoAngle)) {
+                std::cout << "WARNING: Player " << id << " has NaN/inf rTornadoAngle! Resetting...\n";
+                rTornadoAngle = 0.0f;
             }
         }
     }

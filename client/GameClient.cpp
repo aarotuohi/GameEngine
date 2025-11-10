@@ -217,6 +217,7 @@ void GameClient::render() {
     }
 
     for (const auto& [tornadoId, tornado] : rTornadoes) {
+        
         renderer->renderRTornado(tornado->x, tornado->y);
     }
     
