@@ -8,7 +8,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
     : id(playerId), name(playerName), x(posX), y(posY),
       vx(0.0f), vy(0.0f), size(Config::PLAYER_SIZE), speed(Config::PLAYER_SPEED),
       isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
-      health(100), maxHealth(100), rotation(0.0f), isDashing(false), isAlive(true),
+      health(100), maxHealth(100), rotation(0.0f), isAlive(true),
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
       hasRTornadoes(false), rTornadoAngle(0.0f),
@@ -19,6 +19,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
     lastWTime = now;
     lastETime = now;
     lastRTime = now;
+    eShockwaveTime = now;
     windWallStartTime = now;
     rTornadoesStartTime = now;
 }
@@ -134,32 +135,15 @@ void Player::useW() {
     std::cout << "Player " << id << " activated Wind Wall!" << std::endl;
 }
 
-void Player::useE(float targetX, float targetY) {
+void Player::useE() {
     if (!canUseE()) return;
     lastETime = std::chrono::steady_clock::now();
     activeAbility = SamuraiAbility::E_SWEEPING_BLADE;
-    isDashing = true;
-    eDashDamageApplied = false;
-    
-    // Prepare leap towards target (animate over time in GameState::update)
-    float dx = targetX - x;
-    float dy = targetY - y;
-    float distance = std::sqrt(dx * dx + dy * dy);
-    if (distance > 0.0f) {
-        float ndx = dx / distance;
-        float ndy = dy / distance;
-        rotation = std::atan2(ndy, ndx);
-        eDashStartX = x;
-        eDashStartY = y;
-        
-        eDashEndX = x + ndx * Config::E_DASH_DISTANCE;
-        eDashEndY = y + ndy * Config::E_DASH_DISTANCE;
-    } else {
-        
-        isDashing = false;
-        activeAbility = SamuraiAbility::NONE;
-    }
+    eShockwaveTime = lastETime; 
+    std::cout << "Player " << id << " cast E - Shockwave!" << std::endl;
 }
+    
+
 
 void Player::useR() {
     if (!canUseR()) return;
@@ -190,7 +174,6 @@ void Player::respawn(float spawnX, float spawnY) {
     y = spawnY;
     health = maxHealth;
     isAlive = true;
-    isDashing = false;
     qStacks = 0;
     activeAbility = SamuraiAbility::NONE;
 }

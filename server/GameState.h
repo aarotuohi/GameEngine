@@ -60,7 +60,7 @@ public:
     bool processQSwordSwing(uint32_t ownerId, float originX, float originY, float dirX, float dirY,
                             float arcDegrees, float range, int damage);
 
-    void processEDashDamage(uint32_t ownerId, float endX, float endY, float radius, int damage);
+    void processEShockwave(uint32_t ownerId, float centerX, float centerY, float radius, int damage);
     
   
     void createRTornadoes(uint32_t ownerId);

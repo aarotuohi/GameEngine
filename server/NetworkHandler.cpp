@@ -215,16 +215,15 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                     player->useW();
                 }
             } else if (ability.abilityType == 3) {
+              
                 auto player = gameState.getPlayer(ability.playerId);
                 if (player && player->canUseE()) {
-                    float dirX = ability.targetX;
-                    float dirY = ability.targetY;
-                    float len = std::sqrt(dirX * dirX + dirY * dirY);
-                    if (len > 0.0001f) { dirX /= len; dirY /= len; }
-                    float targetX = player->x + dirX * Config::E_DASH_DISTANCE;
-                    float targetY = player->y + dirY * Config::E_DASH_DISTANCE;
-
-                    player->useE(targetX, targetY);
+                    player->useE();
+                    
+                    gameState.processEShockwave(ability.playerId, player->x, player->y, 
+                                                Config::E_SHOCKWAVE_RADIUS, Config::E_SHOCKWAVE_DAMAGE);
+                    std::cout << "Player " << ability.playerId << " cast E shockwave at (" 
+                              << player->x << ", " << player->y << ")\n";
                 }
             } else if (ability.abilityType == 4) {
                 auto player = gameState.getPlayer(ability.playerId);

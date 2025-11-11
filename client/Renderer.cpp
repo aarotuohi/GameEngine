@@ -486,8 +486,8 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_Rect shine = {centerX + flipMultiplier * 4 * scale, centerY, 1 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &shine);
 
-    // wind effect WIP
-    if (player.isDashing || player.activeAbility != SamuraiAbility::NONE) {
+    
+    if (player.activeAbility != SamuraiAbility::NONE) {
         setColor(windColor);
       
         for (int i = 0; i < 360; i += 40) {
@@ -1115,6 +1115,56 @@ void Renderer::renderDashBurst(float originX, float originY, float rotationRad, 
     drawBurstLine(-6.0f, c1);
     drawBurstLine(0.0f, c2);
     drawBurstLine(6.0f, c3);
+}
+
+void Renderer::renderShockwave(float centerX, float centerY, float progress, float maxRadius) {
+    int screenX, screenY;
+    worldToScreen(centerX, centerY, screenX, screenY);
+
+    float currentRadius = maxRadius * progress * cameraScale;
+
+    int alpha = static_cast<int>(255 * (1.0f - progress));
+    if (alpha < 0) alpha = 0;
+    if (alpha > 255) alpha = 255;
+    
+    SDL_Color windOuter = {150, 220, 255, static_cast<Uint8>(alpha * 0.8f)};
+    SDL_Color windMid = {100, 180, 255, static_cast<Uint8>(alpha * 0.9f)};
+    SDL_Color windCore = {80, 160, 240, static_cast<Uint8>(alpha)};
+    
+    int numRings = 3;
+    for (int i = 0; i < numRings; i++) {
+        float ringProgress = progress + (i * 0.15f);
+        if (ringProgress > 1.0f) ringProgress = 1.0f;
+        
+        float ringRadius = maxRadius * ringProgress * cameraScale;
+        int radius = static_cast<int>(ringRadius);
+        
+        if (radius > 0 && radius < 500) {
+            SDL_Color color;
+            if (i == 0) color = windCore;
+            else if (i == 1) color = windMid;
+            else color = windOuter;
+            
+            setColor(color);
+            renderCircle(screenX, screenY, radius);
+        }
+    }
+    
+    int numParticles = 12;
+    for (int i = 0; i < numParticles; i++) {
+        float angle = (i * 2.0f * 3.14159f / numParticles) + (progress * 0.5f);
+        float particleRadius = currentRadius * 0.9f;
+        
+        int px = screenX + static_cast<int>(std::cos(angle) * particleRadius);
+        int py = screenY + static_cast<int>(std::sin(angle) * particleRadius);
+        
+        SDL_Color windParticle = {180, 230, 255, static_cast<Uint8>(alpha * 0.7f)};
+        setColor(windParticle);
+        
+        int particleSize = (std::max)(2, static_cast<int>(4 * cameraScale * (1.0f - progress)));
+        SDL_Rect particle = {px - particleSize/2, py - particleSize/2, particleSize, particleSize};
+        SDL_RenderFillRect(renderer, &particle);
+    }
 }
 
 void Renderer::renderRTornado(float x, float y) {
