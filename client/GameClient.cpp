@@ -191,7 +191,7 @@ void GameClient::render() {
                 }
             }
 
-            // Render E shockwave VFX
+           
             if (lastEShockwaveTime.time_since_epoch().count() > 0) {
                 auto now = std::chrono::steady_clock::now();
                 if (now - lastEShockwaveTime <= eShockwaveVfxDuration) {

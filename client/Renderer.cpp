@@ -1127,43 +1127,56 @@ void Renderer::renderShockwave(float centerX, float centerY, float progress, flo
     if (alpha < 0) alpha = 0;
     if (alpha > 255) alpha = 255;
     
-    SDL_Color windOuter = {150, 220, 255, static_cast<Uint8>(alpha * 0.8f)};
-    SDL_Color windMid = {100, 180, 255, static_cast<Uint8>(alpha * 0.9f)};
-    SDL_Color windCore = {80, 160, 240, static_cast<Uint8>(alpha)};
+  
+    int numRays = 24; 
+    for (int i = 0; i < numRays; i++) {
+        float angle = (i * 2.0f * 3.14159f / numRays);
+        
+        
+        float innerRadius = 10.0f * cameraScale;
+        float outerRadius = currentRadius;
+        
+        int x1 = screenX + static_cast<int>(std::cos(angle) * innerRadius);
+        int y1 = screenY + static_cast<int>(std::sin(angle) * innerRadius);
+        int x2 = screenX + static_cast<int>(std::cos(angle) * outerRadius);
+        int y2 = screenY + static_cast<int>(std::sin(angle) * outerRadius);
+        
+        SDL_Color coreRay = {180, 220, 255, static_cast<Uint8>(alpha * 0.9f)};
+        setColor(coreRay);
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        
+  
+        if (i % 2 == 0) {
+            float offset = 2.0f;
+            int x1a = screenX + static_cast<int>(std::cos(angle + 0.05f) * innerRadius);
+            int y1a = screenY + static_cast<int>(std::sin(angle + 0.05f) * innerRadius);
+            int x2a = screenX + static_cast<int>(std::cos(angle + 0.05f) * outerRadius);
+            int y2a = screenY + static_cast<int>(std::sin(angle + 0.05f) * outerRadius);
+            
+            SDL_Color glowRay = {150, 200, 255, static_cast<Uint8>(alpha * 0.6f)};
+            setColor(glowRay);
+            SDL_RenderDrawLine(renderer, x1a, y1a, x2a, y2a);
+        }
+    }
     
+  
     int numRings = 3;
     for (int i = 0; i < numRings; i++) {
-        float ringProgress = progress + (i * 0.15f);
-        if (ringProgress > 1.0f) ringProgress = 1.0f;
+        float ringSize = (20.0f + i * 10.0f) * cameraScale * (1.0f - progress * 0.3f);
+        int radius = static_cast<int>(ringSize);
         
-        float ringRadius = maxRadius * ringProgress * cameraScale;
-        int radius = static_cast<int>(ringRadius);
-        
-        if (radius > 0 && radius < 500) {
-            SDL_Color color;
-            if (i == 0) color = windCore;
-            else if (i == 1) color = windMid;
-            else color = windOuter;
-            
-            setColor(color);
+        if (radius > 0) {
+            int ringAlpha = static_cast<int>(alpha * (1.0f - i * 0.2f));
+            SDL_Color centerGlow = {200, 230, 255, static_cast<Uint8>(ringAlpha)};
+            setColor(centerGlow);
             renderCircle(screenX, screenY, radius);
         }
     }
     
-    int numParticles = 12;
-    for (int i = 0; i < numParticles; i++) {
-        float angle = (i * 2.0f * 3.14159f / numParticles) + (progress * 0.5f);
-        float particleRadius = currentRadius * 0.9f;
-        
-        int px = screenX + static_cast<int>(std::cos(angle) * particleRadius);
-        int py = screenY + static_cast<int>(std::sin(angle) * particleRadius);
-        
-        SDL_Color windParticle = {180, 230, 255, static_cast<Uint8>(alpha * 0.7f)};
-        setColor(windParticle);
-        
-        int particleSize = (std::max)(2, static_cast<int>(4 * cameraScale * (1.0f - progress)));
-        SDL_Rect particle = {px - particleSize/2, py - particleSize/2, particleSize, particleSize};
-        SDL_RenderFillRect(renderer, &particle);
+    if (currentRadius > 10.0f) {
+        SDL_Color outerRing = {150, 210, 255, static_cast<Uint8>(alpha * 0.7f)};
+        setColor(outerRing);
+        renderCircle(screenX, screenY, static_cast<int>(currentRadius));
     }
 }
 
