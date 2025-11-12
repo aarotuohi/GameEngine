@@ -37,7 +37,6 @@ public:
     int health;
     int maxHealth;
     float rotation;      
-    bool isDashing;
     bool isAlive;
     SamuraiAbility activeAbility;
     std::chrono::steady_clock::time_point lastQTime;
@@ -46,12 +45,11 @@ public:
     std::chrono::steady_clock::time_point lastRTime;
     int qStacks;         
     
-    float eDashStartX{0}, eDashStartY{0};
-    float eDashEndX{0}, eDashEndY{0};
-    bool eDashDamageApplied{false};
     
+    std::chrono::steady_clock::time_point eShockwaveTime;
     
-    bool hasWindWall;   
+
+    bool hasWindWall;
     std::chrono::steady_clock::time_point windWallStartTime;
     float windWallRadius; 
     
@@ -82,7 +80,7 @@ public:
     bool canUseR() const;
     void useQ();
     void useW();
-    void useE(float targetX, float targetY);
+    void useE();
     void useR();
     void takeDamage(int damage);
     void respawn(float spawnX, float spawnY);

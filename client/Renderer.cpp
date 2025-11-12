@@ -486,8 +486,8 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     SDL_Rect shine = {centerX + flipMultiplier * 4 * scale, centerY, 1 * scale, 6 * scale};
     SDL_RenderFillRect(renderer, &shine);
 
-    // wind effect WIP
-    if (player.isDashing || player.activeAbility != SamuraiAbility::NONE) {
+    
+    if (player.activeAbility != SamuraiAbility::NONE) {
         setColor(windColor);
       
         for (int i = 0; i < 360; i += 40) {
@@ -1115,6 +1115,69 @@ void Renderer::renderDashBurst(float originX, float originY, float rotationRad, 
     drawBurstLine(-6.0f, c1);
     drawBurstLine(0.0f, c2);
     drawBurstLine(6.0f, c3);
+}
+
+void Renderer::renderShockwave(float centerX, float centerY, float progress, float maxRadius) {
+    int screenX, screenY;
+    worldToScreen(centerX, centerY, screenX, screenY);
+
+    float currentRadius = maxRadius * progress * cameraScale;
+
+    int alpha = static_cast<int>(255 * (1.0f - progress));
+    if (alpha < 0) alpha = 0;
+    if (alpha > 255) alpha = 255;
+    
+  
+    int numRays = 24; 
+    for (int i = 0; i < numRays; i++) {
+        float angle = (i * 2.0f * 3.14159f / numRays);
+        
+        
+        float innerRadius = 10.0f * cameraScale;
+        float outerRadius = currentRadius;
+        
+        int x1 = screenX + static_cast<int>(std::cos(angle) * innerRadius);
+        int y1 = screenY + static_cast<int>(std::sin(angle) * innerRadius);
+        int x2 = screenX + static_cast<int>(std::cos(angle) * outerRadius);
+        int y2 = screenY + static_cast<int>(std::sin(angle) * outerRadius);
+        
+        SDL_Color coreRay = {180, 220, 255, static_cast<Uint8>(alpha * 0.9f)};
+        setColor(coreRay);
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        
+  
+        if (i % 2 == 0) {
+            float offset = 2.0f;
+            int x1a = screenX + static_cast<int>(std::cos(angle + 0.05f) * innerRadius);
+            int y1a = screenY + static_cast<int>(std::sin(angle + 0.05f) * innerRadius);
+            int x2a = screenX + static_cast<int>(std::cos(angle + 0.05f) * outerRadius);
+            int y2a = screenY + static_cast<int>(std::sin(angle + 0.05f) * outerRadius);
+            
+            SDL_Color glowRay = {150, 200, 255, static_cast<Uint8>(alpha * 0.6f)};
+            setColor(glowRay);
+            SDL_RenderDrawLine(renderer, x1a, y1a, x2a, y2a);
+        }
+    }
+    
+  
+    int numRings = 3;
+    for (int i = 0; i < numRings; i++) {
+        float ringSize = (20.0f + i * 10.0f) * cameraScale * (1.0f - progress * 0.3f);
+        int radius = static_cast<int>(ringSize);
+        
+        if (radius > 0) {
+            int ringAlpha = static_cast<int>(alpha * (1.0f - i * 0.2f));
+            SDL_Color centerGlow = {200, 230, 255, static_cast<Uint8>(ringAlpha)};
+            setColor(centerGlow);
+            renderCircle(screenX, screenY, radius);
+        }
+    }
+    
+    if (currentRadius > 10.0f) {
+        SDL_Color outerRing = {150, 210, 255, static_cast<Uint8>(alpha * 0.7f)};
+        setColor(outerRing);
+        renderCircle(screenX, screenY, static_cast<int>(currentRadius));
+    }
 }
 
 void Renderer::renderRTornado(float x, float y) {

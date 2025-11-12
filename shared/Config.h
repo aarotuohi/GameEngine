@@ -31,12 +31,10 @@ namespace Config {
     constexpr float Q_SWORD_RANGE = 80.0f;       
     constexpr int Q_SWORD_DAMAGE = 20;           
 
-    
-    constexpr float E_DASH_RADIUS = 45.0f;      
-    constexpr int E_DASH_DAMAGE = 30;        
-    constexpr int E_DASH_VFX_MS = 200;           
-    constexpr float E_DASH_DISTANCE = 200.0f;    
-    constexpr int E_DASH_DURATION_MS = 180;     
+
+    constexpr float E_SHOCKWAVE_RADIUS = 150.0f;   
+    constexpr int E_SHOCKWAVE_DAMAGE = 20;        
+    constexpr int E_SHOCKWAVE_VFX_MS = 500;         
     
 
     constexpr int R_DURATION_MS = 10000;        

@@ -58,11 +58,11 @@ void GameClient::updateLocalPlayer(float dt) {
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isEPressed()) {
-        std::cout << "E ability used (Sweeping Blade)\n";
+        std::cout << "E ability used (Shockwave)\n";
         float dirX = std::cos(localRotation);
         float dirY = std::sin(localRotation);
         network->sendAbilityUse(3, dirX, dirY);
-        lastEDashTime = std::chrono::steady_clock::now();
+        lastEShockwaveTime = std::chrono::steady_clock::now();
         inputHandler->clearAbilityInputs();
     }
     if (inputHandler->isRPressed()) {
@@ -191,10 +191,13 @@ void GameClient::render() {
                 }
             }
 
-            if (lastEDashTime.time_since_epoch().count() > 0) {
+           
+            if (lastEShockwaveTime.time_since_epoch().count() > 0) {
                 auto now = std::chrono::steady_clock::now();
-                if (now - lastEDashTime <= eDashVfxDuration) {
-                    renderer->renderDashBurst(localX, localY, localRotation, 120.0f);
+                if (now - lastEShockwaveTime <= eShockwaveVfxDuration) {
+                    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEShockwaveTime).count();
+                    float progress = static_cast<float>(elapsed) / Config::E_SHOCKWAVE_VFX_MS;
+                    renderer->renderShockwave(localX, localY, progress, Config::E_SHOCKWAVE_RADIUS);
                 }
             }
         } else {

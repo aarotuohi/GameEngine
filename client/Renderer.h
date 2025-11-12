@@ -57,6 +57,7 @@ public:
     void renderSwordSwing(float originX, float originY, float rotationRad,
                           float arcDegrees, float range);
     void renderDashBurst(float originX, float originY, float rotationRad, float length);
+    void renderShockwave(float centerX, float centerY, float progress, float maxRadius);
     void renderRTornado(float x, float y);
     void renderUI(uint32_t playerId, int playerCount, int fps);
     
