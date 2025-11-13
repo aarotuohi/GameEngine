@@ -1127,56 +1127,44 @@ void Renderer::renderShockwave(float centerX, float centerY, float progress, flo
     if (alpha < 0) alpha = 0;
     if (alpha > 255) alpha = 255;
     
-  
-    int numRays = 24; 
-    for (int i = 0; i < numRays; i++) {
-        float angle = (i * 2.0f * 3.14159f / numRays);
-        
-        
-        float innerRadius = 10.0f * cameraScale;
-        float outerRadius = currentRadius;
-        
-        int x1 = screenX + static_cast<int>(std::cos(angle) * innerRadius);
-        int y1 = screenY + static_cast<int>(std::sin(angle) * innerRadius);
-        int x2 = screenX + static_cast<int>(std::cos(angle) * outerRadius);
-        int y2 = screenY + static_cast<int>(std::sin(angle) * outerRadius);
-        
-        SDL_Color coreRay = {180, 220, 255, static_cast<Uint8>(alpha * 0.9f)};
-        setColor(coreRay);
-        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
-        
-  
-        if (i % 2 == 0) {
-            float offset = 2.0f;
-            int x1a = screenX + static_cast<int>(std::cos(angle + 0.05f) * innerRadius);
-            int y1a = screenY + static_cast<int>(std::sin(angle + 0.05f) * innerRadius);
-            int x2a = screenX + static_cast<int>(std::cos(angle + 0.05f) * outerRadius);
-            int y2a = screenY + static_cast<int>(std::sin(angle + 0.05f) * outerRadius);
-            
-            SDL_Color glowRay = {150, 200, 255, static_cast<Uint8>(alpha * 0.6f)};
-            setColor(glowRay);
-            SDL_RenderDrawLine(renderer, x1a, y1a, x2a, y2a);
-        }
+    
+    float ringThickness = 15.0f * cameraScale;
+    
+    SDL_Color outerEdge = {120, 200, 255, static_cast<Uint8>(alpha * 0.8f)};
+    setColor(outerEdge);
+    renderCircle(screenX, screenY, static_cast<int>(currentRadius));
+    
+    if (currentRadius > ringThickness * 0.5f) {
+        SDL_Color middleLayer = {150, 220, 255, static_cast<Uint8>(alpha * 0.9f)};
+        setColor(middleLayer);
+        renderCircle(screenX, screenY, static_cast<int>(currentRadius - ringThickness * 0.3f));
     }
     
-  
-    int numRings = 3;
-    for (int i = 0; i < numRings; i++) {
-        float ringSize = (20.0f + i * 10.0f) * cameraScale * (1.0f - progress * 0.3f);
-        int radius = static_cast<int>(ringSize);
-        
-        if (radius > 0) {
-            int ringAlpha = static_cast<int>(alpha * (1.0f - i * 0.2f));
-            SDL_Color centerGlow = {200, 230, 255, static_cast<Uint8>(ringAlpha)};
-            setColor(centerGlow);
-            renderCircle(screenX, screenY, radius);
-        }
+    if (currentRadius > ringThickness) {
+        SDL_Color innerEdge = {180, 240, 255, static_cast<Uint8>(alpha)};
+        setColor(innerEdge);
+        renderCircle(screenX, screenY, static_cast<int>(currentRadius - ringThickness));
     }
     
-    if (currentRadius > 10.0f) {
-        SDL_Color outerRing = {150, 210, 255, static_cast<Uint8>(alpha * 0.7f)};
-        setColor(outerRing);
-        renderCircle(screenX, screenY, static_cast<int>(currentRadius));
+    int numParticles = 16;
+    for (int i = 0; i < numParticles; i++) {
+        float angle = (i * 2.0f * 3.14159f / numParticles) + (progress * 3.0f); 
+        
+        int px = screenX + static_cast<int>(std::cos(angle) * currentRadius);
+        int py = screenY + static_cast<int>(std::sin(angle) * currentRadius);
+        
+
+        float tangentAngle = angle + 3.14159f / 2.0f; 
+        int streakLength = static_cast<int>(8.0f * cameraScale);
+        
+        int sx1 = px - static_cast<int>(std::cos(tangentAngle) * streakLength * 0.5f);
+        int sy1 = py - static_cast<int>(std::sin(tangentAngle) * streakLength * 0.5f);
+        int sx2 = px + static_cast<int>(std::cos(tangentAngle) * streakLength * 0.5f);
+        int sy2 = py + static_cast<int>(std::sin(tangentAngle) * streakLength * 0.5f);
+        
+        SDL_Color windStreak = {200, 240, 255, static_cast<Uint8>(alpha * 0.8f)};
+        setColor(windStreak);
+        SDL_RenderDrawLine(renderer, sx1, sy1, sx2, sy2);
     }
 }
 
