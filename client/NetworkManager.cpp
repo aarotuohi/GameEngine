@@ -142,12 +142,16 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->updateVelocity(state.vx, state.vy);
                 it->second->hasWindWall = state.hasWindWall;
                 it->second->windWallRadius = state.windWallRadius;
+                it->second->health = state.health;
+                it->second->maxHealth = state.maxHealth;
             } else {
                 // Add new player
                 auto player = std::make_shared<Player>(state.id, state.x, state.y);
                 player->updateVelocity(state.vx, state.vy);
                 player->hasWindWall = state.hasWindWall;
                 player->windWallRadius = state.windWallRadius;
+                player->health = state.health;
+                player->maxHealth = state.maxHealth;
                 players[state.id] = player;
             }
         }

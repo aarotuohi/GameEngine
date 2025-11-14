@@ -300,7 +300,8 @@ void Enemy::moveTowards(float targetX, float targetY, float dt) {
     float dy = targetY - y;
     float distance = std::sqrt(dx * dx + dy * dy);
     
-    if (distance < 0.001f) {
+  
+    if (distance < 40.0f) {
         vx = 0.0f;
         vy = 0.0f;
         return;
@@ -309,14 +310,15 @@ void Enemy::moveTowards(float targetX, float targetY, float dt) {
     float dirX = dx / distance;
     float dirY = dy / distance;
     
-    if (distance > 50.0f) {
-        
+   
+    if (distance > 100.0f) {
         vx = dirX * speed;
         vy = dirY * speed;
     } else {
-        
-        vx = dirX * speed * 0.3f;
-        vy = dirY * speed * 0.3f;
+      
+        float speedMultiplier = (distance - 40.0f) / 60.0f; 
+        vx = dirX * speed * speedMultiplier;
+        vy = dirY * speed * speedMultiplier;
     }
     
     x += vx * dt;
