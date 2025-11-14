@@ -272,8 +272,9 @@ void NetworkHandler::broadcastUdpState() {
     
     // Add projectiles
     auto projectiles = gameState.getAllProjectiles();
-    broadcast.numProjectiles = static_cast<uint32_t>(projectiles.size());
     for (const auto& [projId, proj] : projectiles) {
+        if (!proj->active) continue; 
+        
         Protocol::ProjectileState state;
         state.id = proj->id;
         state.x = proj->x;
@@ -285,6 +286,7 @@ void NetworkHandler::broadcastUdpState() {
         state.ownerId = proj->ownerId;
         broadcast.projectiles.push_back(state);
     }
+    broadcast.numProjectiles = static_cast<uint32_t>(broadcast.projectiles.size());
     
     auto rTornadoes = gameState.getAllRTornadoes();
     broadcast.numRTornadoes = static_cast<uint32_t>(rTornadoes.size());

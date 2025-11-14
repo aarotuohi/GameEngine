@@ -372,6 +372,8 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.vy = player->vy;
         state.hasWindWall = player->hasWindWall;
         state.windWallRadius = player->windWallRadius;
+        state.health = player->health;
+        state.maxHealth = player->maxHealth;
         states.push_back(state);
     }
     
@@ -435,7 +437,7 @@ void GameState::updateEnemyShooting(float dt) {
 
     
     const float separationDistance = 60.0f; 
-    const float separationStrength = 150.0f; 
+    const float separationStrength = 100.0f; 
     
    
     for (auto& [enemyId, enemy] : enemies) {
@@ -533,7 +535,6 @@ void GameState::updateEnemyShooting(float dt) {
 void GameState::createRTornadoes(uint32_t ownerId) {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     
-    // Debug: Check if player exists
     auto playerIt = players.find(ownerId);
     if (playerIt == players.end()) {
         std::cout << "ERROR: Cannot create R tornadoes - player " << ownerId << " not found!\n";
@@ -567,7 +568,6 @@ void GameState::updateRTornadoes(float dt) {
         
         auto& owner = ownerIt->second;
         
-        // Protect against NaN values in tornado angles
         if (std::isnan(owner->rTornadoAngle)) {
             std::cout << "WARNING: Player " << tornado->ownerId << " has NaN rTornadoAngle! Resetting...\n";
             owner->rTornadoAngle = 0.0f;
@@ -575,7 +575,7 @@ void GameState::updateRTornadoes(float dt) {
         
         tornado->angle = owner->rTornadoAngle + (2.0f * 3.14159265f / Config::R_TORNADO_COUNT) * tornado->tornadoIndex;
         
-        // Additional protection for calculated tornado angle
+    
         if (std::isnan(tornado->angle)) {
             std::cout << "WARNING: Tornado " << tornado->id << " has NaN angle! Resetting...\n";
             tornado->angle = 0.0f;
@@ -615,11 +615,11 @@ void GameState::updateRTornadoes(float dt) {
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    // Award score to R tornado owner
+                  
                     owner->score++;
                     tornado->lastHitTime = now;
                     std::cout << "R tornado hit player " << pid << "\n";
-                    break; // One hit per update
+                    break; 
                 }
             }
         }
