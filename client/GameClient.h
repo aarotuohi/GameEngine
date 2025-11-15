@@ -38,6 +38,9 @@ private:
     std::chrono::milliseconds eShockwaveVfxDuration{Config::E_SHOCKWAVE_VFX_MS};
 
     std::chrono::steady_clock::time_point lastRTime;
+    
+    bool isGameOver;
+    bool shouldRestart;
 
 public:
     GameClient(const std::string& playerName = "Player");
@@ -50,6 +53,9 @@ private:
     void updateLocalPlayer(float dt);
     void render();
     void updateFps();
+    void checkGameOver();
+    void handleGameOverInput();
+    void restartGame();
 };
 
 #endif 

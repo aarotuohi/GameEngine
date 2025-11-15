@@ -102,6 +102,11 @@ void InputHandler::clearAbilityInputs() {
     rPressed = false;
 }
 
+bool InputHandler::isKeyPressed(SDL_Keycode key) const {
+    SDL_Scancode scancode = SDL_GetScancodeFromKey(key);
+    return keyStates[scancode];
+}
+
 void InputHandler::reset() {
     quit = false;
     hasMovementTarget = false;
