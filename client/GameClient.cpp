@@ -329,6 +329,7 @@ void GameClient::checkGameOver() {
 }
 
 void GameClient::handleGameOverInput() {
+   
     if (inputHandler->isKeyPressed(SDLK_r)) {
         shouldRestart = true;
         std::cout << "Restarting game...\n";
@@ -337,6 +338,37 @@ void GameClient::handleGameOverInput() {
         std::cout << "Exiting game...\n";
         inputHandler->requestQuit();
     }
+    
+    
+    if (inputHandler->isLeftMousePressed()) {
+        int mouseX = inputHandler->getMouseX();
+        int mouseY = inputHandler->getMouseY();
+        
+        int screenWidth = 1280;  
+        int screenHeight = 720;
+        
+        int buttonWidth = 300;
+        int buttonHeight = 60;
+        int button1Y = screenHeight/2 + 20;
+        int button1X = screenWidth/2 - buttonWidth/2;
+        
+        if (isPointInRect(mouseX, mouseY, button1X, button1Y, buttonWidth, buttonHeight)) {
+            shouldRestart = true;
+            std::cout << "Start Game button clicked - Restarting...\n";
+        }
+        
+        int button2Y = button1Y + 90;
+        int button2X = screenWidth/2 - buttonWidth/2;
+        
+        if (isPointInRect(mouseX, mouseY, button2X, button2Y, buttonWidth, buttonHeight)) {
+            std::cout << "Quit button clicked - Exiting...\n";
+            inputHandler->requestQuit();
+        }
+    }
+}
+
+bool GameClient::isPointInRect(int x, int y, int rectX, int rectY, int rectW, int rectH) {
+    return x >= rectX && x <= rectX + rectW && y >= rectY && y <= rectY + rectH;
 }
 
 void GameClient::restartGame() {

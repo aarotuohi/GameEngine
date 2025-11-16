@@ -40,6 +40,11 @@ public:
     
     bool isKeyPressed(SDL_Keycode key) const;
     
+   
+    bool isLeftMousePressed() const { return mouseButtons[0]; }
+    int getMouseX() const { return mouseX; }
+    int getMouseY() const { return mouseY; }
+    
     // Legacy methods
 
     

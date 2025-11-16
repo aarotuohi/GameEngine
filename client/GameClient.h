@@ -56,6 +56,7 @@ private:
     void checkGameOver();
     void handleGameOverInput();
     void restartGame();
+    bool isPointInRect(int x, int y, int rectX, int rectY, int rectW, int rectH);
 };
 
 #endif 
