@@ -38,6 +38,13 @@ public:
     bool isRPressed() const { return rPressed; }
     void clearAbilityInputs();
     
+    bool isKeyPressed(SDL_Keycode key) const;
+    
+   
+    bool isLeftMousePressed() const { return mouseButtons[0]; }
+    int getMouseX() const { return mouseX; }
+    int getMouseY() const { return mouseY; }
+    
     // Legacy methods
 
     
@@ -45,6 +52,7 @@ public:
  
     std::pair<float, float> getShootDirection(float playerX, float playerY) const;
     bool shouldQuit() const { return quit; }
+    void requestQuit() { quit = true; }
     
     void reset();
 };

@@ -1212,3 +1212,240 @@ void Renderer::renderRTornado(float x, float y) {
         SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
     }
 }
+
+void Renderer::renderGameOver() {
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_Color overlay = {0, 0, 0, 200};
+    setColor(overlay);
+    SDL_Rect fullScreen = {0, 0, width, height};
+    SDL_RenderFillRect(renderer, &fullScreen);
+    
+   
+    SDL_Color boxBg = {30, 30, 30, 255};
+    setColor(boxBg);
+    SDL_Rect box = {width/2 - 300, height/2 - 250, 600, 500};
+    SDL_RenderFillRect(renderer, &box);
+    
+    
+    SDL_Color border = {200, 50, 50, 255};
+    setColor(border);
+    for (int i = 0; i < 6; i++) {
+        SDL_Rect borderRect = {box.x - i, box.y - i, box.w + i*2, box.h + i*2};
+        SDL_RenderDrawRect(renderer, &borderRect);
+    }
+    
+   
+    SDL_Color titleColor = {255, 80, 80, 255};
+    setColor(titleColor);
+    
+   
+    int titleY = height/2 - 150;
+    int letterWidth = 40;
+    int letterHeight = 60;
+    int spacing = 10;
+    int totalWidth = letterWidth * 8 + spacing * 7; 
+    int startX = width/2 - totalWidth/2;
+    
+ 
+    SDL_Rect gParts[] = {
+        {startX, titleY, letterWidth, 10},
+        {startX, titleY, 10, letterHeight},
+        {startX, titleY + letterHeight - 10, letterWidth, 10},
+        {startX + letterWidth - 10, titleY + letterHeight/2, 10, letterHeight/2},
+        {startX + letterWidth/2, titleY + letterHeight/2, letterWidth/2, 10}
+    };
+    for (auto& p : gParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing;
+    
+ 
+    SDL_Rect aParts[] = {
+        {startX, titleY, letterWidth, 10},
+        {startX, titleY, 10, letterHeight},
+        {startX + letterWidth - 10, titleY, 10, letterHeight},
+        {startX, titleY + letterHeight/2, letterWidth, 10}
+    };
+    for (auto& p : aParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing;
+    
+
+    SDL_Rect mParts[] = {
+        {startX, titleY, 10, letterHeight},
+        {startX + letterWidth/2 - 5, titleY, 10, letterHeight/2},
+        {startX + letterWidth - 10, titleY, 10, letterHeight}
+    };
+    for (auto& p : mParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing;
+    
+  
+    SDL_Rect eParts[] = {
+        {startX, titleY, 10, letterHeight},
+        {startX, titleY, letterWidth, 10},
+        {startX, titleY + letterHeight/2 - 5, letterWidth - 10, 10},
+        {startX, titleY + letterHeight - 10, letterWidth, 10}
+    };
+    for (auto& p : eParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing + 20; 
+    
+    SDL_Rect oParts[] = {
+        {startX, titleY, letterWidth, 10},
+        {startX, titleY, 10, letterHeight},
+        {startX + letterWidth - 10, titleY, 10, letterHeight},
+        {startX, titleY + letterHeight - 10, letterWidth, 10}
+    };
+    for (auto& p : oParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing;
+    
+ 
+    SDL_Rect vParts[] = {
+        {startX, titleY, 10, letterHeight - 20},
+        {startX + letterWidth - 10, titleY, 10, letterHeight - 20},
+        {startX + letterWidth/2 - 5, titleY + letterHeight - 20, 10, 20}
+    };
+    for (auto& p : vParts) SDL_RenderFillRect(renderer, &p);
+    
+    startX += letterWidth + spacing;
+    
+ 
+    for (auto& p : eParts) {
+        SDL_Rect shifted = {p.x + (startX - eParts[0].x), p.y, p.w, p.h};
+        SDL_RenderFillRect(renderer, &shifted);
+    }
+    
+    startX += letterWidth + spacing;
+    
+
+   
+    SDL_Rect rParts[] = {
+        {startX, titleY, 10, letterHeight}, 
+        {startX, titleY, letterWidth - 5, 10},  
+        {startX + letterWidth - 15, titleY, 10, letterHeight/2 + 5},  
+        {startX, titleY + letterHeight/2 - 5, letterWidth - 10, 10},  
+        {startX + 10, titleY + letterHeight/2 + 5, letterWidth - 20, 10},  
+        {startX + 20, titleY + letterHeight/2 + 15, letterWidth - 30, 10},  
+        {startX + letterWidth - 15, titleY + letterHeight/2 + 10, 10, letterHeight/2 - 10}  
+    };
+    for (auto& p : rParts) SDL_RenderFillRect(renderer, &p);
+    
+   
+    int buttonWidth = 300;
+    int buttonHeight = 60;
+    int button1Y = height/2 + 20;
+    
+    SDL_Color buttonColor = {80, 150, 80, 255};
+    setColor(buttonColor);
+    SDL_Rect startButton = {width/2 - buttonWidth/2, button1Y, buttonWidth, buttonHeight};
+    SDL_RenderFillRect(renderer, &startButton);
+    
+    SDL_Color buttonBorder = {120, 200, 120, 255};
+    setColor(buttonBorder);
+    for (int i = 0; i < 3; i++) {
+        SDL_Rect border = {startButton.x - i, startButton.y - i, startButton.w + i*2, startButton.h + i*2};
+        SDL_RenderDrawRect(renderer, &border);
+    }
+    
+
+    SDL_Color whiteText = {255, 255, 255, 255};
+    setColor(whiteText);
+    int textSize = 8;
+    int textY = button1Y + buttonHeight/2 - textSize;
+    int textStartX = width/2 - 110;
+    
+   
+    SDL_Rect s1[] = {{textStartX, textY, 15, 3}, {textStartX, textY, 3, 8}, {textStartX, textY + 7, 15, 3}, 
+                     {textStartX + 12, textY + 7, 3, 8}, {textStartX, textY + 13, 15, 3}};
+    for (auto& p : s1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+    SDL_Rect t1[] = {{textStartX, textY, 15, 3}, {textStartX + 6, textY, 3, 16}};
+    for (auto& p : t1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+
+    SDL_Rect a1[] = {{textStartX, textY, 15, 3}, {textStartX, textY, 3, 16}, {textStartX + 12, textY, 3, 16}, {textStartX, textY + 7, 15, 3}};
+    for (auto& p : a1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+    SDL_Rect r1[] = {{textStartX, textY, 3, 16}, {textStartX, textY, 15, 3}, {textStartX + 12, textY, 3, 8}, 
+                     {textStartX, textY + 7, 15, 3}, {textStartX + 12, textY + 7, 3, 9}};
+    for (auto& p : r1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+
+    SDL_Rect t2[] = {{textStartX, textY, 15, 3}, {textStartX + 6, textY, 3, 16}};
+    for (auto& p : t2) SDL_RenderFillRect(renderer, &p);
+    textStartX += 25;
+    
+  
+    SDL_Rect g1[] = {{textStartX, textY, 15, 3}, {textStartX, textY, 3, 16}, {textStartX, textY + 13, 15, 3},
+                     {textStartX + 12, textY + 7, 3, 9}, {textStartX + 7, textY + 7, 8, 3}};
+    for (auto& p : g1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+
+    SDL_Rect a2[] = {{textStartX, textY, 15, 3}, {textStartX, textY, 3, 16}, {textStartX + 12, textY, 3, 16}, {textStartX, textY + 7, 15, 3}};
+    for (auto& p : a2) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+  
+    SDL_Rect m1[] = {{textStartX, textY, 3, 16}, {textStartX + 6, textY, 3, 10}, {textStartX + 12, textY, 3, 16}};
+    for (auto& p : m1) SDL_RenderFillRect(renderer, &p);
+    textStartX += 20;
+    
+
+    SDL_Rect e1[] = {{textStartX, textY, 3, 16}, {textStartX, textY, 15, 3}, {textStartX, textY + 7, 12, 3}, {textStartX, textY + 13, 15, 3}};
+    for (auto& p : e1) SDL_RenderFillRect(renderer, &p);
+    
+    
+    int button2Y = button1Y + 90;
+    
+    SDL_Color quitButtonColor = {150, 80, 80, 255};
+    setColor(quitButtonColor);
+    SDL_Rect quitButton = {width/2 - buttonWidth/2, button2Y, buttonWidth, buttonHeight};
+    SDL_RenderFillRect(renderer, &quitButton);
+    
+    SDL_Color quitBorder = {200, 120, 120, 255};
+    setColor(quitBorder);
+    for (int i = 0; i < 3; i++) {
+        SDL_Rect border = {quitButton.x - i, quitButton.y - i, quitButton.w + i*2, quitButton.h + i*2};
+        SDL_RenderDrawRect(renderer, &border);
+    }
+    
+   
+    setColor(whiteText);
+    int quitTextY = button2Y + buttonHeight/2 - textSize;
+    int quitTextX = width/2 - 40;
+    
+   
+    SDL_Rect q1[] = {{quitTextX, quitTextY, 15, 3}, {quitTextX, quitTextY, 3, 16}, {quitTextX + 12, quitTextY, 3, 16},
+                     {quitTextX, quitTextY + 13, 15, 3}, {quitTextX + 10, quitTextY + 11, 8, 3}};
+    for (auto& p : q1) SDL_RenderFillRect(renderer, &p);
+    quitTextX += 20;
+    
+    
+    SDL_Rect u1[] = {{quitTextX, quitTextY, 3, 16}, {quitTextX + 12, quitTextY, 3, 16}, {quitTextX, quitTextY + 13, 15, 3}};
+    for (auto& p : u1) SDL_RenderFillRect(renderer, &p);
+    quitTextX += 20;
+    
+ 
+    SDL_Rect i1[] = {{quitTextX, quitTextY, 15, 3}, {quitTextX + 6, quitTextY, 3, 16}, {quitTextX, quitTextY + 13, 15, 3}};
+    for (auto& p : i1) SDL_RenderFillRect(renderer, &p);
+    quitTextX += 20;
+    
+  
+    SDL_Rect t3[] = {{quitTextX, quitTextY, 15, 3}, {quitTextX + 6, quitTextY, 3, 16}};
+    for (auto& p : t3) SDL_RenderFillRect(renderer, &p);
+    
+    
+    SDL_Color grayText = {180, 180, 180, 255};
+    setColor(grayText);
+    SDL_Rect instructRect = {width/2 - 150, height/2 + 200, 300, 20};
+    SDL_RenderDrawRect(renderer, &instructRect);
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}

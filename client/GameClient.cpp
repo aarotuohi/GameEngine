@@ -7,7 +7,8 @@
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
-    worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0) {
+    worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
+    isGameOver(false), shouldRestart(false) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -227,6 +228,11 @@ void GameClient::render() {
     // Render UI
     renderer->renderUI(myId, static_cast<int>(players.size()), fps);
     
+ 
+    if (isGameOver) {
+        renderer->renderGameOver();
+    }
+    
     renderer->present();
 }
 
@@ -272,14 +278,26 @@ void GameClient::run() {
         // Update input
         inputHandler->update();
         
-        // Update local player
-        updateLocalPlayer(dt);
+    
+        checkGameOver();
         
-        // Send position updates
-        auto timeSinceLastUpdate = currentTime - lastPositionUpdate;
-        if (timeSinceLastUpdate >= positionUpdateInterval) {
-            network->sendPositionUpdate(localX, localY, localVx, localVy);
-            lastPositionUpdate = currentTime;
+    
+        if (isGameOver) {
+            handleGameOverInput();
+            
+            if (shouldRestart) {
+                restartGame();
+            }
+        } else {
+            
+            updateLocalPlayer(dt);
+            
+          
+            auto timeSinceLastUpdate = currentTime - lastPositionUpdate;
+            if (timeSinceLastUpdate >= positionUpdateInterval) {
+                network->sendPositionUpdate(localX, localY, localVx, localVy);
+                lastPositionUpdate = currentTime;
+            }
         }
         
         // Render
@@ -294,4 +312,81 @@ void GameClient::run() {
     }
     
     std::cout << "Shutting down client...\n";
+}
+
+void GameClient::checkGameOver() {
+    auto myId = network->getPlayerId();
+    auto players = network->getPlayers();
+    
+    auto it = players.find(myId);
+    if (it != players.end()) {
+        auto& player = it->second;
+        if (player->health <= 0 && !isGameOver) {
+            isGameOver = true;
+            std::cout << "GAME OVER! Your character has died.\n";
+        }
+    }
+}
+
+void GameClient::handleGameOverInput() {
+   
+    if (inputHandler->isKeyPressed(SDLK_r)) {
+        shouldRestart = true;
+        std::cout << "Restarting game...\n";
+    }
+    if (inputHandler->isKeyPressed(SDLK_ESCAPE)) {
+        std::cout << "Exiting game...\n";
+        inputHandler->requestQuit();
+    }
+    
+    
+    if (inputHandler->isLeftMousePressed()) {
+        int mouseX = inputHandler->getMouseX();
+        int mouseY = inputHandler->getMouseY();
+        
+        int screenWidth = 1280;  
+        int screenHeight = 720;
+        
+        int buttonWidth = 300;
+        int buttonHeight = 60;
+        int button1Y = screenHeight/2 + 20;
+        int button1X = screenWidth/2 - buttonWidth/2;
+        
+        if (isPointInRect(mouseX, mouseY, button1X, button1Y, buttonWidth, buttonHeight)) {
+            shouldRestart = true;
+            std::cout << "Start Game button clicked - Restarting...\n";
+        }
+        
+        int button2Y = button1Y + 90;
+        int button2X = screenWidth/2 - buttonWidth/2;
+        
+        if (isPointInRect(mouseX, mouseY, button2X, button2Y, buttonWidth, buttonHeight)) {
+            std::cout << "Quit button clicked - Exiting...\n";
+            inputHandler->requestQuit();
+        }
+    }
+}
+
+bool GameClient::isPointInRect(int x, int y, int rectX, int rectY, int rectW, int rectH) {
+    return x >= rectX && x <= rectX + rectW && y >= rectY && y <= rectY + rectH;
+}
+
+void GameClient::restartGame() {
+    isGameOver = false;
+    shouldRestart = false;
+    
+    // Reset local player position
+    localX = Config::WORLD_WIDTH / 2.0f;
+    localY = Config::WORLD_HEIGHT / 2.0f;
+    localVx = 0.0f;
+    localVy = 0.0f;
+    localRotation = 0.0f;
+    hasWorldTarget = false;
+    
+    // Reconnect to server (which will respawn the player)
+    network->disconnect();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    network->connect(Config::SERVER_HOST);
+    
+    std::cout << "Game restarted!\n";
 }

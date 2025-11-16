@@ -60,6 +60,7 @@ public:
     void renderShockwave(float centerX, float centerY, float progress, float maxRadius);
     void renderRTornado(float x, float y);
     void renderUI(uint32_t playerId, int playerCount, int fps);
+    void renderGameOver();
     
     int getWidth() const { return width; }
     int getHeight() const { return height; }
