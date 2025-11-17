@@ -1449,3 +1449,156 @@ void Renderer::renderGameOver() {
     
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
+
+void Renderer::renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown) {
+    
+    int boxSize = 60;
+    int spacing = 10;
+    int startX = width/2 - (boxSize * 4 + spacing * 3) / 2;
+    int startY = height - boxSize - 20;
+    
+    auto renderCooldownBox = [&](int x, int y, const char* key, float cooldown, SDL_Color keyColor) {
+      
+        SDL_Color boxBg = {40, 40, 40, 200};
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        setColor(boxBg);
+        SDL_Rect bg = {x, y, boxSize, boxSize};
+        SDL_RenderFillRect(renderer, &bg);
+        
+        
+        SDL_Color border = {100, 100, 100, 255};
+        setColor(border);
+        SDL_RenderDrawRect(renderer, &bg);
+        SDL_Rect borderInner = {x + 1, y + 1, boxSize - 2, boxSize - 2};
+        SDL_RenderDrawRect(renderer, &borderInner);
+        
+       
+        if (cooldown > 0.0f) {
+            SDL_Color cooldownOverlay = {20, 20, 20, 180};
+            setColor(cooldownOverlay);
+            SDL_Rect overlay = {x, y, boxSize, boxSize};
+            SDL_RenderFillRect(renderer, &overlay);
+            
+            float progress = cooldown / (cooldown > 50.0f ? 80.0f : cooldown > 10.0f ? 18.0f : cooldown > 8.0f ? 12.0f : 4.0f);
+            if (progress > 1.0f) progress = 1.0f;
+            int barHeight = static_cast<int>((boxSize - 4) * progress);
+            
+            SDL_Color progressColor = {200, 50, 50, 180};
+            setColor(progressColor);
+            SDL_Rect progressBar = {x + 2, y + boxSize - 2 - barHeight, boxSize - 4, barHeight};
+            SDL_RenderFillRect(renderer, &progressBar);
+            
+
+            setColor({255, 255, 255, 255});
+            int seconds = static_cast<int>(std::ceil(cooldown));
+            
+
+            int digitX = x + boxSize/2 - 8;
+            int digitY = y + boxSize/2 - 10;
+            
+            if (seconds >= 10) {
+
+                int tens = seconds / 10;
+                drawDigit(digitX - 8, digitY, tens);
+                drawDigit(digitX + 8, digitY, seconds % 10);
+            } else {
+         
+                drawDigit(digitX, digitY, seconds);
+            }
+        } else {
+        
+            SDL_Color readyGlow = {80, 255, 80, 100};
+            setColor(readyGlow);
+            SDL_Rect glow = {x + 2, y + 2, boxSize - 4, boxSize - 4};
+            SDL_RenderFillRect(renderer, &glow);
+        }
+        
+ 
+        setColor(keyColor);
+  
+        int labelX = x + boxSize/2 - 6;
+        int labelY = y + boxSize - 15;
+        
+        if (key[0] == 'Q') {
+   
+            SDL_Rect q[] = {
+                {labelX, labelY, 12, 2}, {labelX, labelY, 2, 12}, 
+                {labelX + 10, labelY, 2, 12}, {labelX, labelY + 10, 12, 2},
+                {labelX + 8, labelY + 9, 5, 2}
+            };
+            for (auto& r : q) SDL_RenderFillRect(renderer, &r);
+        } else if (key[0] == 'W') {
+         
+            SDL_Rect w[] = {
+                {labelX, labelY, 2, 12}, {labelX + 5, labelY + 5, 2, 7},
+                {labelX + 10, labelY, 2, 12}
+            };
+            for (auto& r : w) SDL_RenderFillRect(renderer, &r);
+        } else if (key[0] == 'E') {
+       
+            SDL_Rect e[] = {
+                {labelX, labelY, 2, 12}, {labelX, labelY, 12, 2},
+                {labelX, labelY + 5, 10, 2}, {labelX, labelY + 10, 12, 2}
+            };
+            for (auto& r : e) SDL_RenderFillRect(renderer, &r);
+        } else if (key[0] == 'R') {
+  
+            SDL_Rect rr[] = {
+                {labelX, labelY, 2, 12}, {labelX, labelY, 12, 2},
+                {labelX + 10, labelY, 2, 6}, {labelX, labelY + 5, 12, 2},
+                {labelX + 10, labelY + 5, 2, 7}
+            };
+            for (auto& r : rr) SDL_RenderFillRect(renderer, &r);
+        }
+        
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    };
+    
+
+    SDL_Color qColor = {255, 200, 100, 255}; 
+    SDL_Color wColor = {100, 200, 255, 255};  
+    SDL_Color eColor = {255, 100, 150, 255};  
+    SDL_Color rColor = {200, 100, 255, 255};  
+    
+    renderCooldownBox(startX, startY, "Q", qCooldown, qColor);
+    renderCooldownBox(startX + boxSize + spacing, startY, "W", wCooldown, wColor);
+    renderCooldownBox(startX + (boxSize + spacing) * 2, startY, "E", eCooldown, eColor);
+    renderCooldownBox(startX + (boxSize + spacing) * 3, startY, "R", rCooldown, rColor);
+}
+
+void Renderer::drawDigit(int x, int y, int digit) {
+   
+    const int w = 12;
+    const int h = 16;
+    
+    SDL_Rect segments[7] = {
+        {x, y, w, 2},           
+        {x + w - 2, y, 2, h/2}, 
+        {x + w - 2, y + h/2, 2, h/2}, 
+        {x, y + h - 2, w, 2},   
+        {x, y + h/2, 2, h/2},   
+        {x, y, 2, h/2},        
+        {x, y + h/2 - 1, w, 2}  
+    };
+    
+    bool patterns[10][7] = {
+        {1,1,1,1,1,1,0},
+        {0,1,1,0,0,0,0}, 
+        {1,1,0,1,1,0,1}, 
+        {1,1,1,1,0,0,1}, 
+        {0,1,1,0,0,1,1}, 
+        {1,0,1,1,0,1,1}, 
+        {1,0,1,1,1,1,1}, 
+        {1,1,1,0,0,0,0}, 
+        {1,1,1,1,1,1,1}, 
+        {1,1,1,1,0,1,1}  
+    };
+    
+    if (digit >= 0 && digit <= 9) {
+        for (int i = 0; i < 7; i++) {
+            if (patterns[digit][i]) {
+                SDL_RenderFillRect(renderer, &segments[i]);
+            }
+        }
+    }
+}
