@@ -1013,7 +1013,7 @@ void Renderer::renderText(const char* text, int x, int y, int size) {
     SDL_RenderDrawRect(renderer, &rect);
 }
 
-void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
+void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills) {
     setColor(textColor);
     
     // Player ID indicator 
@@ -1024,7 +1024,71 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps) {
     SDL_Rect countRect = {10, 40, 150, 25};
     SDL_RenderDrawRect(renderer, &countRect);
     
-    // FPS counter 
+ 
+    SDL_Color killBg = {40, 40, 40, 220};
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    setColor(killBg);
+    SDL_Rect killBgRect = {width/2 - 100, 10, 200, 40};
+    SDL_RenderFillRect(renderer, &killBgRect);
+    
+    SDL_Color killBorder = {200, 150, 50, 255};
+    setColor(killBorder);
+    SDL_RenderDrawRect(renderer, &killBgRect);
+    SDL_Rect killBorderInner = {killBgRect.x + 1, killBgRect.y + 1, killBgRect.w - 2, killBgRect.h - 2};
+    SDL_RenderDrawRect(renderer, &killBorderInner);
+    
+  
+    SDL_Color killTextColor = {255, 200, 100, 255};
+    setColor(killTextColor);
+    int textX = width/2 - 80;
+    int textY = 20;
+    
+
+    SDL_Rect k[] = {{textX, textY, 2, 16}, {textX, textY + 8, 10, 2}, {textX + 2, textY, 8, 2}, {textX + 10, textY + 14, 2, 2}};
+    for (auto& r : k) SDL_RenderFillRect(renderer, &r);
+    textX += 14;
+ 
+    SDL_Rect i[] = {{textX, textY, 8, 2}, {textX + 3, textY, 2, 16}, {textX, textY + 14, 8, 2}};
+    for (auto& r : i) SDL_RenderFillRect(renderer, &r);
+    textX += 12;
+    
+    SDL_Rect l[] = {{textX, textY, 2, 16}, {textX, textY + 14, 10, 2}};
+    for (auto& r : l) SDL_RenderFillRect(renderer, &r);
+    textX += 14;
+    
+    SDL_Rect l2[] = {{textX, textY, 2, 16}, {textX, textY + 14, 10, 2}};
+    for (auto& r : l2) SDL_RenderFillRect(renderer, &r);
+    textX += 14;
+    
+    SDL_Rect s[] = {{textX, textY, 10, 2}, {textX, textY, 2, 8}, {textX, textY + 7, 10, 2}, {textX + 8, textY + 7, 2, 8}, {textX, textY + 14, 10, 2}};
+    for (auto& r : s) SDL_RenderFillRect(renderer, &r);
+    textX += 14;
+    
+    SDL_Rect colon[] = {{textX, textY + 4, 2, 2}, {textX, textY + 10, 2, 2}};
+    for (auto& r : colon) SDL_RenderFillRect(renderer, &r);
+    textX += 8;
+    
+    SDL_Color numberColor = {255, 255, 255, 255};
+    setColor(numberColor);
+    
+    if (kills >= 100) {
+        drawDigit(textX, textY, kills / 100);
+        textX += 14;
+        drawDigit(textX, textY, (kills / 10) % 10);
+        textX += 14;
+        drawDigit(textX, textY, kills % 10);
+    } else if (kills >= 10) {
+        drawDigit(textX, textY, kills / 10);
+        textX += 14;
+        drawDigit(textX, textY, kills % 10);
+    } else {
+        drawDigit(textX, textY, kills);
+    }
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    
+    
+    setColor(textColor);
     SDL_Rect fpsRect = {width - 80, 10, 70, 25};
     SDL_RenderDrawRect(renderer, &fpsRect);
     

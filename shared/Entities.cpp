@@ -8,7 +8,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
     : id(playerId), name(playerName), x(posX), y(posY),
       vx(0.0f), vy(0.0f), size(Config::PLAYER_SIZE), speed(Config::PLAYER_SPEED),
       isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
-      health(100), maxHealth(100), rotation(0.0f), isAlive(true),
+      health(100), maxHealth(100), rotation(0.0f), isAlive(true), kills(0),
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
       hasRTornadoes(false), rTornadoAngle(0.0f),
@@ -270,15 +270,19 @@ bool Projectile::checkCollisionWithEnemy(const Enemy& enemy) const {
 Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer)
     : id(enemyId), x(posX), y(posY), vx(0.0f), vy(0.0f), size(40.0f),
       speed(Config::ENEMY_SPEED), health(100), maxHealth(100), isAlive(true), 
-      targetPlayerId(targetPlayer), rotation(0.0f) {
+      targetPlayerId(targetPlayer), lastDamagedBy(0), rotation(0.0f) {
     lastHitTime = std::chrono::steady_clock::now();
     spawnTime = std::chrono::steady_clock::now();
     lastShootTime = std::chrono::steady_clock::now();
 }
 
-void Enemy::takeDamage(int damage) {
+void Enemy::takeDamage(int damage, uint32_t damagerId) {
     if (!isAlive) return;
     health -= damage;
+    
+    if (damagerId != 0) {
+        lastDamagedBy = damagerId;
+    }
     
     if (health < 0) {
         health = 0;

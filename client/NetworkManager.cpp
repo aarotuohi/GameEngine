@@ -144,6 +144,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->windWallRadius = state.windWallRadius;
                 it->second->health = state.health;
                 it->second->maxHealth = state.maxHealth;
+                it->second->kills = state.kills;
             } else {
                 // Add new player
                 auto player = std::make_shared<Player>(state.id, state.x, state.y);
@@ -152,6 +153,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 player->windWallRadius = state.windWallRadius;
                 player->health = state.health;
                 player->maxHealth = state.maxHealth;
+                player->kills = state.kills;
                 players[state.id] = player;
             }
         }

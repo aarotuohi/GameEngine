@@ -47,6 +47,8 @@ private:
     
     bool isGameOver;
     bool shouldRestart;
+    
+    int localKills;
 
 public:
     GameClient(const std::string& playerName = "Player");

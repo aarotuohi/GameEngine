@@ -9,7 +9,7 @@ GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
-    isGameOver(false), shouldRestart(false) {
+    isGameOver(false), shouldRestart(false), localKills(0) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -198,6 +198,11 @@ void GameClient::render() {
     auto rTornadoes = network->getRTornadoes();
     uint32_t myId = network->getPlayerId();
     
+    auto myPlayerIt = players.find(myId);
+    if (myPlayerIt != players.end()) {
+        localKills = myPlayerIt->second->kills;
+    }
+    
 
     for (const auto& [enemyId, enemy] : enemies) {
         renderer->renderEnemy(*enemy);
@@ -263,7 +268,7 @@ void GameClient::render() {
     }
     
     // Render UI
-    renderer->renderUI(myId, static_cast<int>(players.size()), fps);
+    renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills);
     
    
     auto now = std::chrono::steady_clock::now();
@@ -444,6 +449,7 @@ bool GameClient::isPointInRect(int x, int y, int rectX, int rectY, int rectW, in
 void GameClient::restartGame() {
     isGameOver = false;
     shouldRestart = false;
+    localKills = 0;
     
     // Reset local player position
     localX = Config::WORLD_WIDTH / 2.0f;

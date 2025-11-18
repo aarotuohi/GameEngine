@@ -247,7 +247,7 @@ void GameState::update(float dt) {
                     if (proj->checkCollisionWithEnemy(*enemy)) {
                         proj->active = false;
                         hit = true;
-                        enemy->takeDamage(proj->damage);
+                        enemy->takeDamage(proj->damage, proj->ownerId);
                 
                         auto owner = players.find(proj->ownerId);
                         if (owner != players.end()) {
@@ -288,6 +288,15 @@ void GameState::update(float dt) {
     for (auto& [enemyId, enemy] : enemies) {
         if (!enemy->isAlive) {
             deadEnemies.push_back(enemyId);
+            
+            if (enemy->lastDamagedBy != 0) {
+                auto killer = players.find(enemy->lastDamagedBy);
+                if (killer != players.end()) {
+                    killer->second->kills++;
+                    std::cout << "Player " << enemy->lastDamagedBy << " killed Enemy " << enemyId 
+                              << "! Total kills: " << killer->second->kills << "\n";
+                }
+            }
         }
     }
     
@@ -374,6 +383,7 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.windWallRadius = player->windWallRadius;
         state.health = player->health;
         state.maxHealth = player->maxHealth;
+        state.kills = player->kills;
         states.push_back(state);
     }
     
