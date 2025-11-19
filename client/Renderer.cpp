@@ -1044,7 +1044,16 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills) 
     int textY = 20;
     
 
-    SDL_Rect k[] = {{textX, textY, 2, 16}, {textX, textY + 8, 10, 2}, {textX + 2, textY, 8, 2}, {textX + 10, textY + 14, 2, 2}};
+    SDL_Rect k[] = {
+        {textX, textY, 2, 16},          
+        {textX + 2, textY + 7, 2, 2},   
+        {textX + 4, textY + 5, 2, 2},   
+        {textX + 6, textY + 3, 2, 2},   
+        {textX + 8, textY + 1, 2, 2},   
+        {textX + 4, textY + 9, 2, 2},   
+        {textX + 6, textY + 11, 2, 2},  
+        {textX + 8, textY + 13, 2, 2}   
+    };
     for (auto& r : k) SDL_RenderFillRect(renderer, &r);
     textX += 14;
  
@@ -1390,9 +1399,10 @@ void Renderer::renderGameOver() {
         {startX, titleY, letterWidth - 5, 10},  
         {startX + letterWidth - 15, titleY, 10, letterHeight/2 + 5},  
         {startX, titleY + letterHeight/2 - 5, letterWidth - 10, 10},  
-        {startX + 10, titleY + letterHeight/2 + 5, letterWidth - 20, 10},  
-        {startX + 20, titleY + letterHeight/2 + 15, letterWidth - 30, 10},  
-        {startX + letterWidth - 15, titleY + letterHeight/2 + 10, 10, letterHeight/2 - 10}  
+        {startX + letterWidth/2 - 5, titleY + letterHeight/2 + 5, 8, 8},  
+        {startX + letterWidth/2 + 3, titleY + letterHeight/2 + 13, 8, 8},  
+        {startX + letterWidth/2 + 11, titleY + letterHeight/2 + 21, 8, 8},
+        {startX + letterWidth/2 + 19, titleY + letterHeight/2 + 29, 8, letterHeight/2 - 29}  
     };
     for (auto& p : rParts) SDL_RenderFillRect(renderer, &p);
     
@@ -1435,8 +1445,15 @@ void Renderer::renderGameOver() {
     for (auto& p : a1) SDL_RenderFillRect(renderer, &p);
     textStartX += 20;
     
-    SDL_Rect r1[] = {{textStartX, textY, 3, 16}, {textStartX, textY, 15, 3}, {textStartX + 12, textY, 3, 8}, 
-                     {textStartX, textY + 7, 15, 3}, {textStartX + 12, textY + 7, 3, 9}};
+    SDL_Rect r1[] = {
+        {textStartX, textY, 3, 16},          
+        {textStartX, textY, 15, 3},          
+        {textStartX + 12, textY, 3, 8},      
+        {textStartX, textY + 7, 15, 3},      
+        {textStartX + 5, textY + 9, 3, 2},  
+        {textStartX + 8, textY + 11, 3, 2},  
+        {textStartX + 11, textY + 13, 3, 3}  
+    };
     for (auto& p : r1) SDL_RenderFillRect(renderer, &p);
     textStartX += 20;
     
@@ -1606,11 +1623,15 @@ void Renderer::renderCooldowns(float qCooldown, float wCooldown, float eCooldown
             };
             for (auto& r : e) SDL_RenderFillRect(renderer, &r);
         } else if (key[0] == 'R') {
-  
+            
             SDL_Rect rr[] = {
-                {labelX, labelY, 2, 12}, {labelX, labelY, 12, 2},
-                {labelX + 10, labelY, 2, 6}, {labelX, labelY + 5, 12, 2},
-                {labelX + 10, labelY + 5, 2, 7}
+                {labelX, labelY, 2, 12},          
+                {labelX, labelY, 12, 2},          
+                {labelX + 10, labelY, 2, 6},      
+                {labelX, labelY + 5, 12, 2},     
+                {labelX + 5, labelY + 6, 2, 2},  
+                {labelX + 7, labelY + 8, 2, 2},   
+                {labelX + 9, labelY + 10, 2, 2}   
             };
             for (auto& r : rr) SDL_RenderFillRect(renderer, &r);
         }
