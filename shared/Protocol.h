@@ -54,6 +54,7 @@ namespace Protocol {
         float windWallRadius;
         uint32_t health;
         uint32_t maxHealth;
+        uint32_t kills;
     };
 
     struct EnemyState {

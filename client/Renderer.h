@@ -59,8 +59,9 @@ public:
     void renderDashBurst(float originX, float originY, float rotationRad, float length);
     void renderShockwave(float centerX, float centerY, float progress, float maxRadius);
     void renderRTornado(float x, float y);
-    void renderUI(uint32_t playerId, int playerCount, int fps);
+    void renderUI(uint32_t playerId, int playerCount, int fps, int kills);
     void renderGameOver();
+    void renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown);
     
     int getWidth() const { return width; }
     int getHeight() const { return height; }
@@ -69,6 +70,7 @@ private:
     void setColor(const SDL_Color& color);
     void renderCircle(int centerX, int centerY, int radius);
     void renderText(const char* text, int x, int y, int size = 20);
+    void drawDigit(int x, int y, int digit);
     
     // Decoration rendering helpers
     void renderCabin(int worldX, int worldY);

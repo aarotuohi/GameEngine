@@ -3,12 +3,13 @@
 #include <iostream>
 #include <thread>
 #include <cmath>
+#include <algorithm>
 
 GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
-    isGameOver(false), shouldRestart(false) {
+    isGameOver(false), shouldRestart(false), localKills(0) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -43,35 +44,71 @@ bool GameClient::connect(const std::string& serverHost) {
 void GameClient::updateLocalPlayer(float dt) {
     // Check for ability key presses
     if (inputHandler->isQPressed()) {
-        std::cout << "Q ability used (Steel Tempest)\n";
-        // Send Q ability to server, DIRECTION NEEDS TO FIXED!!!!
-        float dirX = std::cos(localRotation);
-        float dirY = std::sin(localRotation);
-        network->sendAbilityUse(1, dirX, dirY); 
-        // Trigger local sword swing visual briefly
-        lastQSwingTime = std::chrono::steady_clock::now();
-        inputHandler->clearAbilityInputs();
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceLastQ = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastQUseTime).count();
+        
+        if (timeSinceLastQ >= Config::Q_COOLDOWN_MS || lastQUseTime.time_since_epoch().count() == 0) {
+            std::cout << "Q ability used (Steel Tempest)\n";
+            
+            float dirX = std::cos(localRotation);
+            float dirY = std::sin(localRotation);
+            network->sendAbilityUse(1, dirX, dirY); 
+           
+            lastQSwingTime = now;
+            lastQUseTime = now;
+            inputHandler->clearAbilityInputs();
+        } else {
+            std::cout << "Q on cooldown! " << (Config::Q_COOLDOWN_MS - timeSinceLastQ) / 1000.0f << "s remaining\n";
+            inputHandler->clearAbilityInputs();
+        }
     }
     if (inputHandler->isWPressed()) {
-        std::cout << "W ability used (Wind Wall)\n";
-        // Send W ability to server (Wind Wall doesn't need direction)
-        network->sendAbilityUse(2, 0.0f, 0.0f);
-        inputHandler->clearAbilityInputs();
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceLastW = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastWUseTime).count();
+        
+        if (timeSinceLastW >= Config::W_COOLDOWN_MS || lastWUseTime.time_since_epoch().count() == 0) {
+            std::cout << "W ability used (Wind Wall)\n";
+           
+            network->sendAbilityUse(2, 0.0f, 0.0f);
+            lastWUseTime = now;
+            inputHandler->clearAbilityInputs();
+        } else {
+            std::cout << "W on cooldown! " << (Config::W_COOLDOWN_MS - timeSinceLastW) / 1000.0f << "s remaining\n";
+            inputHandler->clearAbilityInputs();
+        }
     }
     if (inputHandler->isEPressed()) {
-        std::cout << "E ability used (Shockwave)\n";
-        float dirX = std::cos(localRotation);
-        float dirY = std::sin(localRotation);
-        network->sendAbilityUse(3, dirX, dirY);
-        lastEShockwaveTime = std::chrono::steady_clock::now();
-        inputHandler->clearAbilityInputs();
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceLastE = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEUseTime).count();
+        
+        if (timeSinceLastE >= Config::E_COOLDOWN_MS || lastEUseTime.time_since_epoch().count() == 0) {
+            std::cout << "E ability used (Shockwave)\n";
+            float dirX = std::cos(localRotation);
+            float dirY = std::sin(localRotation);
+            network->sendAbilityUse(3, dirX, dirY);
+            lastEShockwaveTime = now;
+            lastEUseTime = now;
+            inputHandler->clearAbilityInputs();
+        } else {
+            std::cout << "E on cooldown! " << (Config::E_COOLDOWN_MS - timeSinceLastE) / 1000.0f << "s remaining\n";
+            inputHandler->clearAbilityInputs();
+        }
     }
     if (inputHandler->isRPressed()) {
-        std::cout << "R ability used (Circulating Tornadoes)\n";
+        auto now = std::chrono::steady_clock::now();
+        auto timeSinceLastR = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRUseTime).count();
         
-        network->sendAbilityUse(4, 0.0f, 0.0f);
-        lastRTime = std::chrono::steady_clock::now();
-        inputHandler->clearAbilityInputs();
+        if (timeSinceLastR >= Config::R_COOLDOWN_MS || lastRUseTime.time_since_epoch().count() == 0) {
+            std::cout << "R ability used (Circulating Tornadoes)\n";
+            
+            network->sendAbilityUse(4, 0.0f, 0.0f);
+            lastRTime = now;
+            lastRUseTime = now;
+            inputHandler->clearAbilityInputs();
+        } else {
+            std::cout << "R on cooldown! " << (Config::R_COOLDOWN_MS - timeSinceLastR) / 1000.0f << "s remaining\n";
+            inputHandler->clearAbilityInputs();
+        }
     }
     
     // Right-click movement system
@@ -161,6 +198,11 @@ void GameClient::render() {
     auto rTornadoes = network->getRTornadoes();
     uint32_t myId = network->getPlayerId();
     
+    auto myPlayerIt = players.find(myId);
+    if (myPlayerIt != players.end()) {
+        localKills = myPlayerIt->second->kills;
+    }
+    
 
     for (const auto& [enemyId, enemy] : enemies) {
         renderer->renderEnemy(*enemy);
@@ -226,7 +268,40 @@ void GameClient::render() {
     }
     
     // Render UI
-    renderer->renderUI(myId, static_cast<int>(players.size()), fps);
+    renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills);
+    
+   
+    auto now = std::chrono::steady_clock::now();
+    
+    float qCooldown = 0.0f;
+    if (lastQUseTime.time_since_epoch().count() > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastQUseTime).count();
+        float remaining = (Config::Q_COOLDOWN_MS - elapsed) / 1000.0f;
+        qCooldown = (std::max)(0.0f, remaining);
+    }
+    
+    float wCooldown = 0.0f;
+    if (lastWUseTime.time_since_epoch().count() > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastWUseTime).count();
+        float remaining = (Config::W_COOLDOWN_MS - elapsed) / 1000.0f;
+        wCooldown = (std::max)(0.0f, remaining);
+    }
+    
+    float eCooldown = 0.0f;
+    if (lastEUseTime.time_since_epoch().count() > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEUseTime).count();
+        float remaining = (Config::E_COOLDOWN_MS - elapsed) / 1000.0f;
+        eCooldown = (std::max)(0.0f, remaining);
+    }
+    
+    float rCooldown = 0.0f;
+    if (lastRUseTime.time_since_epoch().count() > 0) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRUseTime).count();
+        float remaining = (Config::R_COOLDOWN_MS - elapsed) / 1000.0f;
+        rCooldown = (std::max)(0.0f, remaining);
+    }
+    
+    renderer->renderCooldowns(qCooldown, wCooldown, eCooldown, rCooldown);
     
  
     if (isGameOver) {
@@ -374,6 +449,7 @@ bool GameClient::isPointInRect(int x, int y, int rectX, int rectY, int rectW, in
 void GameClient::restartGame() {
     isGameOver = false;
     shouldRestart = false;
+    localKills = 0;
     
     // Reset local player position
     localX = Config::WORLD_WIDTH / 2.0f;

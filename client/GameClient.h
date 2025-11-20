@@ -39,8 +39,16 @@ private:
 
     std::chrono::steady_clock::time_point lastRTime;
     
+    
+    std::chrono::steady_clock::time_point lastQUseTime;
+    std::chrono::steady_clock::time_point lastWUseTime;
+    std::chrono::steady_clock::time_point lastEUseTime;
+    std::chrono::steady_clock::time_point lastRUseTime;
+    
     bool isGameOver;
     bool shouldRestart;
+    
+    int localKills;
 
 public:
     GameClient(const std::string& playerName = "Player");
