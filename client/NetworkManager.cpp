@@ -6,7 +6,7 @@
 
 NetworkManager::NetworkManager(const std::string& name)
     : playerName(name), playerId(0), tcpSocket(INVALID_SOCKET), 
-      udpSocket(INVALID_SOCKET), running(false) {
+      udpSocket(INVALID_SOCKET), running(false), currentWave(1) {
 }
 
 NetworkManager::~NetworkManager() {
@@ -178,13 +178,16 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->health = state.health;
                 it->second->isAlive = state.isAlive;
                 it->second->targetPlayerId = state.targetPlayerId;
+                it->second->isBoss = state.isBoss;
+                it->second->size = state.size;
             } else {
                 
-                auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId);
+                auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId, state.isBoss);
                 enemy->vx = state.vx;
                 enemy->vy = state.vy;
                 enemy->health = state.health;
                 enemy->isAlive = state.isAlive;
+                enemy->size = state.size;
                 enemies[state.id] = enemy;
             }
         }
@@ -226,6 +229,8 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
             rTornadoes[state.id] = tornado;
         }
     }
+    
+    currentWave = broadcast.currentWave;
 }
 
 void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {

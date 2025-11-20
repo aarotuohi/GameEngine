@@ -33,6 +33,8 @@ private:
     mutable std::mutex projectilesMutex;
     mutable std::mutex rTornadoesMutex;
     
+    int currentWave;
+    
     void receiveTcpMessages();
     void receiveUdpMessages();
     void processTcpMessage(const Protocol::TCPMessage& message);
@@ -55,6 +57,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Enemy>> getEnemies();
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<Protocol::RTornadoState>> getRTornadoes();
+    int getCurrentWave() const { return currentWave; }
 };
 
 #endif 

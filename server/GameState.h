@@ -35,9 +35,13 @@ private:
     uint32_t taggedPlayerId;
     mutable std::recursive_mutex mutex; 
     bool running;
+    
+    int currentWave;
+    int enemiesKilledThisWave;
+    int enemiesPerWave;
+    bool waveActive;
 
-
-    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0);
+    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0, bool isBoss = false);
 
 public:
     GameState();
@@ -82,6 +86,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Enemy>> getAllEnemies();
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getAllProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<RTornado>> getAllRTornadoes();
+    int getCurrentWave() const { return currentWave; }
     
     // Control
     void setRunning(bool run) { running = run; }

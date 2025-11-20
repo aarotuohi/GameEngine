@@ -4,10 +4,13 @@
 #include <cmath>
 
 GameState::GameState()
-    : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true) {
+    : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true),
+      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true) {
 
-    // Spawn only one enemy for testing
-    spawnEnemy(300.0f, 250.0f);
+
+    for (int i = 0; i < 3; i++) {
+        spawnEnemy(300.0f + i * 100.0f, 250.0f);
+    }
 }
 
 GameState::~GameState() {
@@ -292,29 +295,55 @@ void GameState::update(float dt) {
             if (enemy->lastDamagedBy != 0) {
                 auto killer = players.find(enemy->lastDamagedBy);
                 if (killer != players.end()) {
-                    killer->second->kills++;
-                    std::cout << "Player " << enemy->lastDamagedBy << " killed Enemy " << enemyId 
-                              << "! Total kills: " << killer->second->kills << "\n";
+                    killer->second->kills += enemy->killValue;
+                    enemiesKilledThisWave++;
+                    std::cout << "Player " << enemy->lastDamagedBy << " killed " 
+                              << (enemy->isBoss ? "BOSS" : "Enemy") << " " << enemyId 
+                              << " (+" << enemy->killValue << " kills)! Total kills: " 
+                              << killer->second->kills << "\n";
                 }
             }
         }
     }
     
     for (uint32_t enemyId : deadEnemies) {
-        auto it = enemies.find(enemyId);
-        if (it != enemies.end()) {
-            std::cout << "Enemy " << enemyId << " died! Respawning new enemy...\n";
-            enemies.erase(it);
+        enemies.erase(enemyId);
+    }
+    
+    if (waveActive && enemies.empty()) {
+        waveActive = false;
+        currentWave++;
+        enemiesKilledThisWave = 0;
+        
+        std::cout << "\n=== WAVE " << currentWave << " STARTING ===\n";
+        
+      
+        bool isBossWave = (currentWave % 5 == 0);
+        
+        if (isBossWave) {
+            std::cout << "*** BOSS WAVE! ***\n";
+           
+            spawnEnemyInternal(Config::WORLD_WIDTH / 2.0f, Config::WORLD_HEIGHT / 2.0f, 0, true);
+        } else {
+            
+            enemiesPerWave = 3 + (currentWave - 1);
+            if (enemiesPerWave > 15) enemiesPerWave = 15;
+            
+            std::cout << "Spawning " << enemiesPerWave << " enemies\n";
             
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> distX(50, Config::WORLD_WIDTH - 50);
             std::uniform_int_distribution<> distY(50, Config::WORLD_HEIGHT - 50);
             
-            float spawnX = static_cast<float>(distX(gen));
-            float spawnY = static_cast<float>(distY(gen));
-            spawnEnemyInternal(spawnX, spawnY); 
+            for (int i = 0; i < enemiesPerWave; i++) {
+                float spawnX = static_cast<float>(distX(gen));
+                float spawnY = static_cast<float>(distY(gen));
+                spawnEnemyInternal(spawnX, spawnY);
+            }
         }
+        
+        waveActive = true;
     }
     
     // Check player collisions 
@@ -402,15 +431,19 @@ std::unordered_map<uint32_t, std::shared_ptr<Projectile>> GameState::getAllProje
 
 uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    return spawnEnemyInternal(x, y, targetPlayerId);
+    return spawnEnemyInternal(x, y, targetPlayerId, false);
 }
 
-uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId) {
+uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId, bool isBoss) {
     
     uint32_t enemyId = nextEnemyId++;
-    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId);
+    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss);
     enemies[enemyId] = enemy;
-    std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ")\n";
+    if (isBoss) {
+        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with 500 HP!\n";
+    } else {
+        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ")\n";
+    }
     return enemyId;
 }
 

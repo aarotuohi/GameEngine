@@ -131,8 +131,10 @@ public:
     std::chrono::steady_clock::time_point lastHitTime;
     std::chrono::steady_clock::time_point spawnTime;
     std::chrono::steady_clock::time_point lastShootTime;
+    bool isBoss;
+    int killValue;
     
-    Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer = 0);
+    Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer = 0, bool boss = false);
     
     void takeDamage(int damage, uint32_t damagerId = 0);
     void setTarget(uint32_t playerId);

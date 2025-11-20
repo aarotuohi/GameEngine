@@ -559,6 +559,8 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int screenX, screenY;
     worldToScreen(enemy.x, enemy.y, screenX, screenY);
     
+    
+    float sizeMultiplier = enemy.isBoss ? 2.0f : 1.0f;
 
     SDL_Color bodyOrange = {255, 120, 50, 255};    
     SDL_Color bodyDark = {200, 80, 30, 255};         
@@ -568,11 +570,23 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Color accentYellow = {255, 200, 80, 255};    
     SDL_Color healthBarBg = {60, 60, 60, 255};
     SDL_Color healthBarRed = {200, 50, 50, 255};
+    SDL_Color bossGlow = {255, 50, 255, 180}; 
     
-    int scale = static_cast<int>(cameraScale);
+    int scale = static_cast<int>(cameraScale * sizeMultiplier);
     int centerX = screenX;
     int centerY = screenY;
     
+
+    if (enemy.isBoss) {
+        setColor(bossGlow);
+        int glowRadius = static_cast<int>(18 * cameraScale * sizeMultiplier);
+        for (int y = -glowRadius; y <= glowRadius; y++) {
+            int width = static_cast<int>(std::sqrt(glowRadius * glowRadius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                centerX - width, centerY + y,
+                centerX + width, centerY + y);
+        }
+    }
    
     setColor(wingRed);
    
@@ -648,10 +662,10 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_RenderFillRect(renderer, &dot2);
     
 
-    int barWidth = static_cast<int>(40 * cameraScale);
+    int barWidth = static_cast<int>(40 * cameraScale * sizeMultiplier);
     int barHeight = static_cast<int>(5 * cameraScale);
     int barX = centerX - barWidth / 2;
-    int barY = centerY - static_cast<int>(18 * cameraScale);
+    int barY = centerY - static_cast<int>(18 * cameraScale * sizeMultiplier);
     
     SDL_Rect bgRect = {barX, barY, barWidth, barHeight};
     setColor(healthBarBg);
@@ -663,7 +677,7 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int fgWidth = static_cast<int>(barWidth * healthPercent);
     if (fgWidth > 0) {
         SDL_Rect fgRect = {barX, barY, fgWidth, barHeight};
-        setColor(healthBarRed);
+        setColor(enemy.isBoss ? bossGlow : healthBarRed);
         SDL_RenderFillRect(renderer, &fgRect);
     }
 }
@@ -1013,7 +1027,7 @@ void Renderer::renderText(const char* text, int x, int y, int size) {
     SDL_RenderDrawRect(renderer, &rect);
 }
 
-void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills) {
+void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills, int wave) {
     setColor(textColor);
     
     // Player ID indicator 
@@ -1025,8 +1039,73 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills) 
     SDL_RenderDrawRect(renderer, &countRect);
     
  
-    SDL_Color killBg = {40, 40, 40, 220};
+    SDL_Color waveBg = {40, 40, 60, 220};
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    setColor(waveBg);
+    SDL_Rect waveBgRect = {width - 160, 10, 150, 40};
+    SDL_RenderFillRect(renderer, &waveBgRect);
+    
+    SDL_Color waveBorder = {100, 150, 200, 255};
+    setColor(waveBorder);
+    SDL_RenderDrawRect(renderer, &waveBgRect);
+    SDL_Rect waveBorderInner = {waveBgRect.x + 1, waveBgRect.y + 1, waveBgRect.w - 2, waveBgRect.h - 2};
+    SDL_RenderDrawRect(renderer, &waveBorderInner);
+    
+ 
+    SDL_Color waveTextColor = {150, 200, 255, 255};
+    setColor(waveTextColor);
+    int waveTextX = width - 145;
+    int waveTextY = 20;
+    int waveLetterSize = 2;
+    
+   
+    SDL_Rect w[] = {{waveTextX, waveTextY, waveLetterSize, 16}, 
+                    {waveTextX + 5, waveTextY + 10, waveLetterSize, 6}, 
+                    {waveTextX + 10, waveTextY, waveLetterSize, 16}};
+    for (auto& r : w) SDL_RenderFillRect(renderer, &r);
+    waveTextX += 16;
+    
+ 
+    SDL_Rect a[] = {{waveTextX, waveTextY, 10, waveLetterSize}, 
+                    {waveTextX, waveTextY, waveLetterSize, 16}, 
+                    {waveTextX + 8, waveTextY, waveLetterSize, 16}, 
+                    {waveTextX, waveTextY + 7, 10, waveLetterSize}};
+    for (auto& r : a) SDL_RenderFillRect(renderer, &r);
+    waveTextX += 14;
+    
+
+    SDL_Rect v[] = {{waveTextX, waveTextY, waveLetterSize, 12}, 
+                    {waveTextX + 4, waveTextY + 12, waveLetterSize, 4}, 
+                    {waveTextX + 8, waveTextY, waveLetterSize, 12}};
+    for (auto& r : v) SDL_RenderFillRect(renderer, &r);
+    waveTextX += 14;
+    
+
+    SDL_Rect e[] = {{waveTextX, waveTextY, waveLetterSize, 16}, 
+                    {waveTextX, waveTextY, 10, waveLetterSize}, 
+                    {waveTextX, waveTextY + 7, 8, waveLetterSize}, 
+                    {waveTextX, waveTextY + 14, 10, waveLetterSize}};
+    for (auto& r : e) SDL_RenderFillRect(renderer, &r);
+    waveTextX += 14;
+    
+
+    SDL_Rect waveColon[] = {{waveTextX, waveTextY + 4, waveLetterSize, waveLetterSize}, 
+                             {waveTextX, waveTextY + 10, waveLetterSize, waveLetterSize}};
+    for (auto& r : waveColon) SDL_RenderFillRect(renderer, &r);
+    waveTextX += 6;
+    
+
+    SDL_Color waveNumberColor = {255, 255, 255, 255};
+    setColor(waveNumberColor);
+    if (wave >= 10) {
+        drawDigit(waveTextX, waveTextY, wave / 10);
+        waveTextX += 14;
+        drawDigit(waveTextX, waveTextY, wave % 10);
+    } else {
+        drawDigit(waveTextX, waveTextY, wave);
+    }
+ 
+    SDL_Color killBg = {40, 40, 40, 220};
     setColor(killBg);
     SDL_Rect killBgRect = {width/2 - 100, 10, 200, 40};
     SDL_RenderFillRect(renderer, &killBgRect);
@@ -1106,6 +1185,7 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills) 
         "Right-click: Move",
         "Mouse: Aim",
         "ESC: Quit"
+        "R: Restarts"
     };
     
     int yOffset = height - 70;

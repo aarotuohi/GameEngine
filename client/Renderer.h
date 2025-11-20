@@ -59,7 +59,7 @@ public:
     void renderDashBurst(float originX, float originY, float rotationRad, float length);
     void renderShockwave(float centerX, float centerY, float progress, float maxRadius);
     void renderRTornado(float x, float y);
-    void renderUI(uint32_t playerId, int playerCount, int fps, int kills);
+    void renderUI(uint32_t playerId, int playerCount, int fps, int kills, int wave);
     void renderGameOver();
     void renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown);
     
