@@ -315,6 +315,10 @@ void GameState::update(float dt) {
         currentWave++;
         enemiesKilledThisWave = 0;
         
+        for (auto& [playerId, player] : players) {
+            player->health = player->maxHealth;
+        }
+        
         std::cout << "\n=== WAVE " << currentWave << " STARTING ===\n";
         
       
