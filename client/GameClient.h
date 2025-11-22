@@ -49,6 +49,7 @@ private:
     bool shouldRestart;
     
     int localKills;
+    int currentWave;
 
 public:
     GameClient(const std::string& playerName = "Player");

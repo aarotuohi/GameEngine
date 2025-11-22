@@ -200,6 +200,12 @@ namespace Protocol {
                          reinterpret_cast<const uint8_t*>(&netTornado) + sizeof(RTornadoState));
         }
         
+    
+        uint32_t netWave = hton(state.currentWave);
+        buffer.insert(buffer.end(),
+                     reinterpret_cast<const uint8_t*>(&netWave),
+                     reinterpret_cast<const uint8_t*>(&netWave) + sizeof(uint32_t));
+        
         return buffer;
     }
 
@@ -292,6 +298,15 @@ namespace Protocol {
             }
         } else {
             state.numRTornadoes = 0;
+        }
+        
+   
+        if (length >= expectedSize + sizeof(uint32_t)) {
+            std::memcpy(&state.currentWave, ptr, sizeof(uint32_t));
+            state.currentWave = ntoh(state.currentWave);
+            ptr += sizeof(uint32_t);
+        } else {
+            state.currentWave = 1;
         }
         
         return true;

@@ -267,6 +267,8 @@ void NetworkHandler::broadcastUdpState() {
         state.health = enemy->health;
         state.isAlive = enemy->isAlive;
         state.targetPlayerId = enemy->targetPlayerId;
+        state.isBoss = enemy->isBoss;
+        state.size = enemy->size;
         broadcast.enemies.push_back(state);
     }
     
@@ -316,6 +318,9 @@ void NetworkHandler::broadcastUdpState() {
             
         }
     }
+    
+    
+    broadcast.currentWave = gameState.getCurrentWave();
     
     auto data = Protocol::encodeStateBroadcast(broadcast);
     auto addresses = playerManager.getUdpAddresses();

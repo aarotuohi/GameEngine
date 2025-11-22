@@ -30,14 +30,14 @@ namespace Config {
     constexpr float Q_SWORD_ARC_DEGREES = 90.0f; 
     constexpr float Q_SWORD_RANGE = 80.0f;       
     constexpr int Q_SWORD_DAMAGE = 20;           
-    constexpr int Q_COOLDOWN_MS = 4000;          
+    constexpr int Q_COOLDOWN_MS = 2000;          
 
-    constexpr int W_COOLDOWN_MS = 18000;         
+    constexpr int W_COOLDOWN_MS = 9000;         
 
     constexpr float E_SHOCKWAVE_RADIUS = 150.0f;   
     constexpr int E_SHOCKWAVE_DAMAGE = 20;        
     constexpr int E_SHOCKWAVE_VFX_MS = 500;         
-    constexpr int E_COOLDOWN_MS = 12000;              
+    constexpr int E_COOLDOWN_MS = 6000;              
     
 
     constexpr int R_DURATION_MS = 10000;        
@@ -46,7 +46,7 @@ namespace Config {
     constexpr float R_ROTATION_SPEED = 2.0f;     
     constexpr int R_TORNADO_DAMAGE = 25;         
     constexpr int R_TORNADO_SIZE = 30;          
-    constexpr int R_COOLDOWN_MS = 40000;                   
+    constexpr int R_COOLDOWN_MS = 20000;                   
     
     constexpr int ENEMY_SHOOT_INTERVAL_MS = 2000; 
     constexpr float ENEMY_SHOOT_RANGE = 300.0f;    

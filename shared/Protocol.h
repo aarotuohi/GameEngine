@@ -66,6 +66,8 @@ namespace Protocol {
         uint32_t health;
         bool isAlive;
         uint32_t targetPlayerId;
+        bool isBoss;
+        float size;
     };
 
     struct ProjectileState {
@@ -95,6 +97,7 @@ namespace Protocol {
         std::vector<ProjectileState> projectiles;
         uint32_t numRTornadoes;
         std::vector<RTornadoState> rTornadoes;
+        uint32_t currentWave;
     };
 
     // Encoding functions

@@ -9,7 +9,7 @@ GameClient::GameClient(const std::string& playerName)
     : localX(Config::WORLD_WIDTH / 2.0f), localY(Config::WORLD_HEIGHT / 2.0f),
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
-    isGameOver(false), shouldRestart(false), localKills(0) {
+    isGameOver(false), shouldRestart(false), localKills(0), currentWave(1) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -203,6 +203,8 @@ void GameClient::render() {
         localKills = myPlayerIt->second->kills;
     }
     
+    currentWave = network->getCurrentWave();
+    
 
     for (const auto& [enemyId, enemy] : enemies) {
         renderer->renderEnemy(*enemy);
@@ -263,12 +265,12 @@ void GameClient::render() {
     }
 
     for (const auto& [tornadoId, tornado] : rTornadoes) {
-        
+       
         renderer->renderRTornado(tornado->x, tornado->y);
     }
     
     // Render UI
-    renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills);
+    renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills, currentWave);
     
    
     auto now = std::chrono::steady_clock::now();
