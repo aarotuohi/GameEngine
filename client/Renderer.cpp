@@ -1027,7 +1027,7 @@ void Renderer::renderText(const char* text, int x, int y, int size) {
     SDL_RenderDrawRect(renderer, &rect);
 }
 
-void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills, int wave) {
+void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills, int wave, int level, int attackDamage) {
     setColor(textColor);
     
     // Player ID indicator 
@@ -1038,6 +1038,85 @@ void Renderer::renderUI(uint32_t playerId, int playerCount, int fps, int kills, 
     SDL_Rect countRect = {10, 40, 150, 25};
     SDL_RenderDrawRect(renderer, &countRect);
     
+    
+    SDL_Color levelBg = {60, 40, 60, 220};
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    setColor(levelBg);
+    SDL_Rect levelBgRect = {10, 70, 150, 40};
+    SDL_RenderFillRect(renderer, &levelBgRect);
+    
+    SDL_Color levelBorder = {150, 100, 200, 255};
+    setColor(levelBorder);
+    SDL_RenderDrawRect(renderer, &levelBgRect);
+    
+   
+    SDL_Color levelTextColor = {200, 150, 255, 255};
+    setColor(levelTextColor);
+    int levelTextX = 20;
+    int levelTextY = 80;
+    int letterSize = 2;
+    
+    
+    SDL_Rect lvlL[] = {{levelTextX, levelTextY, letterSize, 12}, {levelTextX, levelTextY+10, 8, letterSize}};
+    for (auto& r : lvlL) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 10;
+    
+    SDL_Rect lvlV[] = {{levelTextX, levelTextY, letterSize, 10}, {levelTextX+3, levelTextY+10, letterSize, 2}, {levelTextX+6, levelTextY, letterSize, 10}};
+    for (auto& r : lvlV) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 10;
+    
+    SDL_Rect lvlL2[] = {{levelTextX, levelTextY, letterSize, 12}, {levelTextX, levelTextY+10, 8, letterSize}};
+    for (auto& r : lvlL2) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 10;
+    
+    
+    SDL_Rect lvlColon[] = {{levelTextX, levelTextY+3, letterSize, letterSize}, {levelTextX, levelTextY+7, letterSize, letterSize}};
+    for (auto& r : lvlColon) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 5;
+    
+   
+    SDL_Color lvlNumberColor = {255, 255, 255, 255};
+    setColor(lvlNumberColor);
+    if (level >= 10) {
+        drawDigit(levelTextX, levelTextY-2, level / 10);
+        levelTextX += 10;
+        drawDigit(levelTextX, levelTextY-2, level % 10);
+    } else {
+        drawDigit(levelTextX, levelTextY-2, level);
+    }
+    levelTextX += 15;
+    
+    
+    setColor(levelTextColor);
+    SDL_Rect adA[] = {{levelTextX, levelTextY, 8, letterSize}, {levelTextX, levelTextY, letterSize, 12}, {levelTextX+6, levelTextY, letterSize, 12}, {levelTextX, levelTextY+5, 8, letterSize}};
+    for (auto& r : adA) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 10;
+    
+    SDL_Rect adD[] = {{levelTextX, levelTextY, letterSize, 12}, {levelTextX, levelTextY, 6, letterSize}, {levelTextX+4, levelTextY, letterSize, 10}, {levelTextX, levelTextY+10, 6, letterSize}};
+    for (auto& r : adD) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 8;
+    
+  
+    SDL_Rect adColon[] = {{levelTextX, levelTextY+3, letterSize, letterSize}, {levelTextX, levelTextY+7, letterSize, letterSize}};
+    for (auto& r : adColon) SDL_RenderFillRect(renderer, &r);
+    levelTextX += 5;
+    
+    
+    SDL_Color adNumberColor = {255, 255, 255, 255};
+    setColor(adNumberColor);
+    if (attackDamage >= 100) {
+        drawDigit(levelTextX, levelTextY-2, attackDamage / 100);
+        levelTextX += 8;
+        drawDigit(levelTextX, levelTextY-2, (attackDamage / 10) % 10);
+        levelTextX += 8;
+        drawDigit(levelTextX, levelTextY-2, attackDamage % 10);
+    } else if (attackDamage >= 10) {
+        drawDigit(levelTextX, levelTextY-2, attackDamage / 10);
+        levelTextX += 8;
+        drawDigit(levelTextX, levelTextY-2, attackDamage % 10);
+    } else {
+        drawDigit(levelTextX, levelTextY-2, attackDamage);
+    }
  
     SDL_Color waveBg = {40, 40, 60, 220};
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);

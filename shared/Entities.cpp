@@ -9,6 +9,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       vx(0.0f), vy(0.0f), size(Config::PLAYER_SIZE), speed(Config::PLAYER_SPEED),
       isTagged(false), score(0), lastUpdate(std::chrono::steady_clock::now()),
       health(300), maxHealth(300), rotation(0.0f), isAlive(true), kills(0),
+      level(1), attackDamage(20),
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
       hasRTornadoes(false), rTornadoAngle(0.0f),
