@@ -145,6 +145,8 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->health = state.health;
                 it->second->maxHealth = state.maxHealth;
                 it->second->kills = state.kills;
+                it->second->level = state.level;
+                it->second->attackDamage = state.attackDamage;
             } else {
                 // Add new player
                 auto player = std::make_shared<Player>(state.id, state.x, state.y);
@@ -154,6 +156,8 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 player->health = state.health;
                 player->maxHealth = state.maxHealth;
                 player->kills = state.kills;
+                player->level = state.level;
+                player->attackDamage = state.attackDamage;
                 players[state.id] = player;
             }
         }

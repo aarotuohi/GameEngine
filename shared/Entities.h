@@ -39,6 +39,8 @@ public:
     float rotation;      
     bool isAlive;
     int kills;
+    int level;
+    int attackDamage;
     SamuraiAbility activeAbility;
     std::chrono::steady_clock::time_point lastQTime;
     std::chrono::steady_clock::time_point lastWTime;

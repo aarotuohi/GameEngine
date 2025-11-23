@@ -191,7 +191,7 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
 
                     bool isTornado = (player->qStacks >= 2);
                     if (isTornado) {
-                        const int tornadoDamage = 40;
+                        const int tornadoDamage = player->attackDamage * 2;  
                         gameState.createQProjectile(ability.playerId, player->x, player->y,
                                                     dirX, dirY, true, tornadoDamage);
                         player->qStacks = 0;
@@ -202,7 +202,7 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                             dirX, dirY,
                             Config::Q_SWORD_ARC_DEGREES,
                             Config::Q_SWORD_RANGE,
-                            Config::Q_SWORD_DAMAGE
+                            player->attackDamage
                         );
                     }
 
@@ -221,7 +221,7 @@ void NetworkHandler::processUdpMessage(const uint8_t* data, size_t length, const
                     player->useE();
                     
                     gameState.processEShockwave(ability.playerId, player->x, player->y, 
-                                                Config::E_SHOCKWAVE_RADIUS, Config::E_SHOCKWAVE_DAMAGE);
+                                                Config::E_SHOCKWAVE_RADIUS, player->attackDamage);
                     std::cout << "Player " << ability.playerId << " cast E shockwave at (" 
                               << player->x << ", " << player->y << ")\n";
                 }

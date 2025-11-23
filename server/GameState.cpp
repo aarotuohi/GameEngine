@@ -315,8 +315,14 @@ void GameState::update(float dt) {
         currentWave++;
         enemiesKilledThisWave = 0;
         
+        
         for (auto& [playerId, player] : players) {
-            player->health = player->maxHealth;
+            player->level++;
+            player->maxHealth += 50;  
+            player->health = player->maxHealth;  
+            player->attackDamage += 5;  
+            std::cout << "Player " << player->name << " leveled up to " << player->level 
+                      << " (HP: " << player->maxHealth << ", AD: " << player->attackDamage << ")\n";
         }
         
         std::cout << "\n=== WAVE " << currentWave << " STARTING ===\n";
@@ -417,6 +423,8 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.health = player->health;
         state.maxHealth = player->maxHealth;
         state.kills = player->kills;
+        state.level = player->level;
+        state.attackDamage = player->attackDamage;
         states.push_back(state);
     }
     
@@ -645,9 +653,15 @@ void GameState::updateRTornadoes(float dt) {
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    enemy->takeDamage(Config::R_TORNADO_DAMAGE);
+                    
+                    int tornadoDamage = Config::R_TORNADO_DAMAGE;
+                    auto ownerIt = players.find(tornado->ownerId);
+                    if (ownerIt != players.end()) {
+                        tornadoDamage = ownerIt->second->attackDamage;
+                    }
+                    enemy->takeDamage(tornadoDamage);
                     tornado->lastHitTime = now;
-                    std::cout << "R tornado hit enemy " << enemyId << " for " << Config::R_TORNADO_DAMAGE << " damage\n";
+                    std::cout << "R tornado hit enemy " << enemyId << " for " << tornadoDamage << " damage\n";
                     break; 
                 }
             }

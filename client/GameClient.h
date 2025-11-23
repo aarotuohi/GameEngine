@@ -50,6 +50,8 @@ private:
     
     int localKills;
     int currentWave;
+    int localLevel;
+    int localAttackDamage;
 
 public:
     GameClient(const std::string& playerName = "Player");
