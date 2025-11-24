@@ -653,11 +653,11 @@ void GameState::updateRTornadoes(float dt) {
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    
+                    // R ability does 1.5x damage
                     int tornadoDamage = Config::R_TORNADO_DAMAGE;
                     auto ownerIt = players.find(tornado->ownerId);
                     if (ownerIt != players.end()) {
-                        tornadoDamage = ownerIt->second->attackDamage;
+                        tornadoDamage = static_cast<int>(ownerIt->second->attackDamage * 1.5f);
                     }
                     enemy->takeDamage(tornadoDamage);
                     tornado->lastHitTime = now;
