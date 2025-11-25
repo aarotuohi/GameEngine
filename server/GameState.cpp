@@ -450,11 +450,17 @@ uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId
     
     uint32_t enemyId = nextEnemyId++;
     auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss);
+    
+  
+    float hpMultiplier = 1.0f + (currentWave - 1) * 0.1f;
+    enemy->health = static_cast<int>(enemy->health * hpMultiplier);
+    enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
+    
     enemies[enemyId] = enemy;
     if (isBoss) {
-        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with 500 HP!\n";
+        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
     } else {
-        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ")\n";
+        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP\n";
     }
     return enemyId;
 }
@@ -572,11 +578,14 @@ void GameState::updateEnemyShooting(float dt) {
           
                 enemy->rotation = std::atan2(dirY, dirX);
                 
-         
+                
+                float damageMultiplier = 1.0f + (currentWave - 1) * 0.05f;
+                int scaledDamage = static_cast<int>(Config::ENEMY_BULLET_DAMAGE * damageMultiplier);
+                
                 uint32_t projId = nextProjectileId++;
                 auto projectile = std::make_shared<Projectile>(
                     projId, enemy->x, enemy->y, dirX, dirY, 
-                    enemyId, false, Config::ENEMY_BULLET_DAMAGE, true  
+                    enemyId, false, scaledDamage, true  
                 );
                 projectiles[projId] = projectile;
                 
@@ -653,7 +662,7 @@ void GameState::updateRTornadoes(float dt) {
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    // R ability does 1.5x damage
+                   
                     int tornadoDamage = Config::R_TORNADO_DAMAGE;
                     auto ownerIt = players.find(tornado->ownerId);
                     if (ownerIt != players.end()) {
