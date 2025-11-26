@@ -184,6 +184,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->targetPlayerId = state.targetPlayerId;
                 it->second->isBoss = state.isBoss;
                 it->second->size = state.size;
+                it->second->isDragon = state.isDragon;
             } else {
                 
                 auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId, state.isBoss);
@@ -192,6 +193,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 enemy->health = state.health;
                 enemy->isAlive = state.isAlive;
                 enemy->size = state.size;
+                enemy->isDragon = state.isDragon;
                 enemies[state.id] = enemy;
             }
         }

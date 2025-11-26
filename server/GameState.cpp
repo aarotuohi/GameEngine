@@ -325,21 +325,22 @@ void GameState::update(float dt) {
                       << " (HP: " << player->maxHealth << ", AD: " << player->attackDamage << ")\n";
         }
         
-        std::cout << "\n=== WAVE " << currentWave << " STARTING ===\n";
         
       
         bool isBossWave = (currentWave % 5 == 0);
+        bool isDragonWave = (currentWave == 10);
         
-        if (isBossWave) {
+        if (isDragonWave) {
+            std::cout << "*** DRAGON RAID BOSS! ***\n";
+            spawnEnemyInternal(Config::WORLD_WIDTH / 2.0f, Config::WORLD_HEIGHT / 2.0f, 0, true, true);
+        } else if (isBossWave) {
             std::cout << "*** BOSS WAVE! ***\n";
-           
             spawnEnemyInternal(Config::WORLD_WIDTH / 2.0f, Config::WORLD_HEIGHT / 2.0f, 0, true);
         } else {
             
             enemiesPerWave = 3 + (currentWave - 1);
             if (enemiesPerWave > 15) enemiesPerWave = 15;
-            
-            std::cout << "Spawning " << enemiesPerWave << " enemies\n";
+    
             
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -446,18 +447,28 @@ uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
     return spawnEnemyInternal(x, y, targetPlayerId, false);
 }
 
-uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId, bool isBoss) {
+uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId, bool isBoss, bool isDragon) {
     
     uint32_t enemyId = nextEnemyId++;
-    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss);
+    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss || isDragon);
     
-  
+ 
+    if (isDragon) {
+        enemy->isDragon = true;
+        enemy->size = 120.0f;  
+        enemy->health = 2000;  
+        enemy->maxHealth = 2000;
+        enemy->killValue = 25;  
+    }
+    
     float hpMultiplier = 1.0f + (currentWave - 1) * 0.1f;
     enemy->health = static_cast<int>(enemy->health * hpMultiplier);
     enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
     
     enemies[enemyId] = enemy;
-    if (isBoss) {
+    if (isDragon) {
+        std::cout << "Spawned DRAGON RAID BOSS " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
+    } else if (isBoss) {
         std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
     } else {
         std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP\n";

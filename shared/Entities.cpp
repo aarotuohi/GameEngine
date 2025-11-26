@@ -271,7 +271,7 @@ bool Projectile::checkCollisionWithEnemy(const Enemy& enemy) const {
 Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer, bool boss)
     : id(enemyId), x(posX), y(posY), vx(0.0f), vy(0.0f), size(boss ? 80.0f : 40.0f),
       speed(Config::ENEMY_SPEED), health(boss ? 500 : 100), maxHealth(boss ? 500 : 100), isAlive(true), 
-      targetPlayerId(targetPlayer), lastDamagedBy(0), rotation(0.0f), isBoss(boss), killValue(boss ? 10 : 1) {
+      targetPlayerId(targetPlayer), lastDamagedBy(0), rotation(0.0f), isBoss(boss), killValue(boss ? 10 : 1), isDragon(false) {
     lastHitTime = std::chrono::steady_clock::now();
     spawnTime = std::chrono::steady_clock::now();
     lastShootTime = std::chrono::steady_clock::now();

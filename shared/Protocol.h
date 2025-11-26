@@ -70,6 +70,7 @@ namespace Protocol {
         uint32_t targetPlayerId;
         bool isBoss;
         float size;
+        bool isDragon;
     };
 
     struct ProjectileState {

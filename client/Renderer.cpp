@@ -559,8 +559,8 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int screenX, screenY;
     worldToScreen(enemy.x, enemy.y, screenX, screenY);
     
-    
-    float sizeMultiplier = enemy.isBoss ? 2.0f : 1.0f;
+   
+    float sizeMultiplier = enemy.isDragon ? 3.0f : (enemy.isBoss ? 2.0f : 1.0f);
 
     SDL_Color bodyOrange = {255, 120, 50, 255};    
     SDL_Color bodyDark = {200, 80, 30, 255};         
@@ -571,13 +571,23 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Color healthBarBg = {60, 60, 60, 255};
     SDL_Color healthBarRed = {200, 50, 50, 255};
     SDL_Color bossGlow = {255, 50, 255, 180}; 
+    SDL_Color dragonGlow = {255, 100, 0, 200};  
     
     int scale = static_cast<int>(cameraScale * sizeMultiplier);
     int centerX = screenX;
     int centerY = screenY;
     
-
-    if (enemy.isBoss) {
+   
+    if (enemy.isDragon) {
+        setColor(dragonGlow);
+        int glowRadius = static_cast<int>(22 * cameraScale * sizeMultiplier);
+        for (int y = -glowRadius; y <= glowRadius; y++) {
+            int width = static_cast<int>(std::sqrt(glowRadius * glowRadius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                centerX - width, centerY + y,
+                centerX + width, centerY + y);
+        }
+    } else if (enemy.isBoss) {
         setColor(bossGlow);
         int glowRadius = static_cast<int>(18 * cameraScale * sizeMultiplier);
         for (int y = -glowRadius; y <= glowRadius; y++) {
@@ -587,8 +597,12 @@ void Renderer::renderEnemy(const Enemy& enemy) {
                 centerX + width, centerY + y);
         }
     }
-   
-    setColor(wingRed);
+  
+    SDL_Color dragonBodyColor = enemy.isDragon ? SDL_Color{180, 20, 20, 255} : bodyOrange;
+    SDL_Color dragonWingColor = enemy.isDragon ? SDL_Color{140, 10, 10, 255} : wingRed;
+    SDL_Color dragonDarkColor = enemy.isDragon ? SDL_Color{100, 10, 10, 255} : bodyDark;
+    
+    setColor(dragonWingColor);
    
     SDL_Rect leftWing = {centerX - 12 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &leftWing);
@@ -596,8 +610,19 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Rect rightWing = {centerX + 7 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &rightWing);
     
+   
+    if (enemy.isDragon) {
+        SDL_Color hornColor = {80, 80, 80, 255};
+        setColor(hornColor);
+      
+        SDL_Rect leftHorn = {centerX - 8 * scale, centerY - 12 * scale, 2 * scale, 8 * scale};
+        SDL_RenderFillRect(renderer, &leftHorn);
+        
+        SDL_Rect rightHorn = {centerX + 6 * scale, centerY - 12 * scale, 2 * scale, 8 * scale};
+        SDL_RenderFillRect(renderer, &rightHorn);
+    }
 
-    setColor(bodyOrange);
+    setColor(dragonBodyColor);
     int bodyRadius = 8 * scale;
     for (int y = -bodyRadius; y <= bodyRadius; y++) {
         int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
@@ -607,7 +632,7 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     }
     
    
-    setColor(bodyDark);
+    setColor(dragonDarkColor);
     for (int y = 2 * scale; y <= bodyRadius; y++) {
         int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
         SDL_RenderDrawLine(renderer, 
@@ -677,7 +702,9 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int fgWidth = static_cast<int>(barWidth * healthPercent);
     if (fgWidth > 0) {
         SDL_Rect fgRect = {barX, barY, fgWidth, barHeight};
-        setColor(enemy.isBoss ? bossGlow : healthBarRed);
+    
+        SDL_Color healthColor = enemy.isDragon ? SDL_Color{255, 50, 50, 255} : (enemy.isBoss ? bossGlow : healthBarRed);
+        setColor(healthColor);
         SDL_RenderFillRect(renderer, &fgRect);
     }
 }

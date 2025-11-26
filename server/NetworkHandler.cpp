@@ -269,6 +269,7 @@ void NetworkHandler::broadcastUdpState() {
         state.targetPlayerId = enemy->targetPlayerId;
         state.isBoss = enemy->isBoss;
         state.size = enemy->size;
+        state.isDragon = enemy->isDragon;
         broadcast.enemies.push_back(state);
     }
     

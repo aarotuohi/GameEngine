@@ -135,6 +135,7 @@ public:
     std::chrono::steady_clock::time_point lastShootTime;
     bool isBoss;
     int killValue;
+    bool isDragon;
     
     Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer = 0, bool boss = false);
     
