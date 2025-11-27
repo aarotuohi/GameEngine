@@ -107,7 +107,8 @@ public:
     bool active;
     bool isTornado;     
     bool isEnemyProjectile;  
-    int damage;      
+    int damage;
+    bool isFireball;
 
     Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado = false, int dmg = 20, bool enemyProj = false);
     

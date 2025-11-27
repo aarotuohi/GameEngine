@@ -221,6 +221,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 state.id, state.x, state.y, state.vx, state.vy, 
                 state.ownerId, state.isTornado, 20, state.isEnemyProjectile
             );
+            projectile->isFireball = state.isFireball;
             projectiles[state.id] = projectile;
         }
     }

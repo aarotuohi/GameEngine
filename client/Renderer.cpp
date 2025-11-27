@@ -817,6 +817,64 @@ void Renderer::renderProjectile(const Projectile& projectile) {
             SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
         }
         
+    } else if (projectile.isFireball) {
+        
+        int fireballRadius = static_cast<int>(projectile.size * cameraScale);
+        float time = SDL_GetTicks() / 100.0f;
+        
+        SDL_Color fireCore = {255, 255, 150, 255};     
+        SDL_Color fireOrange = {255, 150, 50, 255};   
+        SDL_Color fireRed = {255, 50, 0, 255};        
+        SDL_Color fireDark = {150, 30, 0, 200};        
+        
+      
+        float pulse = 0.9f + 0.1f * std::sin(time * 5.0f);
+        int outerRadius = static_cast<int>(fireballRadius * pulse);
+        int midRadius = static_cast<int>(fireballRadius * 0.7f * pulse);
+        int innerRadius = static_cast<int>(fireballRadius * 0.4f * pulse);
+        
+        
+        setColor(fireDark);
+        for (int y = -outerRadius; y <= outerRadius; y++) {
+            int width = static_cast<int>(std::sqrt(outerRadius * outerRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+        setColor(fireRed);
+        for (int y = -midRadius; y <= midRadius; y++) {
+            int width = static_cast<int>(std::sqrt(midRadius * midRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+        setColor(fireOrange);
+        for (int y = -innerRadius; y <= innerRadius; y++) {
+            int width = static_cast<int>(std::sqrt(innerRadius * innerRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+
+        setColor(fireCore);
+        int coreRadius = static_cast<int>(fireballRadius * 0.2f);
+        for (int y = -coreRadius; y <= coreRadius; y++) {
+            int width = static_cast<int>(std::sqrt(coreRadius * coreRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+
+        float angle = std::atan2(projectile.vy, projectile.vx);
+        for (int i = 0; i < 8; i++) {
+            float trailAngle = angle + 3.14159f + (std::sin(time + i) * 0.5f);
+            int trailDist = static_cast<int>(fireballRadius * (0.8f + i * 0.15f));
+            int trailX = screenX + static_cast<int>(std::cos(trailAngle) * trailDist);
+            int trailY = screenY + static_cast<int>(std::sin(trailAngle) * trailDist);
+            
+            SDL_Color trailColor = (i < 3) ? fireOrange : fireRed;
+            setColor(trailColor);
+            SDL_RenderDrawPoint(renderer, trailX, trailY);
+            SDL_RenderDrawPoint(renderer, trailX + 1, trailY);
+            SDL_RenderDrawPoint(renderer, trailX, trailY + 1);
+        }
+        
     } else if (projectile.isEnemyProjectile) {
         
         SDL_Color laserCore = {255, 50, 50, 255};     

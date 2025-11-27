@@ -82,6 +82,7 @@ namespace Protocol {
         bool isTornado;
         bool isEnemyProjectile;
         uint32_t ownerId;
+        bool isFireball;
     };
 
     struct RTornadoState {

@@ -589,19 +589,36 @@ void GameState::updateEnemyShooting(float dt) {
           
                 enemy->rotation = std::atan2(dirY, dirX);
                 
-                
+                // Scale enemy damage based on wave (5% increase per wave)
                 float damageMultiplier = 1.0f + (currentWave - 1) * 0.05f;
                 int scaledDamage = static_cast<int>(Config::ENEMY_BULLET_DAMAGE * damageMultiplier);
+                
+                // Dragons shoot fireballs with more damage and larger size
+                if (enemy->isDragon) {
+                    scaledDamage = static_cast<int>(scaledDamage * 2.0f);  // Dragons do 2x damage
+                }
                 
                 uint32_t projId = nextProjectileId++;
                 auto projectile = std::make_shared<Projectile>(
                     projId, enemy->x, enemy->y, dirX, dirY, 
                     enemyId, false, scaledDamage, true  
                 );
+                
+                // Mark as fireball if dragon
+                if (enemy->isDragon) {
+                    projectile->isFireball = true;
+                    projectile->size = 25.0f;  // Larger fireball
+                    projectile->speed = 500.0f;  // Slightly slower than normal bullets
+                }
+                
                 projectiles[projId] = projectile;
                 
                 enemy->shoot();
-                std::cout << "Enemy " << enemyId << " shot laser at player " << nearestPlayer->id << "\n";
+                if (enemy->isDragon) {
+                    std::cout << "Dragon " << enemyId << " shot FIREBALL at player " << nearestPlayer->id << " for " << scaledDamage << " damage!\n";
+                } else {
+                    std::cout << "Enemy " << enemyId << " shot laser at player " << nearestPlayer->id << "\n";
+                }
             }
         }
     }

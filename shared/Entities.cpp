@@ -235,7 +235,7 @@ void Player::updateRTornadoes(float dt) {
 Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado, int dmg, bool enemyProj)
     : id(projId), x(posX), y(posY), vx(velX), vy(velY), ownerId(owner),
       size(tornado ? 30.0f : 15.0f), speed(tornado ? 600.0f : (enemyProj ? Config::ENEMY_BULLET_SPEED : 800.0f)), 
-      active(true), isTornado(tornado), isEnemyProjectile(enemyProj), damage(dmg) {
+      active(true), isTornado(tornado), isEnemyProjectile(enemyProj), damage(dmg), isFireball(false) {
 }
 
 void Projectile::update(float dt) {

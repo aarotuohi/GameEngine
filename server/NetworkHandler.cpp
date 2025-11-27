@@ -287,6 +287,7 @@ void NetworkHandler::broadcastUdpState() {
         state.isTornado = proj->isTornado;
         state.isEnemyProjectile = proj->isEnemyProjectile;
         state.ownerId = proj->ownerId;
+        state.isFireball = proj->isFireball;
         broadcast.projectiles.push_back(state);
     }
     broadcast.numProjectiles = static_cast<uint32_t>(broadcast.projectiles.size());
