@@ -543,6 +543,45 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     renderText(player.name.c_str(), nameX, nameY, nameSize);
     
    
+    if (player.movementEnergy > 0.0f) {
+        int energyBarY = barY + barHeight + static_cast<int>(2 * cameraScale);
+        int energyBarHeight = static_cast<int>(3 * cameraScale);
+        int energyBarWidth = barWidth;
+        
+        SDL_Rect energyBg = {barX, energyBarY, energyBarWidth, energyBarHeight};
+        SDL_Color energyBgColor = {40, 40, 60, 255};
+        setColor(energyBgColor);
+        SDL_RenderFillRect(renderer, &energyBg);
+        
+   
+        int energyFgWidth = static_cast<int>(energyBarWidth * (player.movementEnergy / 100.0f));
+        if (energyFgWidth > 0) {
+            SDL_Rect energyFg = {barX, energyBarY, energyFgWidth, energyBarHeight};
+            SDL_Color energyColor = {100, 200, 255, 255}; 
+            setColor(energyColor);
+            SDL_RenderFillRect(renderer, &energyFg);
+        }
+    }
+    
+    
+    if (player.shieldHealth > 0) {
+        SDL_Color shieldColor = {100, 150, 255, 100};  
+        setColor(shieldColor);
+        int shieldRadius = static_cast<int>((player.size + 8) * cameraScale);
+        
+        for (int angle = 0; angle < 360; angle += 10) {
+            float rad1 = angle * 3.14159f / 180.0f;
+            float rad2 = (angle + 10) * 3.14159f / 180.0f;
+            int x1 = centerX + static_cast<int>(std::cos(rad1) * shieldRadius);
+            int y1 = centerY + static_cast<int>(std::sin(rad1) * shieldRadius);
+            int x2 = centerX + static_cast<int>(std::cos(rad2) * shieldRadius);
+            int y2 = centerY + static_cast<int>(std::sin(rad2) * shieldRadius);
+            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+            SDL_RenderDrawLine(renderer, x1+1, y1, x2+1, y2);
+        }
+    }
+    
+  
     if (isLocal) {
         
         for (int i = 0; i < player.qStacks; i++) {

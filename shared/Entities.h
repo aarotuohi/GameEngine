@@ -61,6 +61,11 @@ public:
     std::chrono::steady_clock::time_point rTornadoesStartTime;
     float rTornadoAngle; 
    
+
+    float movementEnergy;  
+    int shieldHealth;
+    int maxShieldHealth;
+    
     bool hasTarget;
     float targetX, targetY;
     
@@ -87,6 +92,10 @@ public:
     void useR();
     void takeDamage(int damage);
     void respawn(float spawnX, float spawnY);
+    
+ 
+    void updateMovementEnergy(float dt, bool isMoving);
+    void activateShield();
     
     // Wind Wall methods
     void updateWindWall(float dt);

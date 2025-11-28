@@ -209,6 +209,9 @@ void GameState::update(float dt) {
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
         player->updateRTornadoes(dt);
+        
+        bool isMoving = (player->vx != 0.0f || player->vy != 0.0f);
+        player->updateMovementEnergy(dt, isMoving);
     }
     
     // Update projectiles
@@ -426,6 +429,9 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.kills = player->kills;
         state.level = player->level;
         state.attackDamage = player->attackDamage;
+        state.movementEnergy = player->movementEnergy;
+        state.shieldHealth = player->shieldHealth;
+        state.maxShieldHealth = player->maxShieldHealth;
         states.push_back(state);
     }
     
@@ -588,14 +594,14 @@ void GameState::updateEnemyShooting(float dt) {
                 
           
                 enemy->rotation = std::atan2(dirY, dirX);
-                
-                // Scale enemy damage based on wave (5% increase per wave)
+            
+              
                 float damageMultiplier = 1.0f + (currentWave - 1) * 0.05f;
                 int scaledDamage = static_cast<int>(Config::ENEMY_BULLET_DAMAGE * damageMultiplier);
                 
-                // Dragons shoot fireballs with more damage and larger size
+           
                 if (enemy->isDragon) {
-                    scaledDamage = static_cast<int>(scaledDamage * 2.0f);  // Dragons do 2x damage
+                    scaledDamage = static_cast<int>(scaledDamage * 2.0f); 
                 }
                 
                 uint32_t projId = nextProjectileId++;
@@ -604,11 +610,11 @@ void GameState::updateEnemyShooting(float dt) {
                     enemyId, false, scaledDamage, true  
                 );
                 
-                // Mark as fireball if dragon
+              
                 if (enemy->isDragon) {
                     projectile->isFireball = true;
-                    projectile->size = 25.0f;  // Larger fireball
-                    projectile->speed = 500.0f;  // Slightly slower than normal bullets
+                    projectile->size = 25.0f;  
+                    projectile->speed = 500.0f;  
                 }
                 
                 projectiles[projId] = projectile;

@@ -13,6 +13,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
       hasRTornadoes(false), rTornadoAngle(0.0f),
+      movementEnergy(0.0f), shieldHealth(0), maxShieldHealth(0),
       hasTarget(false), targetX(0.0f), targetY(0.0f) {
     
     auto now = std::chrono::steady_clock::now();
@@ -160,7 +161,23 @@ void Player::useR() {
 
 void Player::takeDamage(int damage) {
     if (!isAlive) return;
-    health -= damage;
+    
+  
+    if (shieldHealth > 0) {
+        int damageAfterShield = damage - shieldHealth;
+        shieldHealth -= damage;
+        
+        if (shieldHealth < 0) {
+            shieldHealth = 0;
+        
+            if (damageAfterShield > 0) {
+                health -= damageAfterShield;
+            }
+        }
+        std::cout << "Shield absorbed damage! Shield HP: " << shieldHealth << "\n";
+    } else {
+        health -= damage;
+    }
     
     if (health < 0) {
         health = 0;
@@ -177,6 +194,35 @@ void Player::respawn(float spawnX, float spawnY) {
     isAlive = true;
     qStacks = 0;
     activeAbility = SamuraiAbility::NONE;
+    movementEnergy = 0.0f;
+    shieldHealth = 0;
+}
+
+void Player::updateMovementEnergy(float dt, bool isMoving) {
+    if (!isAlive) return;
+    
+    if (isMoving) {
+    
+        movementEnergy += dt * 20.0f; 
+        
+        if (movementEnergy >= 100.0f) {
+            movementEnergy = 100.0f;
+         
+            if (shieldHealth == 0) {
+                activateShield();
+            }
+        }
+    }
+}
+
+void Player::activateShield() {
+    if (movementEnergy >= 100.0f) {
+     
+        maxShieldHealth = 50 + (level * 25);
+        shieldHealth = maxShieldHealth;
+        movementEnergy = 0.0f;  
+        std::cout << "Player " << id << " activated shield! Shield HP: " << shieldHealth << "\n";
+    }
 }
 
 void Player::updateWindWall(float dt) {

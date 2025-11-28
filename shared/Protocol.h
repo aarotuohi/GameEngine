@@ -57,6 +57,9 @@ namespace Protocol {
         uint32_t kills;
         uint32_t level;
         uint32_t attackDamage;
+        float movementEnergy;
+        uint32_t shieldHealth;
+        uint32_t maxShieldHealth;
     };
 
     struct EnemyState {
