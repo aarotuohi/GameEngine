@@ -41,7 +41,7 @@ private:
     int enemiesPerWave;
     bool waveActive;
 
-    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0, bool isBoss = false);
+    uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0, bool isBoss = false, bool isDragon = false);
 
 public:
     GameState();

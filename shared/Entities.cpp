@@ -13,6 +13,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
       activeAbility(SamuraiAbility::NONE), qStacks(0),
       hasWindWall(false), windWallRadius(60.0f),
       hasRTornadoes(false), rTornadoAngle(0.0f),
+      movementEnergy(0.0f), shieldHealth(0), maxShieldHealth(0),
       hasTarget(false), targetX(0.0f), targetY(0.0f) {
     
     auto now = std::chrono::steady_clock::now();
@@ -160,7 +161,23 @@ void Player::useR() {
 
 void Player::takeDamage(int damage) {
     if (!isAlive) return;
-    health -= damage;
+    
+  
+    if (shieldHealth > 0) {
+        int damageAfterShield = damage - shieldHealth;
+        shieldHealth -= damage;
+        
+        if (shieldHealth < 0) {
+            shieldHealth = 0;
+        
+            if (damageAfterShield > 0) {
+                health -= damageAfterShield;
+            }
+        }
+        std::cout << "Shield absorbed damage! Shield HP: " << shieldHealth << "\n";
+    } else {
+        health -= damage;
+    }
     
     if (health < 0) {
         health = 0;
@@ -177,6 +194,35 @@ void Player::respawn(float spawnX, float spawnY) {
     isAlive = true;
     qStacks = 0;
     activeAbility = SamuraiAbility::NONE;
+    movementEnergy = 0.0f;
+    shieldHealth = 0;
+}
+
+void Player::updateMovementEnergy(float dt, bool isMoving) {
+    if (!isAlive) return;
+    
+    if (isMoving) {
+    
+        movementEnergy += dt * 20.0f; 
+        
+        if (movementEnergy >= 100.0f) {
+            movementEnergy = 100.0f;
+         
+            if (shieldHealth == 0) {
+                activateShield();
+            }
+        }
+    }
+}
+
+void Player::activateShield() {
+    if (movementEnergy >= 100.0f) {
+     
+        maxShieldHealth = 50 + (level * 25);
+        shieldHealth = maxShieldHealth;
+        movementEnergy = 0.0f;  
+        std::cout << "Player " << id << " activated shield! Shield HP: " << shieldHealth << "\n";
+    }
 }
 
 void Player::updateWindWall(float dt) {
@@ -235,7 +281,7 @@ void Player::updateRTornadoes(float dt) {
 Projectile::Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado, int dmg, bool enemyProj)
     : id(projId), x(posX), y(posY), vx(velX), vy(velY), ownerId(owner),
       size(tornado ? 30.0f : 15.0f), speed(tornado ? 600.0f : (enemyProj ? Config::ENEMY_BULLET_SPEED : 800.0f)), 
-      active(true), isTornado(tornado), isEnemyProjectile(enemyProj), damage(dmg) {
+      active(true), isTornado(tornado), isEnemyProjectile(enemyProj), damage(dmg), isFireball(false) {
 }
 
 void Projectile::update(float dt) {
@@ -271,7 +317,7 @@ bool Projectile::checkCollisionWithEnemy(const Enemy& enemy) const {
 Enemy::Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer, bool boss)
     : id(enemyId), x(posX), y(posY), vx(0.0f), vy(0.0f), size(boss ? 80.0f : 40.0f),
       speed(Config::ENEMY_SPEED), health(boss ? 500 : 100), maxHealth(boss ? 500 : 100), isAlive(true), 
-      targetPlayerId(targetPlayer), lastDamagedBy(0), rotation(0.0f), isBoss(boss), killValue(boss ? 10 : 1) {
+      targetPlayerId(targetPlayer), lastDamagedBy(0), rotation(0.0f), isBoss(boss), killValue(boss ? 10 : 1), isDragon(false) {
     lastHitTime = std::chrono::steady_clock::now();
     spawnTime = std::chrono::steady_clock::now();
     lastShootTime = std::chrono::steady_clock::now();

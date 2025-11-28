@@ -147,6 +147,9 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->kills = state.kills;
                 it->second->level = state.level;
                 it->second->attackDamage = state.attackDamage;
+                it->second->movementEnergy = state.movementEnergy;
+                it->second->shieldHealth = state.shieldHealth;
+                it->second->maxShieldHealth = state.maxShieldHealth;
             } else {
                 // Add new player
                 auto player = std::make_shared<Player>(state.id, state.x, state.y);
@@ -158,6 +161,9 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 player->kills = state.kills;
                 player->level = state.level;
                 player->attackDamage = state.attackDamage;
+                player->movementEnergy = state.movementEnergy;
+                player->shieldHealth = state.shieldHealth;
+                player->maxShieldHealth = state.maxShieldHealth;
                 players[state.id] = player;
             }
         }
@@ -184,6 +190,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->targetPlayerId = state.targetPlayerId;
                 it->second->isBoss = state.isBoss;
                 it->second->size = state.size;
+                it->second->isDragon = state.isDragon;
             } else {
                 
                 auto enemy = std::make_shared<Enemy>(state.id, state.x, state.y, state.targetPlayerId, state.isBoss);
@@ -192,6 +199,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 enemy->health = state.health;
                 enemy->isAlive = state.isAlive;
                 enemy->size = state.size;
+                enemy->isDragon = state.isDragon;
                 enemies[state.id] = enemy;
             }
         }
@@ -219,6 +227,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 state.id, state.x, state.y, state.vx, state.vy, 
                 state.ownerId, state.isTornado, 20, state.isEnemyProjectile
             );
+            projectile->isFireball = state.isFireball;
             projectiles[state.id] = projectile;
         }
     }

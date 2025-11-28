@@ -57,6 +57,9 @@ namespace Protocol {
         uint32_t kills;
         uint32_t level;
         uint32_t attackDamage;
+        float movementEnergy;
+        uint32_t shieldHealth;
+        uint32_t maxShieldHealth;
     };
 
     struct EnemyState {
@@ -70,6 +73,7 @@ namespace Protocol {
         uint32_t targetPlayerId;
         bool isBoss;
         float size;
+        bool isDragon;
     };
 
     struct ProjectileState {
@@ -81,6 +85,7 @@ namespace Protocol {
         bool isTornado;
         bool isEnemyProjectile;
         uint32_t ownerId;
+        bool isFireball;
     };
 
     struct RTornadoState {

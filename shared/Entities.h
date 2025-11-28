@@ -61,6 +61,11 @@ public:
     std::chrono::steady_clock::time_point rTornadoesStartTime;
     float rTornadoAngle; 
    
+
+    float movementEnergy;  
+    int shieldHealth;
+    int maxShieldHealth;
+    
     bool hasTarget;
     float targetX, targetY;
     
@@ -88,6 +93,10 @@ public:
     void takeDamage(int damage);
     void respawn(float spawnX, float spawnY);
     
+ 
+    void updateMovementEnergy(float dt, bool isMoving);
+    void activateShield();
+    
     // Wind Wall methods
     void updateWindWall(float dt);
     bool isProjectileBlockedByWindWall(float projX, float projY) const;
@@ -107,7 +116,8 @@ public:
     bool active;
     bool isTornado;     
     bool isEnemyProjectile;  
-    int damage;      
+    int damage;
+    bool isFireball;
 
     Projectile(uint32_t projId, float posX, float posY, float velX, float velY, uint32_t owner, bool tornado = false, int dmg = 20, bool enemyProj = false);
     
@@ -135,6 +145,7 @@ public:
     std::chrono::steady_clock::time_point lastShootTime;
     bool isBoss;
     int killValue;
+    bool isDragon;
     
     Enemy(uint32_t enemyId, float posX, float posY, uint32_t targetPlayer = 0, bool boss = false);
     

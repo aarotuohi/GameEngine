@@ -209,6 +209,9 @@ void GameState::update(float dt) {
     for (auto& [playerId, player] : players) {
         player->updateWindWall(dt);
         player->updateRTornadoes(dt);
+        
+        bool isMoving = (player->vx != 0.0f || player->vy != 0.0f);
+        player->updateMovementEnergy(dt, isMoving);
     }
     
     // Update projectiles
@@ -325,21 +328,22 @@ void GameState::update(float dt) {
                       << " (HP: " << player->maxHealth << ", AD: " << player->attackDamage << ")\n";
         }
         
-        std::cout << "\n=== WAVE " << currentWave << " STARTING ===\n";
         
       
         bool isBossWave = (currentWave % 5 == 0);
+        bool isDragonWave = (currentWave == 10);
         
-        if (isBossWave) {
+        if (isDragonWave) {
+            std::cout << "*** DRAGON RAID BOSS! ***\n";
+            spawnEnemyInternal(Config::WORLD_WIDTH / 2.0f, Config::WORLD_HEIGHT / 2.0f, 0, true, true);
+        } else if (isBossWave) {
             std::cout << "*** BOSS WAVE! ***\n";
-           
             spawnEnemyInternal(Config::WORLD_WIDTH / 2.0f, Config::WORLD_HEIGHT / 2.0f, 0, true);
         } else {
             
             enemiesPerWave = 3 + (currentWave - 1);
             if (enemiesPerWave > 15) enemiesPerWave = 15;
-            
-            std::cout << "Spawning " << enemiesPerWave << " enemies\n";
+    
             
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -425,6 +429,9 @@ std::vector<Protocol::PlayerState> GameState::getPlayersForBroadcast() {
         state.kills = player->kills;
         state.level = player->level;
         state.attackDamage = player->attackDamage;
+        state.movementEnergy = player->movementEnergy;
+        state.shieldHealth = player->shieldHealth;
+        state.maxShieldHealth = player->maxShieldHealth;
         states.push_back(state);
     }
     
@@ -446,15 +453,31 @@ uint32_t GameState::spawnEnemy(float x, float y, uint32_t targetPlayerId) {
     return spawnEnemyInternal(x, y, targetPlayerId, false);
 }
 
-uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId, bool isBoss) {
+uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId, bool isBoss, bool isDragon) {
     
     uint32_t enemyId = nextEnemyId++;
-    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss);
+    auto enemy = std::make_shared<Enemy>(enemyId, x, y, targetPlayerId, isBoss || isDragon);
+    
+ 
+    if (isDragon) {
+        enemy->isDragon = true;
+        enemy->size = 120.0f;  
+        enemy->health = 2000;  
+        enemy->maxHealth = 2000;
+        enemy->killValue = 25;  
+    }
+    
+    float hpMultiplier = 1.0f + (currentWave - 1) * 0.1f;
+    enemy->health = static_cast<int>(enemy->health * hpMultiplier);
+    enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
+    
     enemies[enemyId] = enemy;
-    if (isBoss) {
-        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with 500 HP!\n";
+    if (isDragon) {
+        std::cout << "Spawned DRAGON RAID BOSS " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
+    } else if (isBoss) {
+        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
     } else {
-        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ")\n";
+        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP\n";
     }
     return enemyId;
 }
@@ -571,17 +594,37 @@ void GameState::updateEnemyShooting(float dt) {
                 
           
                 enemy->rotation = std::atan2(dirY, dirX);
+            
+              
+                float damageMultiplier = 1.0f + (currentWave - 1) * 0.05f;
+                int scaledDamage = static_cast<int>(Config::ENEMY_BULLET_DAMAGE * damageMultiplier);
                 
-         
+           
+                if (enemy->isDragon) {
+                    scaledDamage = static_cast<int>(scaledDamage * 2.0f); 
+                }
+                
                 uint32_t projId = nextProjectileId++;
                 auto projectile = std::make_shared<Projectile>(
                     projId, enemy->x, enemy->y, dirX, dirY, 
-                    enemyId, false, Config::ENEMY_BULLET_DAMAGE, true  
+                    enemyId, false, scaledDamage, true  
                 );
+                
+              
+                if (enemy->isDragon) {
+                    projectile->isFireball = true;
+                    projectile->size = 25.0f;  
+                    projectile->speed = 500.0f;  
+                }
+                
                 projectiles[projId] = projectile;
                 
                 enemy->shoot();
-                std::cout << "Enemy " << enemyId << " shot laser at player " << nearestPlayer->id << "\n";
+                if (enemy->isDragon) {
+                    std::cout << "Dragon " << enemyId << " shot FIREBALL at player " << nearestPlayer->id << " for " << scaledDamage << " damage!\n";
+                } else {
+                    std::cout << "Enemy " << enemyId << " shot laser at player " << nearestPlayer->id << "\n";
+                }
             }
         }
     }
@@ -653,7 +696,7 @@ void GameState::updateRTornadoes(float dt) {
                 float hitRadius = static_cast<float>(Config::R_TORNADO_SIZE);
                 
                 if (distSq <= hitRadius * hitRadius) {
-                    // R ability does 1.5x damage
+                   
                     int tornadoDamage = Config::R_TORNADO_DAMAGE;
                     auto ownerIt = players.find(tornado->ownerId);
                     if (ownerIt != players.end()) {

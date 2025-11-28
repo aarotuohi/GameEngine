@@ -543,6 +543,45 @@ void Renderer::renderPlayer(const Player& player, bool isLocal) {
     renderText(player.name.c_str(), nameX, nameY, nameSize);
     
    
+    if (player.movementEnergy > 0.0f) {
+        int energyBarY = barY + barHeight + static_cast<int>(2 * cameraScale);
+        int energyBarHeight = static_cast<int>(3 * cameraScale);
+        int energyBarWidth = barWidth;
+        
+        SDL_Rect energyBg = {barX, energyBarY, energyBarWidth, energyBarHeight};
+        SDL_Color energyBgColor = {40, 40, 60, 255};
+        setColor(energyBgColor);
+        SDL_RenderFillRect(renderer, &energyBg);
+        
+   
+        int energyFgWidth = static_cast<int>(energyBarWidth * (player.movementEnergy / 100.0f));
+        if (energyFgWidth > 0) {
+            SDL_Rect energyFg = {barX, energyBarY, energyFgWidth, energyBarHeight};
+            SDL_Color energyColor = {100, 200, 255, 255}; 
+            setColor(energyColor);
+            SDL_RenderFillRect(renderer, &energyFg);
+        }
+    }
+    
+    
+    if (player.shieldHealth > 0) {
+        SDL_Color shieldColor = {100, 150, 255, 100};  
+        setColor(shieldColor);
+        int shieldRadius = static_cast<int>((player.size + 8) * cameraScale);
+        
+        for (int angle = 0; angle < 360; angle += 10) {
+            float rad1 = angle * 3.14159f / 180.0f;
+            float rad2 = (angle + 10) * 3.14159f / 180.0f;
+            int x1 = centerX + static_cast<int>(std::cos(rad1) * shieldRadius);
+            int y1 = centerY + static_cast<int>(std::sin(rad1) * shieldRadius);
+            int x2 = centerX + static_cast<int>(std::cos(rad2) * shieldRadius);
+            int y2 = centerY + static_cast<int>(std::sin(rad2) * shieldRadius);
+            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+            SDL_RenderDrawLine(renderer, x1+1, y1, x2+1, y2);
+        }
+    }
+    
+  
     if (isLocal) {
         
         for (int i = 0; i < player.qStacks; i++) {
@@ -559,8 +598,8 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int screenX, screenY;
     worldToScreen(enemy.x, enemy.y, screenX, screenY);
     
-    
-    float sizeMultiplier = enemy.isBoss ? 2.0f : 1.0f;
+   
+    float sizeMultiplier = enemy.isDragon ? 3.0f : (enemy.isBoss ? 2.0f : 1.0f);
 
     SDL_Color bodyOrange = {255, 120, 50, 255};    
     SDL_Color bodyDark = {200, 80, 30, 255};         
@@ -571,13 +610,23 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Color healthBarBg = {60, 60, 60, 255};
     SDL_Color healthBarRed = {200, 50, 50, 255};
     SDL_Color bossGlow = {255, 50, 255, 180}; 
+    SDL_Color dragonGlow = {255, 100, 0, 200};  
     
     int scale = static_cast<int>(cameraScale * sizeMultiplier);
     int centerX = screenX;
     int centerY = screenY;
     
-
-    if (enemy.isBoss) {
+   
+    if (enemy.isDragon) {
+        setColor(dragonGlow);
+        int glowRadius = static_cast<int>(22 * cameraScale * sizeMultiplier);
+        for (int y = -glowRadius; y <= glowRadius; y++) {
+            int width = static_cast<int>(std::sqrt(glowRadius * glowRadius - y * y));
+            SDL_RenderDrawLine(renderer, 
+                centerX - width, centerY + y,
+                centerX + width, centerY + y);
+        }
+    } else if (enemy.isBoss) {
         setColor(bossGlow);
         int glowRadius = static_cast<int>(18 * cameraScale * sizeMultiplier);
         for (int y = -glowRadius; y <= glowRadius; y++) {
@@ -587,8 +636,12 @@ void Renderer::renderEnemy(const Enemy& enemy) {
                 centerX + width, centerY + y);
         }
     }
-   
-    setColor(wingRed);
+  
+    SDL_Color dragonBodyColor = enemy.isDragon ? SDL_Color{180, 20, 20, 255} : bodyOrange;
+    SDL_Color dragonWingColor = enemy.isDragon ? SDL_Color{140, 10, 10, 255} : wingRed;
+    SDL_Color dragonDarkColor = enemy.isDragon ? SDL_Color{100, 10, 10, 255} : bodyDark;
+    
+    setColor(dragonWingColor);
    
     SDL_Rect leftWing = {centerX - 12 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &leftWing);
@@ -596,8 +649,19 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Rect rightWing = {centerX + 7 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
     SDL_RenderFillRect(renderer, &rightWing);
     
+   
+    if (enemy.isDragon) {
+        SDL_Color hornColor = {80, 80, 80, 255};
+        setColor(hornColor);
+      
+        SDL_Rect leftHorn = {centerX - 8 * scale, centerY - 12 * scale, 2 * scale, 8 * scale};
+        SDL_RenderFillRect(renderer, &leftHorn);
+        
+        SDL_Rect rightHorn = {centerX + 6 * scale, centerY - 12 * scale, 2 * scale, 8 * scale};
+        SDL_RenderFillRect(renderer, &rightHorn);
+    }
 
-    setColor(bodyOrange);
+    setColor(dragonBodyColor);
     int bodyRadius = 8 * scale;
     for (int y = -bodyRadius; y <= bodyRadius; y++) {
         int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
@@ -607,7 +671,7 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     }
     
    
-    setColor(bodyDark);
+    setColor(dragonDarkColor);
     for (int y = 2 * scale; y <= bodyRadius; y++) {
         int width = static_cast<int>(std::sqrt(bodyRadius * bodyRadius - y * y));
         SDL_RenderDrawLine(renderer, 
@@ -677,7 +741,9 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     int fgWidth = static_cast<int>(barWidth * healthPercent);
     if (fgWidth > 0) {
         SDL_Rect fgRect = {barX, barY, fgWidth, barHeight};
-        setColor(enemy.isBoss ? bossGlow : healthBarRed);
+    
+        SDL_Color healthColor = enemy.isDragon ? SDL_Color{255, 50, 50, 255} : (enemy.isBoss ? bossGlow : healthBarRed);
+        setColor(healthColor);
         SDL_RenderFillRect(renderer, &fgRect);
     }
 }
@@ -788,6 +854,64 @@ void Renderer::renderProjectile(const Projectile& projectile) {
         for (int y = -centerSize; y <= centerSize; y++) {
             int width = static_cast<int>(std::sqrt(centerSize * centerSize - y * y));
             SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+    } else if (projectile.isFireball) {
+        
+        int fireballRadius = static_cast<int>(projectile.size * cameraScale);
+        float time = SDL_GetTicks() / 100.0f;
+        
+        SDL_Color fireCore = {255, 255, 150, 255};     
+        SDL_Color fireOrange = {255, 150, 50, 255};   
+        SDL_Color fireRed = {255, 50, 0, 255};        
+        SDL_Color fireDark = {150, 30, 0, 200};        
+        
+      
+        float pulse = 0.9f + 0.1f * std::sin(time * 5.0f);
+        int outerRadius = static_cast<int>(fireballRadius * pulse);
+        int midRadius = static_cast<int>(fireballRadius * 0.7f * pulse);
+        int innerRadius = static_cast<int>(fireballRadius * 0.4f * pulse);
+        
+        
+        setColor(fireDark);
+        for (int y = -outerRadius; y <= outerRadius; y++) {
+            int width = static_cast<int>(std::sqrt(outerRadius * outerRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+        setColor(fireRed);
+        for (int y = -midRadius; y <= midRadius; y++) {
+            int width = static_cast<int>(std::sqrt(midRadius * midRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+        setColor(fireOrange);
+        for (int y = -innerRadius; y <= innerRadius; y++) {
+            int width = static_cast<int>(std::sqrt(innerRadius * innerRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+
+        setColor(fireCore);
+        int coreRadius = static_cast<int>(fireballRadius * 0.2f);
+        for (int y = -coreRadius; y <= coreRadius; y++) {
+            int width = static_cast<int>(std::sqrt(coreRadius * coreRadius - y * y));
+            SDL_RenderDrawLine(renderer, screenX - width, screenY + y, screenX + width, screenY + y);
+        }
+        
+
+        float angle = std::atan2(projectile.vy, projectile.vx);
+        for (int i = 0; i < 8; i++) {
+            float trailAngle = angle + 3.14159f + (std::sin(time + i) * 0.5f);
+            int trailDist = static_cast<int>(fireballRadius * (0.8f + i * 0.15f));
+            int trailX = screenX + static_cast<int>(std::cos(trailAngle) * trailDist);
+            int trailY = screenY + static_cast<int>(std::sin(trailAngle) * trailDist);
+            
+            SDL_Color trailColor = (i < 3) ? fireOrange : fireRed;
+            setColor(trailColor);
+            SDL_RenderDrawPoint(renderer, trailX, trailY);
+            SDL_RenderDrawPoint(renderer, trailX + 1, trailY);
+            SDL_RenderDrawPoint(renderer, trailX, trailY + 1);
         }
         
     } else if (projectile.isEnemyProjectile) {
