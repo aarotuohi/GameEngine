@@ -265,6 +265,7 @@ void NetworkHandler::broadcastUdpState() {
         state.vx = enemy->vx;
         state.vy = enemy->vy;
         state.health = enemy->health;
+        state.maxHealth = enemy->maxHealth;
         state.isAlive = enemy->isAlive;
         state.targetPlayerId = enemy->targetPlayerId;
         state.isBoss = enemy->isBoss;

@@ -186,6 +186,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 it->second->vx = state.vx;
                 it->second->vy = state.vy;
                 it->second->health = state.health;
+                it->second->maxHealth = state.maxHealth;
                 it->second->isAlive = state.isAlive;
                 it->second->targetPlayerId = state.targetPlayerId;
                 it->second->isBoss = state.isBoss;
@@ -197,6 +198,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
                 enemy->vx = state.vx;
                 enemy->vy = state.vy;
                 enemy->health = state.health;
+                enemy->maxHealth = state.maxHealth;
                 enemy->isAlive = state.isAlive;
                 enemy->size = state.size;
                 enemy->isDragon = state.isDragon;
