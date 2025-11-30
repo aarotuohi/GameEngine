@@ -642,7 +642,7 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     SDL_Color dragonDarkColor = enemy.isDragon ? SDL_Color{120, 15, 15, 255} : bodyDark;
     SDL_Color dragonSpineColor = enemy.isDragon ? SDL_Color{220, 50, 50, 255} : accentYellow;
     
-    // Draw tail for dragon
+
     if (enemy.isDragon) {
         setColor(dragonDarkColor);
         int tailSegments = 5;
@@ -654,7 +654,7 @@ void Renderer::renderEnemy(const Enemy& enemy) {
             SDL_RenderFillRect(renderer, &tailSegment);
         }
         
-        // Tail spike
+ 
         int spikeX = centerX + (8 + tailSegments * 4) * scale;
         int spikeY = centerY;
         SDL_Rect spike = {spikeX, spikeY - 2 * scale, 4 * scale, 4 * scale};
@@ -663,9 +663,9 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     }
     
     setColor(dragonWingColor);
-    // Wings for dragon are larger and more angular
+
     if (enemy.isDragon) {
-        // Left wing with angular shape
+      
         SDL_Point leftWingPoints[4] = {
             {centerX - 14 * scale, centerY - 4 * scale},
             {centerX - 18 * scale, centerY - 2 * scale},
@@ -679,14 +679,14 @@ void Renderer::renderEnemy(const Enemy& enemy) {
         SDL_RenderDrawLine(renderer, leftWingPoints[3].x, leftWingPoints[3].y,
                          leftWingPoints[0].x, leftWingPoints[0].y);
         
-        // Fill left wing
+     
         for (int y = -4 * scale; y <= 6 * scale; y++) {
             int x1 = centerX - 14 * scale - static_cast<int>((y + 4 * scale) * 0.4f);
             int x2 = centerX - 10 * scale;
             SDL_RenderDrawLine(renderer, x1, centerY + y, x2, centerY + y);
         }
         
-        // Right wing
+   
         SDL_Point rightWingPoints[4] = {
             {centerX + 10 * scale, centerY + 4 * scale},
             {centerX + 16 * scale, centerY + 6 * scale},
@@ -700,37 +700,37 @@ void Renderer::renderEnemy(const Enemy& enemy) {
         SDL_RenderDrawLine(renderer, rightWingPoints[3].x, rightWingPoints[3].y,
                          rightWingPoints[0].x, rightWingPoints[0].y);
         
-        // Fill right wing
+  
         for (int y = -4 * scale; y <= 6 * scale; y++) {
             int x1 = centerX + 10 * scale;
             int x2 = centerX + 14 * scale + static_cast<int>((y + 4 * scale) * 0.4f);
             SDL_RenderDrawLine(renderer, x1, centerY + y, x2, centerY + y);
         }
     } else {
-        // Normal enemy wings
+     
         SDL_Rect leftWing = {centerX - 12 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
         SDL_RenderFillRect(renderer, &leftWing);
         SDL_Rect rightWing = {centerX + 7 * scale, centerY - 6 * scale, 5 * scale, 8 * scale};
         SDL_RenderFillRect(renderer, &rightWing);
     }
     
-    // Draw horns/spikes on head for dragon
+
     if (enemy.isDragon) {
         SDL_Color hornColor = {100, 10, 10, 255};
         setColor(hornColor);
-        // Left horn
+
         SDL_Rect leftHorn1 = {centerX - 7 * scale, centerY - 10 * scale, 2 * scale, 6 * scale};
         SDL_RenderFillRect(renderer, &leftHorn1);
         SDL_Rect leftHorn2 = {centerX - 7 * scale, centerY - 12 * scale, 3 * scale, 2 * scale};
         SDL_RenderFillRect(renderer, &leftHorn2);
         
-        // Right horn
+     
         SDL_Rect rightHorn1 = {centerX + 5 * scale, centerY - 10 * scale, 2 * scale, 6 * scale};
         SDL_RenderFillRect(renderer, &rightHorn1);
         SDL_Rect rightHorn2 = {centerX + 4 * scale, centerY - 12 * scale, 3 * scale, 2 * scale};
         SDL_RenderFillRect(renderer, &rightHorn2);
         
-        // Back spines
+        
         setColor(dragonSpineColor);
         for (int i = 0; i < 4; i++) {
             int spineX = centerX - 4 * scale + i * 3 * scale;

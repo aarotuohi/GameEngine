@@ -75,7 +75,6 @@ namespace Protocol {
         bool isBoss;
         float size;
         bool isDragon;
-        bool isDragon;
     };
 
     struct ProjectileState {
