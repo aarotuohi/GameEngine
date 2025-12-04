@@ -618,7 +618,16 @@ void Renderer::renderEnemy(const Enemy& enemy) {
     
     
     if (enemy.isDragon) {
-        // EXACT red dragon from reference image - side view
+        
+        SDL_Color hitboxBg = {100, 30, 30, 80}; 
+        setColor(hitboxBg);
+        int hitboxR = 15 * scale; 
+        for (int y = -hitboxR; y <= hitboxR; y++) {
+            int w = static_cast<int>(std::sqrt(hitboxR * hitboxR - y * y));
+            SDL_RenderDrawLine(renderer, centerX - w, centerY + y, centerX + w, centerY + y);
+        }
+        
+       
         SDL_Color dragonRed = {200, 40, 40, 255};
         SDL_Color dragonDarkRed = {140, 30, 30, 255};
         SDL_Color dragonBrown = {120, 70, 40, 255};
@@ -847,94 +856,106 @@ void Renderer::renderEnemy(const Enemy& enemy) {
         SDL_RenderFillRect(renderer, &tip2);
         
     } else if (enemy.isBoss) {
-        
-        SDL_Color fireWhite = {255, 255, 240, 255};
-        SDL_Color fireYellow = {255, 240, 100, 255};
-        SDL_Color fireOrange = {255, 160, 50, 255};
-        SDL_Color fireRed = {240, 80, 40, 255};
-        SDL_Color fireDark = {200, 60, 30, 255};
-        SDL_Color fireBlack = {40, 30, 20, 255};
-        
-  
-        setColor({255, 200, 80, 120});
-        int glowR = 22 * scale;
-        for (int y = -glowR; y <= glowR; y++) {
-            int w = static_cast<int>(std::sqrt(glowR * glowR - y * y));
+        // Background circular hitbox (hidden behind)
+        SDL_Color hitboxBg = {80, 40, 20, 80}; 
+        setColor(hitboxBg);
+        int hitboxR = 10 * scale; 
+        for (int y = -hitboxR; y <= hitboxR; y++) {
+            int w = static_cast<int>(std::sqrt(hitboxR * hitboxR - y * y));
             SDL_RenderDrawLine(renderer, centerX - w, centerY + y, centerX + w, centerY + y);
         }
         
-       
-        setColor(fireDark);
-        int bodyR = 8 * scale;
-        for (int y = -bodyR; y <= bodyR; y++) {
-            int w = static_cast<int>(std::sqrt(bodyR * bodyR - y * y));
-            SDL_RenderDrawLine(renderer, centerX - w, centerY + y, centerX + w, centerY + y);
-        }
+        // Fireball boss - Eye of Sauron style design
+        SDL_Color outerDarkGrey = {60, 60, 60, 255};
+        SDL_Color darkOrange = {200, 80, 20, 255};
+        SDL_Color brightOrange = {255, 140, 40, 255};
+        SDL_Color yellow = {255, 220, 60, 255};
+        SDL_Color brightYellow = {255, 255, 140, 255};
+        SDL_Color centerBlack = {30, 20, 10, 255};
+        SDL_Color eyeWhite = {255, 255, 255, 255};
         
-      
-        setColor(fireRed);
-        for (int y = 2 * scale; y <= bodyR; y++) {
-            int w = static_cast<int>(std::sqrt(bodyR * bodyR - y * y));
-            SDL_RenderDrawLine(renderer, centerX - w, centerY + y, centerX + w, centerY + y);
-        }
+        int headR = 15 * scale;
         
-       
-        setColor(fireYellow);
-        int headR = 9 * scale;
-        int headY = centerY - 6 * scale;
+        // Outer dark grey/black ring (far outer edge)
+        setColor(outerDarkGrey);
         for (int y = -headR; y <= headR; y++) {
-            int w = static_cast<int>(std::sqrt(headR * headR - y * y));
-            SDL_RenderDrawLine(renderer, centerX - w, headY + y, centerX + w, headY + y);
-        }
-        
-        
-        setColor(fireWhite);
-        int coreR = 5 * scale;
-        for (int y = -coreR; y <= coreR; y++) {
-            int w = static_cast<int>(std::sqrt(coreR * coreR - y * y));
-            SDL_RenderDrawLine(renderer, centerX - w, headY + y, centerX + w, headY + y);
-        }
-        
-        
-        setColor(fireOrange);
-        float time = SDL_GetTicks() / 200.0f;
-        for (int i = 0; i < 5; i++) {
-            int wx = centerX + (i - 2) * 3 * scale;
-            int wh = (3 + std::sin(time + i) * 1.5f) * scale;
-            int wy = headY - headR - wh;
-            SDL_Point wisp[3] = {{wx, wy}, {wx - 2 * scale, headY - headR}, {wx + 2 * scale, headY - headR}};
-            for (int j = 0; j < 2; j++) SDL_RenderDrawLine(renderer, wisp[j].x, wisp[j].y, wisp[j+1].x, wisp[j+1].y);
-            SDL_RenderDrawLine(renderer, wisp[2].x, wisp[2].y, wisp[0].x, wisp[0].y);
-        }
-        
-        // NO FACE - just solid flame head
-      
-        // Small flame arms on sides
-        setColor(fireOrange);
-        for (int arm = 0; arm < 2; arm++) {
-            int ax = arm == 0 ? centerX - 8 * scale : centerX + 8 * scale;
-            for (int i = 0; i < 3; i++) {
-                int wy = centerY + 2 * scale + i * 3 * scale;
-                int wl = (2 + std::sin(time * 2 + i + arm)) * scale;
-                int wx = ax + (arm == 0 ? -wl : wl);
-                SDL_RenderDrawLine(renderer, ax, wy, wx, wy);
-                SDL_RenderDrawLine(renderer, ax, wy + 1, wx, wy + 1);
+            int outerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)(headR * headR - y * y))));
+            int innerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)((headR-2*scale) * (headR-2*scale) - y * y))));
+            if (outerW > innerW) {
+                SDL_RenderDrawLine(renderer, centerX - outerW, centerY + y, centerX - innerW, centerY + y);
+                SDL_RenderDrawLine(renderer, centerX + innerW, centerY + y, centerX + outerW, centerY + y);
             }
         }
         
-      
-        setColor(fireYellow);
-        for (int i = 0; i < 8; i++) {
-            float angle = time + i * 0.785f;
-            int px = centerX + std::cos(angle) * 12 * scale;
-            int py = centerY + std::sin(angle) * 10 * scale;
-            SDL_Rect particle = {px - scale, py - scale, 2 * scale, 2 * scale};
-            SDL_RenderFillRect(renderer, &particle);
+        // Dark orange outer ring
+        setColor(darkOrange);
+        int darkOrangeR = 13 * scale;
+        for (int y = -darkOrangeR; y <= darkOrangeR; y++) {
+            int outerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)(darkOrangeR * darkOrangeR - y * y))));
+            int innerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)((darkOrangeR-2*scale) * (darkOrangeR-2*scale) - y * y))));
+            if (outerW > innerW) {
+                SDL_RenderDrawLine(renderer, centerX - outerW, centerY + y, centerX - innerW, centerY + y);
+                SDL_RenderDrawLine(renderer, centerX + innerW, centerY + y, centerX + outerW, centerY + y);
+            }
         }
-    }
-    
-   
-    if (!enemy.isDragon && !enemy.isBoss) {
+        
+        // Bright orange ring
+        setColor(brightOrange);
+        int brightOrangeR = 11 * scale;
+        for (int y = -brightOrangeR; y <= brightOrangeR; y++) {
+            int outerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)(brightOrangeR * brightOrangeR - y * y))));
+            int innerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)((brightOrangeR-2*scale) * (brightOrangeR-2*scale) - y * y))));
+            if (outerW > innerW) {
+                SDL_RenderDrawLine(renderer, centerX - outerW, centerY + y, centerX - innerW, centerY + y);
+                SDL_RenderDrawLine(renderer, centerX + innerW, centerY + y, centerX + outerW, centerY + y);
+            }
+        }
+        
+        // Yellow ring
+        setColor(yellow);
+        int yellowR = 9 * scale;
+        for (int y = -yellowR; y <= yellowR; y++) {
+            int outerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)(yellowR * yellowR - y * y))));
+            int innerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)((yellowR-2*scale) * (yellowR-2*scale) - y * y))));
+            if (outerW > innerW) {
+                SDL_RenderDrawLine(renderer, centerX - outerW, centerY + y, centerX - innerW, centerY + y);
+                SDL_RenderDrawLine(renderer, centerX + innerW, centerY + y, centerX + outerW, centerY + y);
+            }
+        }
+        
+        // Bright yellow inner ring
+        setColor(brightYellow);
+        int brightYellowR = 7 * scale;
+        for (int y = -brightYellowR; y <= brightYellowR; y++) {
+            int outerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)(brightYellowR * brightYellowR - y * y))));
+            int innerW = static_cast<int>(std::sqrt(std::max(0.0f, (float)((brightYellowR-2*scale) * (brightYellowR-2*scale) - y * y))));
+            if (outerW > innerW) {
+                SDL_RenderDrawLine(renderer, centerX - outerW, centerY + y, centerX - innerW, centerY + y);
+                SDL_RenderDrawLine(renderer, centerX + innerW, centerY + y, centerX + outerW, centerY + y);
+            }
+        }
+        
+        // Center vertical "pupil" (elongated black rectangle)
+        setColor(centerBlack);
+        int pupilW = 2 * scale;
+        int pupilH = 10 * scale;
+        SDL_Rect pupil = {centerX - pupilW, centerY - pupilH, pupilW * 2, pupilH * 2};
+        SDL_RenderFillRect(renderer, &pupil);
+        
+        // Small white horizontal glint in the center
+        setColor(eyeWhite);
+        SDL_Rect glint = {centerX - 3*scale, centerY - scale/2, 6*scale, scale};
+        SDL_RenderFillRect(renderer, &glint);
+        
+        // Small orange flame wisps on left and right (outside the rings)
+        setColor(brightOrange);
+        // Left wisp
+        SDL_Rect leftWisp = {centerX - 17*scale, centerY - 2*scale, 3*scale, 4*scale};
+        SDL_RenderFillRect(renderer, &leftWisp);
+        // Right wisp
+        SDL_Rect rightWisp = {centerX + 14*scale, centerY - 2*scale, 3*scale, 4*scale};
+        SDL_RenderFillRect(renderer, &rightWisp);
+    } else if (!enemy.isDragon && !enemy.isBoss) {
         
         SDL_Color dragonRed = {220, 40, 40, 255};
         SDL_Color dragonDarkRed = {180, 30, 30, 255};
@@ -957,10 +978,128 @@ void Renderer::renderEnemy(const Enemy& enemy) {
         setColor(dragonDarkRed);
         int numTailSegments = 8;
         for (int i = 0; i < numTailSegments; i++) {
+            float t = static_cast<float>(i) / numTailSegments;
+            int tailX = centerX + (10 + i * 5) * scale;
+            int tailY = centerY + static_cast<int>((2 + i * 1.5f) * scale);
+            int segWidth = static_cast<int>((6 - i * 0.6f) * scale);
+            int segHeight = static_cast<int>((5 - i * 0.5f) * scale);
+            
+            SDL_Rect tailSeg = {tailX - segWidth/2, tailY - segHeight/2, segWidth, segHeight};
+            SDL_RenderFillRect(renderer, &tailSeg);
+        }
         
-        // Dragon is rendered as only a large fierce head (no body, wings, or tail)
-          
-        // Large fierce dragon head (fills entire boss area)
+        
+        int tailTipX = centerX + (10 + numTailSegments * 5) * scale;
+        int tailTipY = centerY + static_cast<int>((2 + numTailSegments * 1.5f) * scale);
+        SDL_Point tailSpike[3] = {
+            {tailTipX, tailTipY - 2 * scale},
+            {tailTipX + 4 * scale, tailTipY},
+            {tailTipX, tailTipY + 2 * scale}
+        };
+        setColor(dragonBrightRed);
+        for (int i = 0; i < 2; i++) {
+            SDL_RenderDrawLine(renderer, tailSpike[i].x, tailSpike[i].y, 
+                             tailSpike[i+1].x, tailSpike[i+1].y);
+        }
+        SDL_RenderDrawLine(renderer, tailSpike[2].x, tailSpike[2].y, 
+                         tailSpike[0].x, tailSpike[0].y);
+        
+       
+        setColor(dragonDarkRed);
+        
+      
+        SDL_Point leftWing[6] = {
+            {centerX - 8 * scale, centerY - 2 * scale},   
+            {centerX - 18 * scale, centerY - 8 * scale},  
+            {centerX - 22 * scale, centerY - 4 * scale},  
+            {centerX - 20 * scale, centerY + 2 * scale},  
+            {centerX - 14 * scale, centerY + 4 * scale},  
+            {centerX - 8 * scale, centerY + 2 * scale}    
+        };
+        
+        for (int y = -8 * scale; y <= 4 * scale; y++) {
+            float t = (y + 8.0f * scale) / (12.0f * scale);
+            int x1 = centerX - 8 * scale;
+            int x2 = centerX - 18 * scale - static_cast<int>(4 * scale * std::sin(t * 3.14159f));
+            SDL_RenderDrawLine(renderer, x1, centerY + y - 2 * scale, x2, centerY + y - 2 * scale);
+        }
+        
+       
+        setColor(dragonBlack);
+        for (int i = 0; i < 5; i++) {
+            SDL_RenderDrawLine(renderer, leftWing[0].x, leftWing[0].y,
+                             leftWing[i+1].x, leftWing[i+1].y);
+        }
+        
+      
+        setColor(dragonDarkRed);
+        SDL_Point rightWing[6] = {
+            {centerX + 8 * scale, centerY - 2 * scale},
+            {centerX + 18 * scale, centerY - 8 * scale},
+            {centerX + 22 * scale, centerY - 4 * scale},
+            {centerX + 20 * scale, centerY + 2 * scale},
+            {centerX + 14 * scale, centerY + 4 * scale},
+            {centerX + 8 * scale, centerY + 2 * scale}
+        };
+        
+        for (int y = -8 * scale; y <= 4 * scale; y++) {
+            float t = (y + 8.0f * scale) / (12.0f * scale);
+            int x1 = centerX + 8 * scale;
+            int x2 = centerX + 18 * scale + static_cast<int>(4 * scale * std::sin(t * 3.14159f));
+            SDL_RenderDrawLine(renderer, x1, centerY + y - 2 * scale, x2, centerY + y - 2 * scale);
+        }
+        
+    
+        setColor(dragonBlack);
+        for (int i = 0; i < 5; i++) {
+            SDL_RenderDrawLine(renderer, rightWing[0].x, rightWing[0].y,
+                             rightWing[i+1].x, rightWing[i+1].y);
+        }
+      
+        setColor(dragonRed);
+        int bodyWidth = 12 * scale;
+        int bodyHeight = 10 * scale;
+        for (int y = -bodyHeight; y <= bodyHeight; y++) {
+            int width = static_cast<int>(std::sqrt(1.0f - (float)(y * y) / (bodyHeight * bodyHeight)) * bodyWidth);
+            SDL_RenderDrawLine(renderer, centerX - width, centerY + y, centerX + width, centerY + y);
+        }
+        
+       
+        setColor(dragonBrightRed);
+        for (int y = bodyHeight / 3; y <= bodyHeight; y++) {
+            int width = static_cast<int>(std::sqrt(1.0f - (float)(y * y) / (bodyHeight * bodyHeight)) * bodyWidth);
+            SDL_RenderDrawLine(renderer, centerX - width, centerY + y, centerX + width, centerY + y);
+        }
+        
+       
+        setColor(dragonBlack);
+        int numSpikes = 6;
+        for (int i = 0; i < numSpikes; i++) {
+            int spikeX = centerX - (5 - i) * scale * 2;
+            int spikeBaseY = centerY - bodyHeight + 2 * scale;
+            
+            SDL_Point spike[3] = {
+                {spikeX - 1 * scale, spikeBaseY},
+                {spikeX, spikeBaseY - 4 * scale},
+                {spikeX + 1 * scale, spikeBaseY}
+            };
+            
+            for (int j = 0; j < 2; j++) {
+                SDL_RenderDrawLine(renderer, spike[j].x, spike[j].y,
+                                 spike[j+1].x, spike[j+1].y);
+            }
+            SDL_RenderDrawLine(renderer, spike[2].x, spike[2].y,
+                             spike[0].x, spike[0].y);
+            
+           
+            for (int dy = 0; dy < 4 * scale; dy++) {
+                int sw = 1 * scale - (dy * scale / 4);
+                SDL_RenderDrawLine(renderer, spikeX - sw, spikeBaseY - dy,
+                                 spikeX + sw, spikeBaseY - dy);
+            }
+        }
+        
+        
         setColor(dragonRed);
         int headCenterX = centerX;
         int headCenterY = centerY;
@@ -973,55 +1112,54 @@ void Renderer::renderEnemy(const Enemy& enemy) {
                              headCenterX + width, headCenterY + y);
         }
         
-        // Large snout protruding from the head
+      
         setColor(dragonDarkRed);
-        int snoutX = headCenterX - 10 * scale;
-        int snoutY = headCenterY + 3 * scale;
-        SDL_Rect snout = {snoutX - 5 * scale, snoutY - 4 * scale, 10 * scale, 8 * scale};
+        int snoutX = headCenterX - 6 * scale;
+        int snoutY = headCenterY + 2 * scale;
+        SDL_Rect snout = {snoutX - 3 * scale, snoutY - 2 * scale, 6 * scale, 4 * scale};
         SDL_RenderFillRect(renderer, &snout);
         
-        // Large curved horns
+    
         setColor(dragonBlack);
       
-        SDL_Rect leftHorn = {headCenterX - 8 * scale, headCenterY - 12 * scale, 4 * scale, 10 * scale};
+        SDL_Rect leftHorn = {headCenterX - 4 * scale, headCenterY - 7 * scale, 2 * scale, 5 * scale};
         SDL_RenderFillRect(renderer, &leftHorn);
-        SDL_Rect leftHornTip = {headCenterX - 8 * scale, headCenterY - 16 * scale, 4 * scale, 4 * scale};
+        SDL_Rect leftHornTip = {headCenterX - 4 * scale, headCenterY - 9 * scale, 2 * scale, 2 * scale};
         SDL_RenderFillRect(renderer, &leftHornTip);
         
-        SDL_Rect rightHorn = {headCenterX + 4 * scale, headCenterY - 12 * scale, 4 * scale, 10 * scale};
+   
+        SDL_Rect rightHorn = {headCenterX + 2 * scale, headCenterY - 7 * scale, 2 * scale, 5 * scale};
         SDL_RenderFillRect(renderer, &rightHorn);
-        SDL_Rect rightHornTip = {headCenterX + 4 * scale, headCenterY - 16 * scale, 4 * scale, 4 * scale};
+        SDL_Rect rightHornTip = {headCenterX + 2 * scale, headCenterY - 9 * scale, 2 * scale, 2 * scale};
         SDL_RenderFillRect(renderer, &rightHornTip);
         
-        // Eyes - yellow with black vertical slits
-        setColor(dragonYellow);
-        SDL_Rect leftEye = {headCenterX - 10 * scale, headCenterY - 4 * scale, 6 * scale, 5 * scale};
-        SDL_RenderFillRect(renderer, &leftEye);
-        SDL_Rect rightEye = {headCenterX + 4 * scale, headCenterY - 4 * scale, 6 * scale, 5 * scale};
-        SDL_RenderFillRect(renderer, &rightEye);
+        // NO EYES - dragon has no face features
         
-        // Pupils - vertical slits
+        // Four legs underneath the body
+        setColor(dragonDarkRed);
+       
+        SDL_Rect frontLeftLeg = {centerX - 6 * scale, centerY + bodyHeight - 2 * scale, 3 * scale, 6 * scale};
+        SDL_RenderFillRect(renderer, &frontLeftLeg);
+     
+        SDL_Rect frontRightLeg = {centerX + 3 * scale, centerY + bodyHeight - 2 * scale, 3 * scale, 6 * scale};
+        SDL_RenderFillRect(renderer, &frontRightLeg);
+   
+        SDL_Rect backLeftLeg = {centerX + 2 * scale, centerY + bodyHeight - 1 * scale, 3 * scale, 5 * scale};
+        SDL_RenderFillRect(renderer, &backLeftLeg);
+      
+        SDL_Rect backRightLeg = {centerX + 7 * scale, centerY + bodyHeight - 1 * scale, 3 * scale, 5 * scale};
+        SDL_RenderFillRect(renderer, &backRightLeg);
+        
+    
         setColor(dragonBlack);
-        SDL_Rect leftPupil = {headCenterX - 7 * scale, headCenterY - 5 * scale, 2 * scale, 7 * scale};
-        SDL_RenderFillRect(renderer, &leftPupil);
-        SDL_Rect rightPupil = {headCenterX + 7 * scale, headCenterY - 5 * scale, 2 * scale, 7 * scale};
-        SDL_RenderFillRect(renderer, &rightPupil);
-        
-        // Nostrils on snout
-        SDL_Rect leftNostril = {snoutX - 7 * scale, snoutY - scale, 2 * scale, 2 * scale};
-        SDL_RenderFillRect(renderer, &leftNostril);
-        SDL_Rect rightNostril = {snoutX - 7 * scale, snoutY + scale, 2 * scale, 2 * scale};
-        SDL_RenderFillRect(renderer, &rightNostril);
-        
-        // Face spikes radiating from head
-        for (int i = 0; i < 8; i++) {
-            float angle = (i / 8.0f) * 6.28318f;
-            int spikeBaseX = headCenterX + static_cast<int>(headRadius * 0.9f * std::cos(angle));
-            int spikeBaseY = headCenterY + static_cast<int>(headRadius * 0.9f * std::sin(angle));
-            int spikeTipX = headCenterX + static_cast<int>((headRadius + 3 * scale) * std::cos(angle));
-            int spikeTipY = headCenterY + static_cast<int>((headRadius + 3 * scale) * std::sin(angle));
+        for (int leg = 0; leg < 4; leg++) {
+            int legX = (leg < 2) ? (centerX + (leg == 0 ? -6 : 3) * scale) : (centerX + (leg == 2 ? 2 : 7) * scale);
+            int legY = centerY + bodyHeight + (leg < 2 ? 4 : 3) * scale;
             
-            SDL_RenderDrawLine(renderer, spikeBaseX, spikeBaseY, spikeTipX, spikeTipY);
+            for (int claw = 0; claw < 3; claw++) {
+                SDL_Rect clawRect = {legX + claw * scale, legY, scale, 2 * scale};
+                SDL_RenderFillRect(renderer, &clawRect);
+            }
         }
         
     } else if (enemy.isBoss) {
