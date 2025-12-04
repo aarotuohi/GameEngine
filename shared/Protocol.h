@@ -69,6 +69,7 @@ namespace Protocol {
         float vx;
         float vy;
         uint32_t health;
+        uint32_t maxHealth;
         bool isAlive;
         uint32_t targetPlayerId;
         bool isBoss;
