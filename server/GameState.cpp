@@ -7,9 +7,9 @@ GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true),
       currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true) {
 
-    // Spawn ONLY wave 5 regular boss for testing
-    std::cout << "Spawning Wave 5 regular boss for testing at center...\n";
-    spawnEnemyInternal(400.0f, 300.0f, 0, true, false);   // Regular boss (not dragon) at center
+    // Spawn ONLY wave 10 dragon boss for testing
+    std::cout << "Spawning Wave 10 dragon boss for testing at center...\n";
+    spawnEnemyInternal(400.0f, 300.0f, 0, true, true);   // Dragon boss at center
 }
 
 GameState::~GameState() {
