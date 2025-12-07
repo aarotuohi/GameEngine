@@ -106,6 +106,7 @@ namespace Protocol {
         uint32_t numRTornadoes;
         std::vector<RTornadoState> rTornadoes;
         uint32_t currentWave;
+        bool showWaveAnnouncement;
     };
 
     // Encoding functions

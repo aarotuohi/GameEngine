@@ -40,6 +40,8 @@ private:
     int enemiesKilledThisWave;
     int enemiesPerWave;
     bool waveActive;
+    std::chrono::steady_clock::time_point waveStartTime;
+    bool showWaveAnnouncement;
 
     uint32_t spawnEnemyInternal(float x, float y, uint32_t targetPlayerId = 0, bool isBoss = false, bool isDragon = false);
 
@@ -87,6 +89,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getAllProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<RTornado>> getAllRTornadoes();
     int getCurrentWave() const { return currentWave; }
+    bool isShowingWaveAnnouncement() const { return showWaveAnnouncement; }
     
     // Control
     void setRunning(bool run) { running = run; }

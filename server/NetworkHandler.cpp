@@ -324,6 +324,7 @@ void NetworkHandler::broadcastUdpState() {
     
     
     broadcast.currentWave = gameState.getCurrentWave();
+    broadcast.showWaveAnnouncement = gameState.isShowingWaveAnnouncement();
     
     auto data = Protocol::encodeStateBroadcast(broadcast);
     auto addresses = playerManager.getUdpAddresses();

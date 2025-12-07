@@ -62,6 +62,7 @@ public:
     void renderUI(uint32_t playerId, int playerCount, int fps, int kills, int wave, int level, int attackDamage);
     void renderGameOver();
     void renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown);
+    void renderWaveAnnouncement(int wave);
     
     int getWidth() const { return width; }
     int getHeight() const { return height; }

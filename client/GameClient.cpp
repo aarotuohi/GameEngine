@@ -10,7 +10,7 @@ GameClient::GameClient(const std::string& playerName)
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
     isGameOver(false), shouldRestart(false), localKills(0), currentWave(1), 
-    localLevel(1), localAttackDamage(20) {
+    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -207,6 +207,7 @@ void GameClient::render() {
     }
     
     currentWave = network->getCurrentWave();
+    showWaveAnnouncement = network->getShowWaveAnnouncement();
     
 
     for (const auto& [enemyId, enemy] : enemies) {
@@ -274,6 +275,10 @@ void GameClient::render() {
     
     // Render UI
     renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills, currentWave, localLevel, localAttackDamage);
+    
+    if (showWaveAnnouncement) {
+        renderer->renderWaveAnnouncement(currentWave);
+    }
     
    
     auto now = std::chrono::steady_clock::now();

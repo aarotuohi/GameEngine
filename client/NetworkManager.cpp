@@ -6,7 +6,7 @@
 
 NetworkManager::NetworkManager(const std::string& name)
     : playerName(name), playerId(0), tcpSocket(INVALID_SOCKET), 
-      udpSocket(INVALID_SOCKET), running(false), currentWave(1) {
+      udpSocket(INVALID_SOCKET), running(false), currentWave(1), showWaveAnnouncement(false) {
 }
 
 NetworkManager::~NetworkManager() {
@@ -246,6 +246,7 @@ void NetworkManager::processUdpMessage(const Protocol::StateBroadcast& broadcast
     }
     
     currentWave = broadcast.currentWave;
+    showWaveAnnouncement = broadcast.showWaveAnnouncement;
 }
 
 void NetworkManager::sendPositionUpdate(float x, float y, float vx, float vy) {

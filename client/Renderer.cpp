@@ -2494,3 +2494,116 @@ void Renderer::drawDigit(int x, int y, int digit) {
         }
     }
 }
+
+void Renderer::renderWaveAnnouncement(int wave) {
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_Color overlay = {0, 0, 0, 150};
+    setColor(overlay);
+    SDL_Rect fullScreen = {0, 0, width, height};
+    SDL_RenderFillRect(renderer, &fullScreen);
+    
+    
+    SDL_Color waveTextColor = {255, 220, 100, 255};
+    SDL_Color numberColor = {255, 100, 100, 255};
+    
+   
+    int centerX = width / 2;
+    int centerY = height / 2;
+    
+ 
+    setColor(waveTextColor);
+    int letterSize = 8;
+    int letterSpacing = letterSize * 7;
+    int startX = centerX - letterSpacing * 2;
+    int startY = centerY - 40;
+    
+
+    SDL_Rect w[] = {
+        {startX, startY, letterSize, letterSize * 6},
+        {startX + letterSize * 2, startY + letterSize * 3, letterSize, letterSize * 3},
+        {startX + letterSize * 4, startY, letterSize, letterSize * 6}
+    };
+    for (auto& r : w) SDL_RenderFillRect(renderer, &r);
+    
+ 
+    startX += letterSpacing;
+    SDL_Rect a[] = {
+        {startX, startY + letterSize, letterSize, letterSize * 5},
+        {startX + letterSize, startY, letterSize * 3, letterSize},
+        {startX + letterSize, startY + letterSize * 3, letterSize * 3, letterSize},
+        {startX + letterSize * 4, startY + letterSize, letterSize, letterSize * 5}
+    };
+    for (auto& r : a) SDL_RenderFillRect(renderer, &r);
+    
+ 
+    startX += letterSpacing;
+    SDL_Rect v[] = {
+        {startX, startY, letterSize, letterSize * 4},
+        {startX + letterSize, startY + letterSize * 4, letterSize, letterSize},
+        {startX + letterSize * 2, startY + letterSize * 5, letterSize, letterSize},
+        {startX + letterSize * 3, startY + letterSize * 4, letterSize, letterSize},
+        {startX + letterSize * 4, startY, letterSize, letterSize * 4}
+    };
+    for (auto& r : v) SDL_RenderFillRect(renderer, &r);
+    
+ 
+    startX += letterSpacing;
+    SDL_Rect e[] = {
+        {startX, startY, letterSize, letterSize * 6},
+        {startX + letterSize, startY, letterSize * 4, letterSize},
+        {startX + letterSize, startY + letterSize * 3, letterSize * 3, letterSize},
+        {startX + letterSize, startY + letterSize * 5, letterSize * 4, letterSize}
+    };
+    for (auto& r : e) SDL_RenderFillRect(renderer, &r);
+    
+ 
+    setColor(numberColor);
+    int numY = centerY + 20;
+    int digitWidth = 30;
+    int digitHeight = 50;
+    
+
+    std::string waveStr = std::to_string(wave);
+    int numDigits = waveStr.length();
+    int numStartX = centerX - (numDigits * digitWidth * 2) / 2;
+    
+    for (size_t i = 0; i < waveStr.length(); i++) {
+        int digit = waveStr[i] - '0';
+        int digitX = numStartX + i * (digitWidth * 2);
+        
+     
+        SDL_Rect segments[7] = {
+            {digitX, numY, digitWidth, 4},                          
+            {digitX + digitWidth - 4, numY, 4, digitHeight/2},         
+            {digitX + digitWidth - 4, numY + digitHeight/2, 4, digitHeight/2}, 
+            {digitX, numY + digitHeight - 4, digitWidth, 4},          
+            {digitX, numY + digitHeight/2, 4, digitHeight/2},          
+            {digitX, numY, 4, digitHeight/2},                         
+            {digitX, numY + digitHeight/2 - 2, digitWidth, 4}         
+        };
+        
+        bool patterns[10][7] = {
+            {1,1,1,1,1,1,0},
+            {0,1,1,0,0,0,0},
+            {1,1,0,1,1,0,1}, 
+            {1,1,1,1,0,0,1},
+            {0,1,1,0,0,1,1}, 
+            {1,0,1,1,0,1,1}, 
+            {1,0,1,1,1,1,1},
+            {1,1,1,0,0,0,0}, 
+            {1,1,1,1,1,1,1}, 
+            {1,1,1,1,0,1,1}  
+        };
+        
+        if (digit >= 0 && digit <= 9) {
+            for (int s = 0; s < 7; s++) {
+                if (patterns[digit][s]) {
+                    SDL_RenderFillRect(renderer, &segments[s]);
+                }
+            }
+        }
+    }
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}

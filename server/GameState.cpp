@@ -5,7 +5,8 @@
 
 GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true),
-      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true) {
+      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true),
+      waveStartTime(std::chrono::steady_clock::now()), showWaveAnnouncement(true) {
 }
 
 GameState::~GameState() {
@@ -312,6 +313,8 @@ void GameState::update(float dt) {
         waveActive = false;
         currentWave++;
         enemiesKilledThisWave = 0;
+        waveStartTime = std::chrono::steady_clock::now();
+        showWaveAnnouncement = true;
         
         
         for (auto& [playerId, player] : players) {
@@ -353,6 +356,15 @@ void GameState::update(float dt) {
         }
         
         waveActive = true;
+    }
+    
+ 
+    if (showWaveAnnouncement) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - waveStartTime).count();
+        if (elapsed > 3000) {  
+            showWaveAnnouncement = false;
+        }
     }
     
     // Check player collisions 

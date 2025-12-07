@@ -206,6 +206,10 @@ namespace Protocol {
                      reinterpret_cast<const uint8_t*>(&netWave),
                      reinterpret_cast<const uint8_t*>(&netWave) + sizeof(uint32_t));
         
+      
+        uint8_t announcement = state.showWaveAnnouncement ? 1 : 0;
+        buffer.push_back(announcement);
+        
         return buffer;
     }
 
@@ -307,6 +311,13 @@ namespace Protocol {
             ptr += sizeof(uint32_t);
         } else {
             state.currentWave = 1;
+        }
+      
+        if (length >= expectedSize + sizeof(uint32_t) + sizeof(uint8_t)) {
+            state.showWaveAnnouncement = (*ptr != 0);
+            ptr += sizeof(uint8_t);
+        } else {
+            state.showWaveAnnouncement = false;
         }
         
         return true;

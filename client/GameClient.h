@@ -52,6 +52,7 @@ private:
     int currentWave;
     int localLevel;
     int localAttackDamage;
+    bool showWaveAnnouncement;
 
 public:
     GameClient(const std::string& playerName = "Player");
