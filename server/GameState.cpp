@@ -478,14 +478,7 @@ uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId
     enemy->health = static_cast<int>(enemy->health * hpMultiplier);
     enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
     
-    enemies[enemyId] = enemy;
-    if (isDragon) {
-        std::cout << "Spawned DRAGON RAID BOSS " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
-    } else if (isBoss) {
-        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
-    } else {
-        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP\n";
-    }
+    
     return enemyId;
 }
 
@@ -530,7 +523,7 @@ void GameState::updateEnemyShooting(float dt) {
         
        
         if (std::isnan(enemy->x) || std::isnan(enemy->y)) {
-            std::cout << "WARNING: Enemy " << enemyId << " has NaN position! Resetting...\n";
+            
             enemy->x = Config::WORLD_WIDTH / 2.0f;
             enemy->y = Config::WORLD_HEIGHT / 2.0f;
             enemy->vx = 0.0f;
@@ -657,7 +650,6 @@ void GameState::createRTornadoes(uint32_t ownerId) {
         
     }
     
-    std::cout << "Created " << Config::R_TORNADO_COUNT << " R tornadoes for player " << ownerId << "\n";
 }
 
 void GameState::updateRTornadoes(float dt) {
