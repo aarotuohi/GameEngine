@@ -5,11 +5,8 @@
 
 GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true),
-      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true) {
-
-    // Spawn ONLY wave 5 regular boss for testing
-    std::cout << "Spawning Wave 5 regular boss for testing at center...\n";
-    spawnEnemyInternal(400.0f, 300.0f, 0, true, false);   // Regular boss (not dragon) at center
+      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true),
+      waveStartTime(std::chrono::steady_clock::now()), showWaveAnnouncement(true) {
 }
 
 GameState::~GameState() {
@@ -316,6 +313,8 @@ void GameState::update(float dt) {
         waveActive = false;
         currentWave++;
         enemiesKilledThisWave = 0;
+        waveStartTime = std::chrono::steady_clock::now();
+        showWaveAnnouncement = true;
         
         
         for (auto& [playerId, player] : players) {
@@ -357,6 +356,15 @@ void GameState::update(float dt) {
         }
         
         waveActive = true;
+    }
+    
+ 
+    if (showWaveAnnouncement) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - waveStartTime).count();
+        if (elapsed > 3000) {  
+            showWaveAnnouncement = false;
+        }
     }
     
     // Check player collisions 
@@ -470,14 +478,7 @@ uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId
     enemy->health = static_cast<int>(enemy->health * hpMultiplier);
     enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
     
-    enemies[enemyId] = enemy;
-    if (isDragon) {
-        std::cout << "Spawned DRAGON RAID BOSS " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
-    } else if (isBoss) {
-        std::cout << "Spawned BOSS enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP!\n";
-    } else {
-        std::cout << "Spawned enemy " << enemyId << " at (" << x << ", " << y << ") with " << enemy->maxHealth << " HP\n";
-    }
+    
     return enemyId;
 }
 
@@ -522,7 +523,7 @@ void GameState::updateEnemyShooting(float dt) {
         
        
         if (std::isnan(enemy->x) || std::isnan(enemy->y)) {
-            std::cout << "WARNING: Enemy " << enemyId << " has NaN position! Resetting...\n";
+            
             enemy->x = Config::WORLD_WIDTH / 2.0f;
             enemy->y = Config::WORLD_HEIGHT / 2.0f;
             enemy->vx = 0.0f;
@@ -649,7 +650,6 @@ void GameState::createRTornadoes(uint32_t ownerId) {
         
     }
     
-    std::cout << "Created " << Config::R_TORNADO_COUNT << " R tornadoes for player " << ownerId << "\n";
 }
 
 void GameState::updateRTornadoes(float dt) {

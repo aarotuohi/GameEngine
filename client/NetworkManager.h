@@ -34,6 +34,7 @@ private:
     mutable std::mutex rTornadoesMutex;
     
     int currentWave;
+    bool showWaveAnnouncement;
     
     void receiveTcpMessages();
     void receiveUdpMessages();
@@ -58,6 +59,7 @@ public:
     std::unordered_map<uint32_t, std::shared_ptr<Projectile>> getProjectiles();
     std::unordered_map<uint32_t, std::shared_ptr<Protocol::RTornadoState>> getRTornadoes();
     int getCurrentWave() const { return currentWave; }
+    bool getShowWaveAnnouncement() const { return showWaveAnnouncement; }
 };
 
 #endif 
