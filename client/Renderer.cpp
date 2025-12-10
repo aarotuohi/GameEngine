@@ -2607,3 +2607,92 @@ void Renderer::renderWaveAnnouncement(int wave) {
     
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
+
+void Renderer::renderGearIcon(int centerX, int centerY, int size) {
+    
+    int outerRadius = size;
+    int innerRadius = size * 3 / 5;
+    int teethCount = 8;
+    
+    for (int i = 0; i < teethCount; i++) {
+        float angle1 = (i * 2.0f * 3.14159f / teethCount) - 0.2f;
+        float angle2 = (i * 2.0f * 3.14159f / teethCount) + 0.2f;
+        
+        
+        int x1 = centerX + static_cast<int>(std::cos(angle1) * outerRadius);
+        int y1 = centerY + static_cast<int>(std::sin(angle1) * outerRadius);
+        int x2 = centerX + static_cast<int>(std::cos(angle2) * outerRadius);
+        int y2 = centerY + static_cast<int>(std::sin(angle2) * outerRadius);
+        
+       
+        int x3 = centerX + static_cast<int>(std::cos(angle2) * innerRadius);
+        int y3 = centerY + static_cast<int>(std::sin(angle2) * innerRadius);
+        int x4 = centerX + static_cast<int>(std::cos(angle1) * innerRadius);
+        int y4 = centerY + static_cast<int>(std::sin(angle1) * innerRadius);
+        
+        
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        SDL_RenderDrawLine(renderer, x2, y2, x3, y3);
+        SDL_RenderDrawLine(renderer, x3, y3, x4, y4);
+        SDL_RenderDrawLine(renderer, x4, y4, x1, y1);
+        
+      
+        for (int j = 0; j <= innerRadius; j++) {
+            int r = innerRadius + j * (outerRadius - innerRadius) / innerRadius;
+            if (r > outerRadius) r = outerRadius;
+            int xa = centerX + static_cast<int>(std::cos(angle1) * r);
+            int ya = centerY + static_cast<int>(std::sin(angle1) * r);
+            int xb = centerX + static_cast<int>(std::cos(angle2) * r);
+            int yb = centerY + static_cast<int>(std::sin(angle2) * r);
+            SDL_RenderDrawLine(renderer, xa, ya, xb, yb);
+        }
+    }
+    
+   
+    for (int r = innerRadius - 1; r <= innerRadius + 1; r++) {
+        renderCircle(centerX, centerY, r);
+    }
+    
+   
+    int holeRadius = size / 4;
+    for (int r = holeRadius - 1; r <= holeRadius + 1; r++) {
+        renderCircle(centerX, centerY, r);
+    }
+}
+
+void Renderer::renderSettingsButton(bool isHovered) {
+    int buttonSize = 50;
+    int margin = 10;
+    int buttonX = width - buttonSize - margin;
+    int buttonY = margin;
+    
+ 
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    if (isHovered) {
+        SDL_Color hoverBg = {80, 80, 90, 200};
+        setColor(hoverBg);
+    } else {
+        SDL_Color normalBg = {60, 60, 70, 180};
+        setColor(normalBg);
+    }
+    
+    SDL_Rect buttonRect = {buttonX, buttonY, buttonSize, buttonSize};
+    SDL_RenderFillRect(renderer, &buttonRect);
+    
+  
+    SDL_Color borderColor = {120, 120, 130, 255};
+    setColor(borderColor);
+    SDL_RenderDrawRect(renderer, &buttonRect);
+    
+   
+    SDL_Color gearColor = {200, 200, 210, 255};
+    setColor(gearColor);
+    
+    int gearCenterX = buttonX + buttonSize / 2;
+    int gearCenterY = buttonY + buttonSize / 2;
+    int gearSize = buttonSize / 3;
+    
+    renderGearIcon(gearCenterX, gearCenterY, gearSize);
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}

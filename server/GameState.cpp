@@ -5,8 +5,8 @@
 
 GameState::GameState()
     : nextPlayerId(1), nextProjectileId(1), nextEnemyId(1), nextRTornadoId(1), taggedPlayerId(0), running(true),
-      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(true),
-      waveStartTime(std::chrono::steady_clock::now()), showWaveAnnouncement(true) {
+      currentWave(1), enemiesKilledThisWave(0), enemiesPerWave(3), waveActive(false),
+      waveStartTime(std::chrono::steady_clock::now()), showWaveAnnouncement(false) {
 }
 
 GameState::~GameState() {
@@ -37,6 +37,24 @@ uint32_t GameState::addPlayer(const std::string& name) {
     
     players[playerId] = player;
     std::cout << "Player " << playerId << " (" << name << ") joined at (" << x << ", " << y << ")\n";
+    
+    
+    if (players.size() == 1 && !waveActive) {
+        std::cout << "Starting Wave 1!\n";
+        waveActive = true;
+        showWaveAnnouncement = true;
+        waveStartTime = std::chrono::steady_clock::now();
+        
+        
+        std::uniform_int_distribution<> distX(50, Config::WORLD_WIDTH - 50);
+        std::uniform_int_distribution<> distY(50, Config::WORLD_HEIGHT - 50);
+        
+        for (int i = 0; i < enemiesPerWave; i++) {
+            float spawnX = static_cast<float>(distX(gen));
+            float spawnY = static_cast<float>(distY(gen));
+            spawnEnemyInternal(spawnX, spawnY);
+        }
+    }
     
     return playerId;
 }
@@ -309,7 +327,8 @@ void GameState::update(float dt) {
         enemies.erase(enemyId);
     }
     
-    if (waveActive && enemies.empty()) {
+   
+    if (waveActive && enemies.empty() && !players.empty()) {
         waveActive = false;
         currentWave++;
         enemiesKilledThisWave = 0;
@@ -478,6 +497,7 @@ uint32_t GameState::spawnEnemyInternal(float x, float y, uint32_t targetPlayerId
     enemy->health = static_cast<int>(enemy->health * hpMultiplier);
     enemy->maxHealth = static_cast<int>(enemy->maxHealth * hpMultiplier);
     
+    enemies[enemyId] = enemy;
     
     return enemyId;
 }

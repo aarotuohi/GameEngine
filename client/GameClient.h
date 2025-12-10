@@ -53,6 +53,7 @@ private:
     int localLevel;
     int localAttackDamage;
     bool showWaveAnnouncement;
+    bool settingsButtonHovered;
 
 public:
     GameClient(const std::string& playerName = "Player");
@@ -69,6 +70,8 @@ private:
     void handleGameOverInput();
     void restartGame();
     bool isPointInRect(int x, int y, int rectX, int rectY, int rectW, int rectH);
+    void updateSettingsButtonHover();
+    bool isSettingsButtonClicked();
 };
 
 #endif 

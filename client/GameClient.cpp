@@ -10,7 +10,7 @@ GameClient::GameClient(const std::string& playerName)
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
     isGameOver(false), shouldRestart(false), localKills(0), currentWave(1), 
-    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false) {
+    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false), settingsButtonHovered(false) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -276,6 +276,9 @@ void GameClient::render() {
     // Render UI
     renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills, currentWave, localLevel, localAttackDamage);
     
+    
+    renderer->renderSettingsButton(settingsButtonHovered);
+    
     if (showWaveAnnouncement) {
         renderer->renderWaveAnnouncement(currentWave);
     }
@@ -358,10 +361,21 @@ void GameClient::run() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             inputHandler->handleEvent(event);
+            
+           
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                if (isSettingsButtonClicked()) {
+                    std::cout << "Settings button clicked!\n";
+                    // TODO: Open settings menu
+                }
+            }
         }
         
         // Update input
         inputHandler->update();
+        
+        
+        updateSettingsButtonHover();
         
     
         checkGameOver();
@@ -475,4 +489,33 @@ void GameClient::restartGame() {
     network->connect(Config::SERVER_HOST);
     
     std::cout << "Game restarted!\n";
+}
+
+void GameClient::updateSettingsButtonHover() {
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    
+    int buttonSize = 50;
+    int margin = 10;
+    int buttonX = renderer->getWidth() - buttonSize - margin;
+    int buttonY = margin;
+    
+    settingsButtonHovered = isPointInRect(mouseX, mouseY, buttonX, buttonY, buttonSize, buttonSize);
+}
+
+bool GameClient::isSettingsButtonClicked() {
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    
+    int buttonSize = 50;
+    int margin = 10;
+    int buttonX = renderer->getWidth() - buttonSize - margin;
+    int buttonY = margin;
+    
+    if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && 
+        isPointInRect(mouseX, mouseY, buttonX, buttonY, buttonSize, buttonSize)) {
+        return true;
+    }
+    
+    return false;
 }
