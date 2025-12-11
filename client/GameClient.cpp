@@ -497,7 +497,7 @@ void GameClient::updateSettingsButtonHover() {
     
     int buttonSize = 50;
     int margin = 10;
-    int buttonX = renderer->getWidth() - buttonSize - margin;
+    int buttonX = margin;
     int buttonY = margin;
     
     settingsButtonHovered = isPointInRect(mouseX, mouseY, buttonX, buttonY, buttonSize, buttonSize);
@@ -509,7 +509,7 @@ bool GameClient::isSettingsButtonClicked() {
     
     int buttonSize = 50;
     int margin = 10;
-    int buttonX = renderer->getWidth() - buttonSize - margin;
+    int buttonX = margin;
     int buttonY = margin;
     
     if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && 

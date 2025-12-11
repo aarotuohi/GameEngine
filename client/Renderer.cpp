@@ -2663,7 +2663,7 @@ void Renderer::renderGearIcon(int centerX, int centerY, int size) {
 void Renderer::renderSettingsButton(bool isHovered) {
     int buttonSize = 50;
     int margin = 10;
-    int buttonX = width - buttonSize - margin;
+    int buttonX = margin;
     int buttonY = margin;
     
  
