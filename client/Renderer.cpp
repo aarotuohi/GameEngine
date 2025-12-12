@@ -2696,3 +2696,249 @@ void Renderer::renderSettingsButton(bool isHovered) {
     
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
+
+void Renderer::renderSettingsMenu(bool& isOpen, float& masterVolume, float& musicVolume, 
+                                  float& sfxVolume, bool& showFps, bool& vsyncEnabled) {
+    
+    int menuWidth = 500;
+    int menuHeight = 600;
+    int menuX = (width - menuWidth) / 2;
+    int menuY = (height - menuHeight) / 2;
+    
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
+    SDL_Rect overlay = {0, 0, width, height};
+    SDL_RenderFillRect(renderer, &overlay);
+    
+    
+    SDL_SetRenderDrawColor(renderer, 40, 40, 45, 255);
+    SDL_Rect menuBg = {menuX, menuY, menuWidth, menuHeight};
+    SDL_RenderFillRect(renderer, &menuBg);
+    
+   
+    SDL_SetRenderDrawColor(renderer, 100, 100, 110, 255);
+    for (int i = 0; i < 3; i++) {
+        SDL_Rect border = {menuX - i, menuY - i, menuWidth + i*2, menuHeight + i*2};
+        SDL_RenderDrawRect(renderer, &border);
+    }
+    
+    
+    int titleY = menuY + 30;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    const char* title = "SETTINGS";
+    int titleLen = strlen(title);
+    int titleX = menuX + (menuWidth - titleLen * 24) / 2;
+    for (int i = 0; i < titleLen; i++) {
+        renderText(&title[i], titleX + i * 24, titleY, 32);
+    }
+    
+    
+    int closeButtonSize = 40;
+    int closeButtonX = menuX + menuWidth - closeButtonSize - 10;
+    int closeButtonY = menuY + 10;
+    
+
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    bool closeHovered = (mouseX >= closeButtonX && mouseX <= closeButtonX + closeButtonSize &&
+                        mouseY >= closeButtonY && mouseY <= closeButtonY + closeButtonSize);
+    
+  
+    if (closeHovered) {
+        SDL_SetRenderDrawColor(renderer, 180, 50, 50, 255);
+    } else {
+        SDL_SetRenderDrawColor(renderer, 120, 40, 40, 255);
+    }
+    SDL_Rect closeButton = {closeButtonX, closeButtonY, closeButtonSize, closeButtonSize};
+    SDL_RenderFillRect(renderer, &closeButton);
+    
+ 
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    for (int i = 0; i < 3; i++) {
+        SDL_RenderDrawLine(renderer, 
+                          closeButtonX + 10 + i, closeButtonY + 10,
+                          closeButtonX + closeButtonSize - 10 + i, closeButtonY + closeButtonSize - 10);
+        SDL_RenderDrawLine(renderer,
+                          closeButtonX + closeButtonSize - 10 - i, closeButtonY + 10,
+                          closeButtonX + 10 - i, closeButtonY + closeButtonSize - 10);
+    }
+    
+
+    if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && closeHovered) {
+        isOpen = false;
+    }
+    
+   
+    int sectionY = titleY + 80;
+    int sliderX = menuX + 40;
+    int sliderWidth = menuWidth - 80;
+    int sliderHeight = 20;
+    int labelX = sliderX;
+    
+    
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("Master Volume:", labelX, sectionY, 20);
+    
+    int masterSliderY = sectionY + 30;
+  
+    SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
+    SDL_Rect masterSliderBg = {sliderX, masterSliderY, sliderWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &masterSliderBg);
+    
+
+    int masterFillWidth = (int)(sliderWidth * (masterVolume / 100.0f));
+    SDL_SetRenderDrawColor(renderer, 100, 150, 255, 255);
+    SDL_Rect masterFill = {sliderX, masterSliderY, masterFillWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &masterFill);
+ 
+    int masterHandleX = sliderX + masterFillWidth - 5;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_Rect masterHandle = {masterHandleX, masterSliderY - 5, 10, sliderHeight + 10};
+    SDL_RenderFillRect(renderer, &masterHandle);
+    
+  
+    char volText[8];
+    sprintf_s(volText, sizeof(volText), "%d%%", (int)masterVolume);
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText(volText, sliderX + sliderWidth + 20, masterSliderY, 20);
+    
+
+    bool masterSliderClicked = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) &&
+                              mouseX >= sliderX && mouseX <= sliderX + sliderWidth &&
+                              mouseY >= masterSliderY - 10 && mouseY <= masterSliderY + sliderHeight + 10;
+    if (masterSliderClicked) {
+        masterVolume = ((mouseX - sliderX) / (float)sliderWidth) * 100.0f;
+        if (masterVolume < 0.0f) masterVolume = 0.0f;
+        if (masterVolume > 100.0f) masterVolume = 100.0f;
+    }
+    
+    
+    sectionY += 100;
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("Music Volume:", labelX, sectionY, 20);
+    
+    int musicSliderY = sectionY + 30;
+    SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
+    SDL_Rect musicSliderBg = {sliderX, musicSliderY, sliderWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &musicSliderBg);
+    
+    int musicFillWidth = (int)(sliderWidth * (musicVolume / 100.0f));
+    SDL_SetRenderDrawColor(renderer, 100, 200, 150, 255);
+    SDL_Rect musicFill = {sliderX, musicSliderY, musicFillWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &musicFill);
+    
+    int musicHandleX = sliderX + musicFillWidth - 5;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_Rect musicHandle = {musicHandleX, musicSliderY - 5, 10, sliderHeight + 10};
+    SDL_RenderFillRect(renderer, &musicHandle);
+    
+    sprintf_s(volText, sizeof(volText), "%d%%", (int)musicVolume);
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText(volText, sliderX + sliderWidth + 20, musicSliderY, 20);
+    
+    bool musicSliderClicked = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) &&
+                             mouseX >= sliderX && mouseX <= sliderX + sliderWidth &&
+                             mouseY >= musicSliderY - 10 && mouseY <= musicSliderY + sliderHeight + 10;
+    if (musicSliderClicked) {
+        musicVolume = ((mouseX - sliderX) / (float)sliderWidth) * 100.0f;
+        if (musicVolume < 0.0f) musicVolume = 0.0f;
+        if (musicVolume > 100.0f) musicVolume = 100.0f;
+    }
+    
+ 
+    sectionY += 100;
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("SFX Volume:", labelX, sectionY, 20);
+    
+    int sfxSliderY = sectionY + 30;
+    SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
+    SDL_Rect sfxSliderBg = {sliderX, sfxSliderY, sliderWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &sfxSliderBg);
+    
+    int sfxFillWidth = (int)(sliderWidth * (sfxVolume / 100.0f));
+    SDL_SetRenderDrawColor(renderer, 255, 180, 100, 255);
+    SDL_Rect sfxFill = {sliderX, sfxSliderY, sfxFillWidth, sliderHeight};
+    SDL_RenderFillRect(renderer, &sfxFill);
+    
+    int sfxHandleX = sliderX + sfxFillWidth - 5;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_Rect sfxHandle = {sfxHandleX, sfxSliderY - 5, 10, sliderHeight + 10};
+    SDL_RenderFillRect(renderer, &sfxHandle);
+    
+    sprintf_s(volText, sizeof(volText), "%d%%", (int)sfxVolume);
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText(volText, sliderX + sliderWidth + 20, sfxSliderY, 20);
+    
+    bool sfxSliderClicked = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) &&
+                           mouseX >= sliderX && mouseX <= sliderX + sliderWidth &&
+                           mouseY >= sfxSliderY - 10 && mouseY <= sfxSliderY + sliderHeight + 10;
+    if (sfxSliderClicked) {
+        sfxVolume = ((mouseX - sliderX) / (float)sliderWidth) * 100.0f;
+        if (sfxVolume < 0.0f) sfxVolume = 0.0f;
+        if (sfxVolume > 100.0f) sfxVolume = 100.0f;
+    }
+    
+  
+    sectionY += 100;
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("Display:", labelX, sectionY, 20);
+   
+    int checkboxY = sectionY + 40;
+    int checkboxSize = 20;
+    int checkboxX = sliderX;
+    
+    SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
+    SDL_Rect fpsCheckboxBg = {checkboxX, checkboxY, checkboxSize, checkboxSize};
+    SDL_RenderFillRect(renderer, &fpsCheckboxBg);
+    
+    SDL_SetRenderDrawColor(renderer, 150, 150, 155, 255);
+    SDL_RenderDrawRect(renderer, &fpsCheckboxBg);
+    
+    if (showFps) {
+        SDL_SetRenderDrawColor(renderer, 100, 255, 100, 255);
+        SDL_Rect check = {checkboxX + 4, checkboxY + 4, checkboxSize - 8, checkboxSize - 8};
+        SDL_RenderFillRect(renderer, &check);
+    }
+    
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("Show FPS", checkboxX + checkboxSize + 15, checkboxY, 20);
+    
+    bool fpsCheckboxClicked = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) &&
+                             mouseX >= checkboxX && mouseX <= checkboxX + checkboxSize &&
+                             mouseY >= checkboxY && mouseY <= checkboxY + checkboxSize;
+    static bool wasMouseDown = false;
+    bool isMouseDown = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
+    if (fpsCheckboxClicked && !wasMouseDown && isMouseDown) {
+        showFps = !showFps;
+    }
+    
+   
+    checkboxY += 40;
+    SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
+    SDL_Rect vsyncCheckboxBg = {checkboxX, checkboxY, checkboxSize, checkboxSize};
+    SDL_RenderFillRect(renderer, &vsyncCheckboxBg);
+    
+    SDL_SetRenderDrawColor(renderer, 150, 150, 155, 255);
+    SDL_RenderDrawRect(renderer, &vsyncCheckboxBg);
+    
+    if (vsyncEnabled) {
+        SDL_SetRenderDrawColor(renderer, 100, 255, 100, 255);
+        SDL_Rect check = {checkboxX + 4, checkboxY + 4, checkboxSize - 8, checkboxSize - 8};
+        SDL_RenderFillRect(renderer, &check);
+    }
+    
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    renderText("VSync", checkboxX + checkboxSize + 15, checkboxY, 20);
+    
+    bool vsyncCheckboxClicked = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) &&
+                               mouseX >= checkboxX && mouseX <= checkboxX + checkboxSize &&
+                               mouseY >= checkboxY && mouseY <= checkboxY + checkboxSize;
+    if (vsyncCheckboxClicked && !wasMouseDown && isMouseDown) {
+        vsyncEnabled = !vsyncEnabled;
+    }
+    
+    wasMouseDown = isMouseDown;
+    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}

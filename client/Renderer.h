@@ -64,6 +64,8 @@ public:
     void renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown);
     void renderWaveAnnouncement(int wave);
     void renderSettingsButton(bool isHovered);
+    void renderSettingsMenu(bool& isOpen, float& masterVolume, float& musicVolume, 
+                           float& sfxVolume, bool& showFps, bool& vsyncEnabled);
     
     int getWidth() const { return width; }
     int getHeight() const { return height; }

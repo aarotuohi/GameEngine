@@ -54,6 +54,14 @@ private:
     int localAttackDamage;
     bool showWaveAnnouncement;
     bool settingsButtonHovered;
+    bool settingsMenuOpen;
+    
+   
+    float masterVolume;
+    float musicVolume;
+    float sfxVolume;
+    bool showFps;
+    bool vsyncEnabled;
 
 public:
     GameClient(const std::string& playerName = "Player");

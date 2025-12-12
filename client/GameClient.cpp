@@ -10,7 +10,9 @@ GameClient::GameClient(const std::string& playerName)
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
     isGameOver(false), shouldRestart(false), localKills(0), currentWave(1), 
-    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false), settingsButtonHovered(false) {
+    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false), settingsButtonHovered(false),
+    settingsMenuOpen(false), masterVolume(75.0f), musicVolume(75.0f), sfxVolume(75.0f),
+    showFps(true), vsyncEnabled(true) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
@@ -283,6 +285,9 @@ void GameClient::render() {
         renderer->renderWaveAnnouncement(currentWave);
     }
     
+    if (settingsMenuOpen) {
+        renderer->renderSettingsMenu(settingsMenuOpen, masterVolume, musicVolume, sfxVolume, showFps, vsyncEnabled);
+    }
    
     auto now = std::chrono::steady_clock::now();
     
@@ -365,9 +370,15 @@ void GameClient::run() {
            
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (isSettingsButtonClicked()) {
-                    std::cout << "Settings button clicked!\n";
-                    // TODO: Open settings menu
+                    settingsMenuOpen = !settingsMenuOpen;
+                    std::cout << "Settings menu " << (settingsMenuOpen ? "opened" : "closed") << "\n";
                 }
+            }
+            
+            // Close settings menu with ESC key
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && settingsMenuOpen) {
+                settingsMenuOpen = false;
+                std::cout << "Settings menu closed\n";
             }
         }
         
