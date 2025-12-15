@@ -2778,7 +2778,103 @@ void Renderer::renderSettingsMenu(bool& isOpen, float& masterVolume, float& musi
     
     
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-    renderText("Master Volume:", labelX, sectionY, 20);
+    
+
+    int letterY = sectionY;
+    int letterSize = 3;
+    int letterSpacing = 16;
+    int letterStartX = labelX;
+    
+   
+    SDL_Rect m1[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX + letterSize * 2, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 5}};
+    for (auto& r : m1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+  
+    SDL_Rect a1[] = {{letterStartX, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 4, letterY + letterSize, letterSize, letterSize * 4}};
+    for (auto& r : a1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+   
+    SDL_Rect s1[] = {{letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY, letterSize, letterSize * 2},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 4, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : s1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+   
+    SDL_Rect t1[] = {{letterStartX, letterY, letterSize * 5, letterSize},
+                     {letterStartX + letterSize * 2, letterY, letterSize, letterSize * 5}};
+    for (auto& r : t1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+  
+    SDL_Rect e1[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : e1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+   
+    SDL_Rect r1[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 3, letterY, letterSize, letterSize * 2},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 2, letterY + letterSize * 3, letterSize, letterSize * 2}};
+    for (auto& r : r1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing + 8;
+    
+    
+    SDL_Rect v1[] = {{letterStartX, letterY, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 2, letterY + letterSize * 4, letterSize, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 3}};
+    for (auto& r : v1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    
+    SDL_Rect o1[] = {{letterStartX, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 4, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 4, letterSize * 3, letterSize}};
+    for (auto& r : o1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+   
+    SDL_Rect l1[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : l1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+   
+    SDL_Rect u1[] = {{letterStartX, letterY, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 4},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 5, letterSize}};
+    for (auto& r : u1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+  
+    SDL_Rect m2[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX + letterSize * 2, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 5}};
+    for (auto& r : m2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+ 
+    SDL_Rect e2[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : e2) SDL_RenderFillRect(renderer, &r);
     
     int masterSliderY = sectionY + 30;
   
@@ -2816,7 +2912,79 @@ void Renderer::renderSettingsMenu(bool& isOpen, float& masterVolume, float& musi
     
     sectionY += 100;
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-    renderText("Music Volume:", labelX, sectionY, 20);
+ 
+    letterY = sectionY;
+    letterStartX = labelX;
+    
+    SDL_Rect m3[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX + letterSize * 2, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 5}};
+    for (auto& r : m3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect u2[] = {{letterStartX, letterY, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 4},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 5, letterSize}};
+    for (auto& r : u2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect s2[] = {{letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY, letterSize, letterSize * 2},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 4, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : s2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect i1[] = {{letterStartX, letterY, letterSize * 5, letterSize},
+                     {letterStartX + letterSize * 2, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 5, letterSize}};
+    for (auto& r : i1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect c1[] = {{letterStartX, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize, letterY + letterSize * 4, letterSize * 3, letterSize}};
+    for (auto& r : c1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing + 8;
+    
+    SDL_Rect v2[] = {{letterStartX, letterY, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 2, letterY + letterSize * 4, letterSize, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 3}};
+    for (auto& r : v2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect o2[] = {{letterStartX, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 4, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 4, letterSize * 3, letterSize}};
+    for (auto& r : o2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect l2[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : l2) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect u3[] = {{letterStartX, letterY, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 4},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 5, letterSize}};
+    for (auto& r : u3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect m4[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX + letterSize * 2, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 5}};
+    for (auto& r : m4) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect e3[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : e3) SDL_RenderFillRect(renderer, &r);
     
     int musicSliderY = sectionY + 30;
     SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
@@ -2846,10 +3014,76 @@ void Renderer::renderSettingsMenu(bool& isOpen, float& masterVolume, float& musi
         if (musicVolume > 100.0f) musicVolume = 100.0f;
     }
     
- 
     sectionY += 100;
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-    renderText("SFX Volume:", labelX, sectionY, 20);
+    
+    letterY = sectionY;
+    letterStartX = labelX;
+    
+  
+    SDL_Rect s3[] = {{letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY, letterSize, letterSize * 2},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 4, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : s3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect f1[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize}};
+    for (auto& r : f1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect x1[] = {{letterStartX, letterY, letterSize, letterSize},
+                     {letterStartX + letterSize, letterY + letterSize, letterSize, letterSize},
+                     {letterStartX + letterSize * 2, letterY + letterSize * 2, letterSize, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 4, letterY + letterSize * 4, letterSize, letterSize},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize, letterSize, letterSize},
+                     {letterStartX + letterSize, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize, letterSize}};
+    for (auto& r : x1) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing + 8;
+    
+    SDL_Rect v3[] = {{letterStartX, letterY, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 2, letterY + letterSize * 4, letterSize, letterSize},
+                     {letterStartX + letterSize * 3, letterY + letterSize * 3, letterSize, letterSize},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 3}};
+    for (auto& r : v3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect o3[] = {{letterStartX, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY, letterSize * 3, letterSize},
+                     {letterStartX + letterSize * 4, letterY + letterSize, letterSize, letterSize * 3},
+                     {letterStartX + letterSize, letterY + letterSize * 4, letterSize * 3, letterSize}};
+    for (auto& r : o3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect l3[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : l3) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect u4[] = {{letterStartX, letterY, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 4},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 5, letterSize}};
+    for (auto& r : u4) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect m5[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX + letterSize * 2, letterY + letterSize, letterSize, letterSize * 4},
+                     {letterStartX + letterSize * 4, letterY, letterSize, letterSize * 5}};
+    for (auto& r : m5) SDL_RenderFillRect(renderer, &r);
+    letterStartX += letterSpacing;
+    
+    SDL_Rect e4[] = {{letterStartX, letterY, letterSize, letterSize * 5},
+                     {letterStartX, letterY, letterSize * 4, letterSize},
+                     {letterStartX, letterY + letterSize * 2, letterSize * 3, letterSize},
+                     {letterStartX, letterY + letterSize * 4, letterSize * 4, letterSize}};
+    for (auto& r : e4) SDL_RenderFillRect(renderer, &r);
     
     int sfxSliderY = sectionY + 30;
     SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
@@ -2913,7 +3147,6 @@ void Renderer::renderSettingsMenu(bool& isOpen, float& masterVolume, float& musi
         showFps = !showFps;
     }
     
-   
     checkboxY += 40;
     SDL_SetRenderDrawColor(renderer, 60, 60, 65, 255);
     SDL_Rect vsyncCheckboxBg = {checkboxX, checkboxY, checkboxSize, checkboxSize};
