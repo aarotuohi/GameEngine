@@ -1,4 +1,13 @@
 # C++ Build Requirements
 # This project uses CMake and requires SDL2 for client rendering
 # 
+# Windows (vcpkg):
+#   vcpkg install sdl2 sdl2-mixer
+#
+# Ubuntu/Debian:
+#   sudo apt-get install libsdl2-dev libsdl2-mixer-dev
+#
+# MacOS (Homebrew):
+#   brew install sdl2 sdl2_mixer
+#
 # See README.md for platform-specific installation instructions

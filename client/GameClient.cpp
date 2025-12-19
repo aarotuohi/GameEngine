@@ -17,6 +17,9 @@ GameClient::GameClient(const std::string& playerName)
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
     renderer = std::make_unique<Renderer>();
+#ifdef HAS_AUDIO_SUPPORT
+    audioManager = std::make_unique<AudioManager>();
+#endif
     
     positionUpdateInterval = std::chrono::duration<float>(1.0f / Config::UPDATE_RATE);
     lastPositionUpdate = std::chrono::steady_clock::now();
@@ -34,6 +37,16 @@ bool GameClient::connect(const std::string& serverHost) {
         std::cerr << "Failed to initialize renderer\n";
         return false;
     }
+
+#ifdef HAS_AUDIO_SUPPORT
+    
+    if (audioManager && audioManager->initialize()) {
+       
+        std::cout << "Audio system initialized\n";
+    } else {
+        std::cout << "Audio system not available\n";
+    }
+#endif
     
     if (!network->connect(serverHost)) {
         std::cerr << "Failed to connect to server\n";
@@ -59,6 +72,11 @@ void GameClient::updateLocalPlayer(float dt) {
            
             lastQSwingTime = now;
             lastQUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_Q);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "Q on cooldown! " << (Config::Q_COOLDOWN_MS - timeSinceLastQ) / 1000.0f << "s remaining\n";
@@ -74,6 +92,11 @@ void GameClient::updateLocalPlayer(float dt) {
            
             network->sendAbilityUse(2, 0.0f, 0.0f);
             lastWUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_W);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "W on cooldown! " << (Config::W_COOLDOWN_MS - timeSinceLastW) / 1000.0f << "s remaining\n";
@@ -91,6 +114,11 @@ void GameClient::updateLocalPlayer(float dt) {
             network->sendAbilityUse(3, dirX, dirY);
             lastEShockwaveTime = now;
             lastEUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_E);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "E on cooldown! " << (Config::E_COOLDOWN_MS - timeSinceLastE) / 1000.0f << "s remaining\n";
@@ -107,6 +135,11 @@ void GameClient::updateLocalPlayer(float dt) {
             network->sendAbilityUse(4, 0.0f, 0.0f);
             lastRTime = now;
             lastRUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_R);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "R on cooldown! " << (Config::R_COOLDOWN_MS - timeSinceLastR) / 1000.0f << "s remaining\n";
@@ -287,6 +320,14 @@ void GameClient::render() {
     
     if (settingsMenuOpen) {
         renderer->renderSettingsMenu(settingsMenuOpen, masterVolume, musicVolume, sfxVolume, showFps, vsyncEnabled);
+#ifdef HAS_AUDIO_SUPPORT
+        
+        if (audioManager) {
+            audioManager->setMasterVolume(masterVolume);
+            audioManager->setMusicVolume(musicVolume);
+            audioManager->setSFXVolume(sfxVolume);
+        }
+#endif
     }
    
     auto now = std::chrono::steady_clock::now();

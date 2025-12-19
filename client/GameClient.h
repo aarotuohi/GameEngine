@@ -8,12 +8,18 @@
 #include "NetworkManager.h"
 #include "InputHandler.h"
 #include "Renderer.h"
+#ifdef HAS_AUDIO_SUPPORT
+#include "AudioManager.h"
+#endif
 
 class GameClient {
 private:
     std::unique_ptr<NetworkManager> network;
     std::unique_ptr<InputHandler> inputHandler;
     std::unique_ptr<Renderer> renderer;
+#ifdef HAS_AUDIO_SUPPORT
+    std::unique_ptr<AudioManager> audioManager;
+#endif
     
     // Local player state 
     float localX, localY;
