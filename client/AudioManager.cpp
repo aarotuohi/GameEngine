@@ -1,6 +1,8 @@
 #include "AudioManager.h"
 #include <iostream>
 
+#ifdef HAS_AUDIO_SUPPORT
+
 AudioManager::AudioManager()
     : backgroundMusic(nullptr),
       masterVolume(75.0f),
@@ -213,3 +215,35 @@ void AudioManager::updateSFXVolume() {
         }
     }
 }
+
+#else // !HAS_AUDIO_SUPPORT
+
+
+AudioManager::AudioManager()
+    : masterVolume(75.0f),
+      musicVolume(75.0f),
+      sfxVolume(75.0f),
+      initialized(false),
+      musicEnabled(true),
+      sfxEnabled(true) {}
+
+AudioManager::~AudioManager() {}
+bool AudioManager::initialize() { return false; }
+void AudioManager::shutdown() {}
+bool AudioManager::loadMusic(const std::string&) { return false; }
+void AudioManager::playMusic(int) {}
+void AudioManager::pauseMusic() {}
+void AudioManager::resumeMusic() {}
+void AudioManager::stopMusic() {}
+bool AudioManager::isMusicPlaying() const { return false; }
+bool AudioManager::loadSoundEffect(SoundEffect, const std::string&) { return false; }
+void AudioManager::playSoundEffect(SoundEffect, int) {}
+void AudioManager::setMasterVolume(float volume) { masterVolume = std::max(0.0f, std::min(100.0f, volume)); }
+void AudioManager::setMusicVolume(float volume) { musicVolume = std::max(0.0f, std::min(100.0f, volume)); }
+void AudioManager::setSFXVolume(float volume) { sfxVolume = std::max(0.0f, std::min(100.0f, volume)); }
+void AudioManager::setMusicEnabled(bool enabled) { musicEnabled = enabled; }
+void AudioManager::setSFXEnabled(bool enabled) { sfxEnabled = enabled; }
+void AudioManager::updateMusicVolume() {}
+void AudioManager::updateSFXVolume() {}
+
+#endif // HAS_AUDIO_SUPPORT

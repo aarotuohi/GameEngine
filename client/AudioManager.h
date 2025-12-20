@@ -1,7 +1,9 @@
 #ifndef AUDIOMANAGER_H
 #define AUDIOMANAGER_H
 
+#ifdef HAS_AUDIO_SUPPORT
 #include <SDL2/SDL_mixer.h>
+#endif
 #include <string>
 #include <unordered_map>
 
@@ -20,8 +22,10 @@ enum class SoundEffect {
 
 class AudioManager {
 private:
+#ifdef HAS_AUDIO_SUPPORT
     Mix_Music* backgroundMusic;
     std::unordered_map<SoundEffect, Mix_Chunk*> soundEffects;
+#endif
     
     float masterVolume;
     float musicVolume;
