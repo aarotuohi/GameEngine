@@ -10,11 +10,16 @@ GameClient::GameClient(const std::string& playerName)
       localVx(0.0f), localVy(0.0f), localRotation(0.0f), hasWorldTarget(false), 
     worldTargetX(0.0f), worldTargetY(0.0f), fps(60), frameCount(0), 
     isGameOver(false), shouldRestart(false), localKills(0), currentWave(1), 
-    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false) {
+    localLevel(1), localAttackDamage(20), showWaveAnnouncement(false), settingsButtonHovered(false),
+    settingsMenuOpen(false), masterVolume(75.0f), musicVolume(75.0f), sfxVolume(75.0f),
+    showFps(true), vsyncEnabled(true) {
     
     network = std::make_unique<NetworkManager>(playerName);
     inputHandler = std::make_unique<InputHandler>();
     renderer = std::make_unique<Renderer>();
+#ifdef HAS_AUDIO_SUPPORT
+    audioManager = std::make_unique<AudioManager>();
+#endif
     
     positionUpdateInterval = std::chrono::duration<float>(1.0f / Config::UPDATE_RATE);
     lastPositionUpdate = std::chrono::steady_clock::now();
@@ -32,6 +37,16 @@ bool GameClient::connect(const std::string& serverHost) {
         std::cerr << "Failed to initialize renderer\n";
         return false;
     }
+
+#ifdef HAS_AUDIO_SUPPORT
+    
+    if (audioManager && audioManager->initialize()) {
+       
+        std::cout << "Audio system initialized\n";
+    } else {
+        std::cout << "Audio system not available\n";
+    }
+#endif
     
     if (!network->connect(serverHost)) {
         std::cerr << "Failed to connect to server\n";
@@ -57,6 +72,11 @@ void GameClient::updateLocalPlayer(float dt) {
            
             lastQSwingTime = now;
             lastQUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_Q);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "Q on cooldown! " << (Config::Q_COOLDOWN_MS - timeSinceLastQ) / 1000.0f << "s remaining\n";
@@ -72,6 +92,11 @@ void GameClient::updateLocalPlayer(float dt) {
            
             network->sendAbilityUse(2, 0.0f, 0.0f);
             lastWUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_W);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "W on cooldown! " << (Config::W_COOLDOWN_MS - timeSinceLastW) / 1000.0f << "s remaining\n";
@@ -89,6 +114,11 @@ void GameClient::updateLocalPlayer(float dt) {
             network->sendAbilityUse(3, dirX, dirY);
             lastEShockwaveTime = now;
             lastEUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_E);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "E on cooldown! " << (Config::E_COOLDOWN_MS - timeSinceLastE) / 1000.0f << "s remaining\n";
@@ -105,6 +135,11 @@ void GameClient::updateLocalPlayer(float dt) {
             network->sendAbilityUse(4, 0.0f, 0.0f);
             lastRTime = now;
             lastRUseTime = now;
+#ifdef HAS_AUDIO_SUPPORT
+            if (audioManager) {
+                audioManager->playSoundEffect(SoundEffect::ABILITY_R);
+            }
+#endif
             inputHandler->clearAbilityInputs();
         } else {
             std::cout << "R on cooldown! " << (Config::R_COOLDOWN_MS - timeSinceLastR) / 1000.0f << "s remaining\n";
@@ -276,10 +311,24 @@ void GameClient::render() {
     // Render UI
     renderer->renderUI(myId, static_cast<int>(players.size()), fps, localKills, currentWave, localLevel, localAttackDamage);
     
+    
+    renderer->renderSettingsButton(settingsButtonHovered);
+    
     if (showWaveAnnouncement) {
         renderer->renderWaveAnnouncement(currentWave);
     }
     
+    if (settingsMenuOpen) {
+        renderer->renderSettingsMenu(settingsMenuOpen, masterVolume, musicVolume, sfxVolume, showFps, vsyncEnabled);
+#ifdef HAS_AUDIO_SUPPORT
+        
+        if (audioManager) {
+            audioManager->setMasterVolume(masterVolume);
+            audioManager->setMusicVolume(musicVolume);
+            audioManager->setSFXVolume(sfxVolume);
+        }
+#endif
+    }
    
     auto now = std::chrono::steady_clock::now();
     
@@ -358,10 +407,27 @@ void GameClient::run() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             inputHandler->handleEvent(event);
+            
+           
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                if (isSettingsButtonClicked()) {
+                    settingsMenuOpen = !settingsMenuOpen;
+                    std::cout << "Settings menu " << (settingsMenuOpen ? "opened" : "closed") << "\n";
+                }
+            }
+            
+            // Close settings menu with ESC key
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && settingsMenuOpen) {
+                settingsMenuOpen = false;
+                std::cout << "Settings menu closed\n";
+            }
         }
         
         // Update input
         inputHandler->update();
+        
+        
+        updateSettingsButtonHover();
         
     
         checkGameOver();
@@ -475,4 +541,33 @@ void GameClient::restartGame() {
     network->connect(Config::SERVER_HOST);
     
     std::cout << "Game restarted!\n";
+}
+
+void GameClient::updateSettingsButtonHover() {
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    
+    int buttonSize = 50;
+    int margin = 10;
+    int buttonX = margin;
+    int buttonY = margin;
+    
+    settingsButtonHovered = isPointInRect(mouseX, mouseY, buttonX, buttonY, buttonSize, buttonSize);
+}
+
+bool GameClient::isSettingsButtonClicked() {
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    
+    int buttonSize = 50;
+    int margin = 10;
+    int buttonX = margin;
+    int buttonY = margin;
+    
+    if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && 
+        isPointInRect(mouseX, mouseY, buttonX, buttonY, buttonSize, buttonSize)) {
+        return true;
+    }
+    
+    return false;
 }

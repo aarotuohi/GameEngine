@@ -29,8 +29,7 @@ Player::Player(uint32_t playerId, float posX, float posY, const std::string& pla
 void Player::updatePosition(float dx, float dy, float dt) {
     x += dx * speed * dt;
     y += dy * speed * dt;
-    
-    
+    lastUpdate = std::chrono::steady_clock::now();
 }
 
 void Player::updateVelocity(float velX, float velY) {
@@ -131,7 +130,6 @@ void Player::useW() {
     lastWTime = std::chrono::steady_clock::now();
     activeAbility = SamuraiAbility::W_WIND_WALL;
     
-    // Activate wind wall
     hasWindWall = true;
     windWallStartTime = std::chrono::steady_clock::now();
     std::cout << "Player " << id << " activated Wind Wall!" << std::endl;
@@ -258,7 +256,7 @@ void Player::updateRTornadoes(float dt) {
             std::cout << "Player " << id << " R tornadoes expired" << std::endl;
         } else {
             float angleIncrement = Config::R_ROTATION_SPEED * dt;
-            // Protect against NaN and invalid increments
+            
             if (std::isnan(angleIncrement) || std::isinf(angleIncrement)) {
                 std::cout << "WARNING: Player " << id << " has invalid R tornado angle increment! Skipping update...\n";
                 return;
@@ -268,7 +266,7 @@ void Player::updateRTornadoes(float dt) {
             if (rTornadoAngle >= 2.0f * 3.14159265f) {
                 rTornadoAngle -= 2.0f * 3.14159265f;
             }
-            // Additional protection against accumulated NaN
+           
             if (std::isnan(rTornadoAngle) || std::isinf(rTornadoAngle)) {
                 std::cout << "WARNING: Player " << id << " has NaN/inf rTornadoAngle! Resetting...\n";
                 rTornadoAngle = 0.0f;
@@ -378,7 +376,6 @@ void Enemy::moveTowards(float targetX, float targetY, float dt) {
 }
 
 void Enemy::update(float dt) {
-    
     //  can be used for other updates if needed in the future
 }
 

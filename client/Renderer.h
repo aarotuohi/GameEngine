@@ -63,6 +63,9 @@ public:
     void renderGameOver();
     void renderCooldowns(float qCooldown, float wCooldown, float eCooldown, float rCooldown);
     void renderWaveAnnouncement(int wave);
+    void renderSettingsButton(bool isHovered);
+    void renderSettingsMenu(bool& isOpen, float& masterVolume, float& musicVolume, 
+                           float& sfxVolume, bool& showFps, bool& vsyncEnabled);
     
     int getWidth() const { return width; }
     int getHeight() const { return height; }
@@ -72,6 +75,7 @@ private:
     void renderCircle(int centerX, int centerY, int radius);
     void renderText(const char* text, int x, int y, int size = 20);
     void drawDigit(int x, int y, int digit);
+    void renderGearIcon(int centerX, int centerY, int size);
     
     // Decoration rendering helpers
     void renderCabin(int worldX, int worldY);

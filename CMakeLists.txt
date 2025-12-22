@@ -22,9 +22,13 @@ endif()
 
 # Find SDL2 for client
 find_package(SDL2 QUIET)
-if(SDL2_FOUND)
+find_package(SDL2_mixer QUIET)
+if(SDL2_FOUND AND SDL2_mixer_FOUND)
     set(BUILD_CLIENT ON)
-    message(STATUS "SDL2 found - Building client")
+    message(STATUS "SDL2 and SDL2_mixer found - Building client")
+elseif(SDL2_FOUND)
+    set(BUILD_CLIENT ON)
+    message(WARNING "SDL2_mixer not found - Building client without audio support")
 else()
     set(BUILD_CLIENT OFF)
     message(WARNING "SDL2 not found - Skipping client build")
@@ -69,10 +73,26 @@ if(BUILD_CLIENT)
         client/InputHandler.cpp
         client/Renderer.h
         client/Renderer.cpp
+        client/AudioManager.h
+        client/AudioManager.cpp
     )
 
-    target_link_libraries(GameClient PRIVATE SharedLib ${SDL2_LIBRARIES} ${PLATFORM_LIBS})
-    target_include_directories(GameClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})
+    set(CLIENT_LIBS SharedLib ${SDL2_LIBRARIES} ${PLATFORM_LIBS})
+    
+  
+    if(SDL2_mixer_FOUND)
+        list(APPEND CLIENT_LIBS ${SDL2_mixer_LIBRARIES})
+        target_compile_definitions(GameClient PRIVATE HAS_AUDIO_SUPPORT)
+    endif()
+    
+    target_link_libraries(GameClient PRIVATE ${CLIENT_LIBS})
+    
+    set(CLIENT_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})
+    if(SDL2_mixer_FOUND)
+        list(APPEND CLIENT_INCLUDES ${SDL2_mixer_INCLUDE_DIRS})
+    endif()
+    
+    target_include_directories(GameClient PRIVATE ${CLIENT_INCLUDES})
 endif()
 
 # Install targets

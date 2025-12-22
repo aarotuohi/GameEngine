@@ -8,12 +8,18 @@
 #include "NetworkManager.h"
 #include "InputHandler.h"
 #include "Renderer.h"
+#ifdef HAS_AUDIO_SUPPORT
+#include "AudioManager.h"
+#endif
 
 class GameClient {
 private:
     std::unique_ptr<NetworkManager> network;
     std::unique_ptr<InputHandler> inputHandler;
     std::unique_ptr<Renderer> renderer;
+#ifdef HAS_AUDIO_SUPPORT
+    std::unique_ptr<AudioManager> audioManager;
+#endif
     
     // Local player state 
     float localX, localY;
@@ -53,6 +59,15 @@ private:
     int localLevel;
     int localAttackDamage;
     bool showWaveAnnouncement;
+    bool settingsButtonHovered;
+    bool settingsMenuOpen;
+    
+   
+    float masterVolume;
+    float musicVolume;
+    float sfxVolume;
+    bool showFps;
+    bool vsyncEnabled;
 
 public:
     GameClient(const std::string& playerName = "Player");
@@ -69,6 +84,8 @@ private:
     void handleGameOverInput();
     void restartGame();
     bool isPointInRect(int x, int y, int rectX, int rectY, int rectW, int rectH);
+    void updateSettingsButtonHover();
+    bool isSettingsButtonClicked();
 };
 
 #endif 

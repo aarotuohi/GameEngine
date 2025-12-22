@@ -20,7 +20,6 @@ enum class SamuraiAbility {
     R_LAST_BREATH = 4       
 };
 
-
 class Player {
 public:
     uint32_t id;
@@ -32,7 +31,6 @@ public:
     bool isTagged;
     int score;
     std::chrono::steady_clock::time_point lastUpdate;
-
 
     int health;
     int maxHealth;
@@ -48,14 +46,11 @@ public:
     std::chrono::steady_clock::time_point lastRTime;
     int qStacks;         
     
-    
     std::chrono::steady_clock::time_point eShockwaveTime;
     
-
     bool hasWindWall;
     std::chrono::steady_clock::time_point windWallStartTime;
     float windWallRadius; 
-    
     
     bool hasRTornadoes;
     std::chrono::steady_clock::time_point rTornadoesStartTime;
